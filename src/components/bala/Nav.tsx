@@ -1,0 +1,114 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+
+const LINKS = [
+  { href: "/pabegimo-kambariai/kambariai", label: "Scenarijai" },
+  { href: "#kaip-vyksta", label: "Kaip vyksta" },
+  { href: "#kainos", label: "Kainos" },
+  { href: "#atsiliepimai", label: "Atsiliepimai" },
+  { href: "#duk", label: "D.U.K." },
+  { href: "/pabegimo-kambariai/blog", label: "Blogas" },
+  { href: "#kontaktai", label: "Kontaktai" },
+];
+
+export default function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    document.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => document.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+  }, [open]);
+
+  return (
+    <>
+      <header
+        className={`fixed inset-x-0 top-0 z-100 py-[18px] transition-[background,padding,border-color] duration-300 border-b border-transparent ${
+          scrolled
+            ? "bg-ink/92 backdrop-blur-[10px] py-3 border-line"
+            : "bg-gradient-to-b from-ink/85 to-transparent"
+        }`}
+      >
+        <div className="mx-auto max-w-[1280px] px-6 md:px-10 min-[1200px]:px-14 flex items-center justify-between gap-5">
+          <Link
+            href="/pabegimo-kambariai"
+            aria-label="Bala VR — pradžia"
+            className="flex items-center"
+            onClick={(e) => {
+              // Pradiniame puslapyje – nuslinkti į viršų ir išvalyti #hash iš URL
+              if (window.location.pathname === "/pabegimo-kambariai") {
+                e.preventDefault();
+                setOpen(false);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                window.history.replaceState(null, "", "/pabegimo-kambariai");
+              }
+            }}
+          >
+            <Image src="/assets/logo-bala-vr.png" alt="Bala VR" width={154} height={46} className="h-[46px] w-auto" priority />
+          </Link>
+          <nav aria-label="Pagrindinė navigacija" className="hidden min-[960px]:flex items-center gap-[30px]">
+            {LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                className="relative py-1.5 text-sm font-semibold text-smoke hover:text-white transition-colors after:content-[''] after:absolute after:left-0 after:right-full after:bottom-0 after:h-[2px] after:bg-volt after:transition-[right] after:duration-200 hover:after:right-0"
+              >
+                {l.label}
+              </a>
+            ))}
+          </nav>
+          <a
+            href="#kontaktai"
+            className="hidden min-[960px]:inline-flex items-center justify-center gap-2 rounded-full bg-volt px-6 py-3 text-sm font-bold text-volt-ink transition-transform hover:-translate-y-0.5 hover:bg-volt-deep"
+          >
+            Rezervuoti dabar
+          </a>
+          <button
+            type="button"
+            aria-label="Atidaryti meniu"
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+            className="min-[960px]:hidden inline-flex flex-col justify-center items-center gap-[5px] w-11 h-11 rounded-[10px] border border-line-strong"
+          >
+            <span className={`block w-5 h-0.5 bg-white transition-transform ${open ? "translate-y-[7px] rotate-45" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-white transition-opacity ${open ? "opacity-0" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-white transition-transform ${open ? "-translate-y-[7px] -rotate-45" : ""}`} />
+          </button>
+        </div>
+      </header>
+
+      <div
+        className={`min-[960px]:hidden fixed inset-0 z-99 bg-ink flex flex-col justify-center gap-1.5 p-6 transition-transform duration-300 ${
+          open ? "translate-y-0" : "-translate-y-full"
+        }`}
+      >
+        {LINKS.map((l) => (
+          <a
+            key={l.href}
+            href={l.href}
+            onClick={() => setOpen(false)}
+            className="border-b border-line py-3 px-1 font-display text-[clamp(28px,9vw,44px)] uppercase text-white"
+          >
+            {l.label}
+          </a>
+        ))}
+        <a
+          href="#kontaktai"
+          onClick={() => setOpen(false)}
+          className="mt-[22px] self-start inline-flex items-center justify-center gap-2 rounded-full bg-volt px-[30px] py-4 text-[15px] font-bold text-volt-ink"
+        >
+          Rezervuoti dabar
+        </a>
+      </div>
+    </>
+  );
+}

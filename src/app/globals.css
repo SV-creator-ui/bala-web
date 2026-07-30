@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  /* Bala VR (Klaipėda) tokens */
+  --color-ink: #0B0B0B;
+  --color-ink-soft: #141414;
+  --color-ink-card: #1A1A1A;
+  --color-ink-card-2: #1F1F1F;
+  --color-line: rgba(255,255,255,.11);
+  --color-line-strong: rgba(255,255,255,.22);
+  --color-paper: #F3EFE4;
+  --color-paper-ink: #15130E;
+  --color-white: #FFFFFF;
+  --color-smoke: rgba(255,255,255,.84);
+  --color-smoke-2: rgba(255,255,255,.64);
+  --color-volt: #FFE400;
+  --color-volt-deep: #E4CB00;
+  --color-volt-ink: #161200;
+  --color-genre-green: #5FD068;
+  --color-genre-blue: #2EBEF0;
+  --color-genre-pink: #FF4D6D;
+  --color-genre-orange: #FF8A3D;
+
+  --font-display: var(--font-anton), 'Archivo Black', Impact, sans-serif;
+  --font-body: var(--font-archivo), -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --animate-hero-in: heroIn 320ms cubic-bezier(.16,.84,.32,1) both;
+  --animate-hero-in-scale: heroInScale 600ms cubic-bezier(.16,.84,.32,1) both;
+  --animate-bob: bob 2.4s cubic-bezier(.16,.84,.32,1) infinite;
+
+  /* Hero fono efektai */
+  --animate-fx-grid: fxGrid 5.5s linear infinite;
+  --animate-fx-orb-a: fxOrbA 19s ease-in-out infinite;
+  --animate-fx-orb-b: fxOrbB 24s ease-in-out infinite;
+  --animate-fx-sweep: fxSweep 9s ease-in-out infinite;
+
+  @keyframes heroIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes heroInScale {
+    from { opacity: 0; transform: translateY(18px) scale(.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(6px); }
+  }
+  @keyframes fxGrid {
+    from { background-position: 0 0; }
+    to { background-position: 0 72px; }
+  }
+  @keyframes fxOrbA {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(60px, 40px, 0) scale(1.14); }
+  }
+  @keyframes fxOrbB {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1.08); }
+    50% { transform: translate3d(-70px, -50px, 0) scale(.92); }
+  }
+  @keyframes fxSweep {
+    0%, 100% { transform: translate3d(-30%, 0, 0); opacity: 0; }
+    12% { opacity: 1; }
+    50% { transform: translate3d(30%, 0, 0); opacity: 1; }
+    72% { opacity: 0; }
+  }
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scroll-padding-top: 96px; }
+  body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+  /* Perspektyvinio tinklo linijos */
+  .fx-grid {
+    background-image:
+      linear-gradient(to right, rgba(255,228,0,.15) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,228,0,.10) 1px, transparent 1px);
+    background-size: 72px 72px;
+    will-change: background-position;
+  }
+
+  /* Kino grūdėtumas – SVG triukšmas */
+  .fx-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+  }
+}
+
+
