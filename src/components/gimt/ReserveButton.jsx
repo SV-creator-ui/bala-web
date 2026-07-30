@@ -1,31 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 /**
  * Rezervavimo mygtukas.
- * - Jei perduota `flowUrl` — atidaro rezervaciją iššokančiame lange (modalas su iframe),
- *   puslapis nepersikrauna.
+ * - Jei perduotas `flowId` — paspaudus atidaro Moizmo rezervacijos srautą
+ *   iššokančiame lange (popup virš puslapio), puslapis nepersikrauna.
+ *   Naudoja oficialų Moizmo skriptą (žr. MoizmoLoader).
  * - Jei ne — įprastas <a> su `href`.
  */
-export default function ReserveButton({ href, flowUrl, className, style, children }) {
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [open]);
-
-  if (!flowUrl) {
+export default function ReserveButton({ href, flowId, className, style, children }) {
+  if (!flowId) {
     return (
       <a href={href} className={className} style={style}>
         {children}
@@ -33,46 +16,27 @@ export default function ReserveButton({ href, flowUrl, className, style, childre
     );
   }
 
-  return (
-    <>
-      <button
-        type="button"
-        className={className}
-        style={style}
-        onClick={() => setOpen(true)}
-      >
-        {children}
-      </button>
+  const handleClick = (e) => {
+    if (
+      typeof window !== "undefined" &&
+      window.moizmo &&
+      typeof window.moizmo.show === "function"
+    ) {
+      // Antras argumentas (mygtukas) — automatiniam mygtuko išjungimui paspaudus
+      window.moizmo.show(flowId, e.currentTarget);
+    } else {
+      // Atsarginis variantas, jei skriptas dar neužsikrovė
+      window.open(
+        `https://booking.moizmo.com/lt/booking/${flowId}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    }
+  };
 
-      {open && (
-        <div
-          className="booking-modal-overlay"
-          onClick={() => setOpen(false)}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Rezervacija"
-        >
-          <div className="booking-modal" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              className="booking-modal-close"
-              onClick={() => setOpen(false)}
-              aria-label="Uždaryti"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-            <iframe
-              src={flowUrl}
-              className="booking-modal-iframe"
-              title="BALA VR rezervacija"
-              loading="eager"
-            />
-          </div>
-        </div>
-      )}
-    </>
+  return (
+    <button type="button" className={className} style={style} onClick={handleClick}>
+      {children}
+    </button>
   );
 }

@@ -1,4 +1,5 @@
 import { Poppins, Open_Sans } from "next/font/google";
+import MoizmoLoader from "@/components/gimt/MoizmoLoader";
 import "./gimt.css";
 
 const poppins = Poppins({
@@ -25,6 +26,7 @@ export default function GimtadieniaiLayout({ children }) {
   return (
     <div className={`gimt ${poppins.variable} ${openSans.variable}`}>
       {children}
+      <MoizmoLoader />
     </div>
   );
 }
