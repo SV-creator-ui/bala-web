@@ -12,11 +12,11 @@ const testimonials = [
     author: "Aistė I.",
   },
   {
-    text: "„Nusprendėme atšvęsti vaiko gimtadienį BALA VR kambaryje ir tikrai nenusivylėme. Šventė gavosi tobula, vaikai begalo laimingi, nenorėjo išeiti kai pasibaigė laikas. Viskas puikiai apgalvota. Puikus išplanavimas: kol vieni žaidžia įvairius žaidimus su akiniais viename kambaryje, kiti gali smagiai praleisti laiką kitame kambaryje, kur yra pilna veiklos su interaktyvia siena ir stalo žaidimais. Patiko, kad visi vaikai gali rasti veiklos ir nesėdi, laukdami kol kiti pažais su akiniais. Laikas tiesiog pralėkė. Tik geriausi atsiliepimai nuo mūsų ir mūsų svečių!”",
+    text: "„Nusprendėme atšvęsti vaiko gimtadienį BALA VR kambaryje ir tikrai nenusivylėme. Šventė gavosi tobula, vaikai begalo laimingi, nenorėjo išeiti kai pasibaigė laikas.\n   Viskas puikiai apgalvota. Puikus išplanavimas: kol vieni žaidžia įvairius žaidimus su akiniais viename kambaryje, kiti gali smagiai praleisti laiką kitame kambaryje, kur yra pilna veiklos su interaktyvia siena ir stalo žaidimais. Patiko, kad visi vaikai gali rasti veiklos ir nesėdi, laukdami kol kiti pažais su akiniais. Laikas tiesiog pralėkė. Tik geriausi atsiliepimai nuo mūsų ir mūsų svečių!”",
     author: "Irina A.",
   },
   {
-    text: "„Labai šauni vieta gimtadienio šventei. Kol vieni žaidžia VR žaidimus, kiti gali mėgautis gausybe kitų stalo bei interaktyvių žaidimų. Svarbiausia užimtumas, visi laimingi. Vieta labai tvarkinga, prižiūrėta, malonus aptarnavimas, didelis stalas, gali sutalpinti visus svečius. Apgalvota iki smulkmenų: žvakučių uždegimui, torto pjaustymui, kavai paskanauti ir panašiai. Tad labai rekomenduoju. Mūsų šventė praėjo puikiai.”",
+    text: "„Labai šauni vieta gimtadienio šventei. Kol vieni žaidžia VR žaidimus, kiti gali mėgautis gausybe kitų stalo bei interaktyvių žaidimų. Svarbiausia užimtumas, visi laimingi. Vieta labai tvarkinga, prižiūrėta, malonus aptarnavimas, didelis stalas, gali sutalpinti visus svečius.\n   Apgalvota iki smulkmenų: žvakučių uždegimui, torto pjaustymui, kavai paskanauti ir panašiai. Tad labai rekomenduoju. Mūsų šventė praėjo puikiai.”",
     author: "Ema",
   },
   {
@@ -56,9 +56,13 @@ function GoogleG() {
 export default function Testimonials() {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [cfHeight, setCfHeight] = useState(null);
   const revealRef = useRef(null);
+  const coverflowRef = useRef(null);
   const reducedRef = useRef(false);
   const hoverTimer = useRef(null);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
 
   const next = () => setActive((a) => (a + 1) % LEN);
   const prev = () => setActive((a) => (a - 1 + LEN) % LEN);
@@ -90,6 +94,31 @@ export default function Testimonials() {
     return () => observer.disconnect();
   }, []);
 
+  // Konteinerio aukštį pritaikome prie aktyvios kortelės, kad ji išsiplėstų
+  // pagal visą tekstą (be vidinio slinkimo). Telefone paliekame CSS auto aukštį.
+  useEffect(() => {
+    const measure = () => {
+      if (typeof window === "undefined") return;
+      if (window.innerWidth <= 768) {
+        setCfHeight(null);
+        return;
+      }
+      const inner = coverflowRef.current?.querySelector(".cf-center .cf-inner");
+      if (!inner) return;
+      // +48px atsargos „plaukiojimo" animacijai ir šešėliui
+      setCfHeight(inner.scrollHeight + 48);
+    };
+    // Matuojame po atvaizdavimo (kad tekstas jau būtų išdėstytas)
+    const raf = requestAnimationFrame(measure);
+    const t = setTimeout(measure, 120); // po šriftų pakrovimo
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t);
+      window.removeEventListener("resize", measure);
+    };
+  }, [active]);
+
   // Automatinis sukimasis (sustoja užvedus pelę arba esant reduced-motion)
   useEffect(() => {
     if (paused || reducedRef.current) return;
@@ -117,8 +146,32 @@ export default function Testimonials() {
     else if (role === "right") next();
   };
 
+  // Perbraukimas (swipe) — pagrindinis navigacijos būdas telefone, kur šoninės
+  // kortelės nerodomos.
+  const handleTouchStart = (e) => {
+    const t = e.touches[0];
+    touchStartX.current = t.clientX;
+    touchStartY.current = t.clientY;
+    setPaused(true);
+  };
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current == null) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartX.current;
+    const dy = t.clientY - touchStartY.current;
+    const SWIPE_MIN = 40;
+    // Reaguojame tik į aiškų horizontalų mostą (kad neblokuotume vertikalaus slinkimo).
+    if (Math.abs(dx) > SWIPE_MIN && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) next();
+      else prev();
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+    setPaused(false);
+  };
+
   return (
-    <section className="testimonials section" id="testimonials">
+    <section className="testimonials section" id="atsiliepimai">
       <div className="container">
         <div className="label">Tėvų atsiliepimai</div>
         <h2 className="section-heading">Ką sako šeimos</h2>
@@ -126,8 +179,12 @@ export default function Testimonials() {
         <div className="cf-reveal" ref={revealRef}>
           <div
             className="coverflow"
+            ref={coverflowRef}
+            style={cfHeight ? { height: `${cfHeight}px` } : undefined}
             onMouseEnter={() => setPaused(true)}
             onMouseLeave={() => setPaused(false)}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
           >
             {testimonials.map((t, i) => {
               const role = getRole(i, active);
@@ -147,12 +204,16 @@ export default function Testimonials() {
                       Google atsiliepimas
                     </div>
                     <div className="testimonial-stars">★★★★★</div>
-                    <p className="testimonial-text">{t.text}</p>
+                    <p className="testimonial-text" style={{ whiteSpace: "pre-line" }}>{t.text}</p>
                     <div className="testimonial-author">{t.author}</div>
                   </div>
                 </div>
               );
             })}
+          </div>
+
+          <div className="cf-swipe-hint" aria-hidden="true">
+            ← Braukite norėdami peržiūrėti →
           </div>
 
           <div className="tcar-dots" role="tablist" aria-label="Atsiliepimai">

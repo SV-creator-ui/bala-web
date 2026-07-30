@@ -5,13 +5,14 @@ const BOOKING_URL = "https://booking.moizmo.com/lt/booking/";
 const packages = [
   {
     name: "MIDI",
-    sub: "1.5 val. · iki 10 vaikų",
+    sub: "1.5 val.",
     tagline: "Trumpai, aktyviai šventei mažesnei grupei.",
     price: "€189",
     features: [
+      "Įtraukta 30 min. vaišėms",
       "VR žaidimų seansas",
       "Arkadiniai žaidimai",
-      "Tėvų lounge + kava",
+      "Iki 10 vaikų, 5 VR akiniai",
       "Instruktoriaus priežiūra",
     ],
     featured: false,
@@ -19,43 +20,44 @@ const packages = [
   },
   {
     name: "MAKSI",
-    sub: "2 val. · iki 12 vaikų",
+    sub: "2 val.",
     tagline: "Populiariausias pasirinkimas 10–12 vaikų gimtadieniui.",
     price: "€239",
     features: [
+      "Įtraukta 30 min. vaišėms",
       "Viskas iš MIDI paketo",
       "Papildoma 30 min.",
-      "Iki 12 vaikų",
-      "Interaktyvi LED siena",
+      "Iki 12 vaikų, 6 VR akiniai",
     ],
     featured: false,
     cta: "btn-secondary",
   },
   {
     name: "VIP",
-    sub: "2.5 val. · iki 15 vaikų",
+    sub: "2.5 val.",
     tagline:
       "Geriausias balansas: daugiau VR, daugiau laiko tortui ir mažiau skubėjimo.",
     price: "€279",
     features: [
+      "Įtraukta 30 min. vaišėms",
       "Viskas iš MAKSI paketo",
-      "Iki 15 vaikų",
-      "Renginio vedėjas visą laiką",
-      "Nemokama darbo dienos nuolaida",
+      "Interaktyvi siena",
+      "Iki 15 vaikų, 7 VR akiniai",
+      "Papildoma 30 min.",
     ],
     featured: true,
     cta: "btn-primary",
   },
   {
     name: "GOLD",
-    sub: "3 val. · iki 15 vaikų",
+    sub: "3 val.",
     tagline: "Kai norite šventės be spaudimo ir su daugiau laiko poilsiui.",
-    price: "€339",
+    price: "€349",
     features: [
+      "Įtraukta 30 min. vaišėms",
       "Viskas iš VIP paketo",
-      "3 valandos visiško malonumo",
-      "Prioritetinis laikų pasirinkimas",
-      "Maksimalus lankstumas",
+      "Papildoma 30 min.",
+      "iki 16 vaikų, 8 VR akiniai",
     ],
     featured: false,
     cta: "btn-secondary",
@@ -91,15 +93,6 @@ const PopcornIcon = () => (
   </svg>
 );
 
-const CoffeeIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f0a500" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
-    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
-    <line x1="6" y1="1" x2="6" y2="4" />
-    <line x1="10" y1="1" x2="10" y2="4" />
-    <line x1="14" y1="1" x2="14" y2="4" />
-  </svg>
-);
 
 // Skraidančios širdelės VIP kortelės fone (fiksuotos reikšmės — be hydration klaidų).
 const VIP_HEARTS = [
@@ -138,7 +131,7 @@ function VipHearts() {
 
 export default function Packages() {
   return (
-    <section className="packages section" id="packages">
+    <section className="packages section" id="paketai">
       <div className="container">
         <div className="label">Gimtadienio paketai</div>
         <h2 className="section-heading">Pasirinkite savo šventę</h2>
@@ -193,7 +186,7 @@ export default function Packages() {
             color: "var(--white-45)",
           }}
         >
-          Darbo dienomis — papildoma nuolaida. Skambinkite ir susiderinsime.
+          20€ NUOLAIDA I–IV dieniais
         </p>
 
         {/* ── EXTRAS ── */}
@@ -211,67 +204,15 @@ export default function Packages() {
           >
             Padarykite šventę dar ypatingesnę
           </h3>
-          <p
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "16px",
-              color: "var(--white-45)",
-              textAlign: "center",
-              marginBottom: 0,
-            }}
-          >
-            Pasirinkite vieną ar kelis papildymus — galite pridėti rezervuodami
-            arba susisiekę su mumis.
-          </p>
           <div className="extras-grid">
-            {/* 1. Prisiminimų paketas — FEATURED, span 2 */}
-            <div className="extra-card featured-extra">
-              <div className="extra-icon">
-                <HeartIcon />
-              </div>
-              <div className="extra-name">Šventės prisiminimų paketas</div>
-              <div className="extra-desc">
-                Padarykite gimtadienį dar asmeniškesnį — su mažais, bet vaikui
-                labai svarbiais šventės akcentais.
-              </div>
-              <ul className="extra-list">
-                <li className="extra-list-item">
-                  <Tick className="extra-check" size={14} />
-                  Gimtadienio vaiko pasveikinimas didžiajame ekrane
-                </li>
-                <li className="extra-list-item">
-                  <Tick className="extra-check" size={14} />
-                  Momentinė nuotrauka prisiminimui
-                </li>
-                <li className="extra-list-item">
-                  <Tick className="extra-check" size={14} />
-                  Diplomas gimtadienio vaikui
-                </li>
-              </ul>
-              <p
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "16px",
-                  color: "var(--white-45)",
-                  lineHeight: 1.5,
-                  marginTop: "var(--space-2)",
-                }}
-              >
-                Mažas papildymas, kuris šventei suteikia daugiau dėmesio, emocijos
-                ir gražų prisiminimą.
-              </p>
-              <div className="extra-price">Paklauskite kainos →</div>
-            </div>
-
-            {/* 2. VR MAX */}
+            {/* VR MAX */}
             <div className="extra-card">
               <div className="extra-icon">
                 <EyeIcon />
               </div>
               <div className="extra-name">VR MAX</div>
               <div className="extra-desc">
-                Daugiau VR laiko be skubėjimo. Idealus tiems, kam VR — svarbiausia
-                šventės dalis.
+                Trumpiname pertraukas ir skiriame maksimaliai laiką VR žaidimams.
               </div>
               <div className="extra-price">+€20</div>
             </div>
@@ -307,27 +248,11 @@ export default function Packages() {
               </div>
               <div className="extra-name">Kino vakaro popkornas</div>
               <div className="extra-desc">
-                Saldus ar sūrus — vaikams puiki užkanda žaidimo pertraukėlei.
+                Šviežias, gardžiai kvepiantis popkornas — kvapas, kuris iškart sukuria šventinę nuotaiką.
               </div>
               <div className="extra-price">+€10</div>
             </div>
 
-          </div>
-
-          {/* Kava tėvams — horizontalus blokas po kitais papildymais */}
-          <div className="extra-card extra-card-wide">
-            <div className="extra-icon">
-              <CoffeeIcon />
-            </div>
-            <div className="extra-wide-body">
-              <div className="extra-name">Kava ir arbata tėvams</div>
-              <div className="extra-desc">
-                Jūsų poilsio valanda — su šiltu gėrimu lounge zonoje.
-              </div>
-            </div>
-            <div className="extra-price-free">
-              <span className="extra-free-badge">Įskaičiuota</span>
-            </div>
           </div>
         </div>
       </div>

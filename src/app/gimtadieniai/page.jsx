@@ -3,6 +3,8 @@ import Hero from "@/components/gimt/Hero";
 import HowItWorks from "@/components/gimt/HowItWorks";
 import WhatYouGet from "@/components/gimt/WhatYouGet";
 import Games from "@/components/gimt/Games";
+import MidCta from "@/components/gimt/MidCta";
+import Moments from "@/components/gimt/Moments";
 import Packages from "@/components/gimt/Packages";
 import Testimonials from "@/components/gimt/Testimonials";
 import Faq from "@/components/gimt/Faq";
@@ -20,8 +22,10 @@ export default function Home() {
         <HowItWorks />
         <WhatYouGet />
         <Games />
-        <Packages />
+        <MidCta />
+        <Moments />
         <Testimonials />
+        <Packages />
         <Faq />
         <Contacts />
         <ScarcityCta />

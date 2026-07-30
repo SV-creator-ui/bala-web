@@ -1,39 +1,43 @@
 const features = [
   {
     emoji: "🥽",
-    title: "Komandinės VR misijos su naujausiais Pico 4 Ultra akiniais",
-    desc: "Ne pavieniai žaidimai, o tikri nuotykiai, kuriuose vaikai bendradarbiauja ir siekia bendro tikslo.",
-    wide: true,
+    title: "Unikalūs komandiniai VR žaidimai",
+    desc: "Azartas ir juokas, kurį žaidėjai patirs kartu.",
+  },
+  {
+    emoji: "💌",
+    title: "Nemokamas gimtadienio kvietimas",
+    desc: "Sukuriame kvietimo maketą jums dovanų.",
   },
   {
     emoji: "🎮",
-    title: "Profesionaliai organizuojama renginio programa",
-    desc: "Patyręs vedėjas koordinuoja visas veiklas, paaiškina taisykles ir pasirūpina, kad šventė vyktų sklandžiai.",
+    title: "Profesionalus renginio vedėjas",
+    desc: "Veda šventę ir paaiškina visas taisykles.",
   },
   {
     emoji: "✨",
-    title: "Interaktyvi LED siena",
-    desc: "Aktyvūs žaidimai su lietimui ir kamuoliukams jautriais efektais – puiki pramoga tarp VR misijų.",
+    title: "Interaktyvi siena",
+    desc: "Mėtote kamuoliukus į sieną — žaidimai po VR misijų.",
   },
   {
     emoji: "🕹️",
-    title: "Neribotas naudojimasis arkadiniais žaidimais",
-    desc: "Stalo futbolas, oro ritulys, vairavimo simuliatorius, Mortal Kombat ir kiti arkadiniai žaidimai.",
+    title: "Neriboti arkadiniai žaidimai",
+    desc: "Stalo futbolas, oro ritulys, simuliatoriai ir kt.",
   },
   {
     emoji: "🛋️",
-    title: "Atskira poilsio zona tėvams",
-    desc: "Patogi lounge zona su sofa ir TV ekranu — ramiai ilsitės ir per ekraną stebite, ką vaikai žaidžia.",
+    title: "Poilsio zona tėvams",
+    desc: "Patogios sofos — ilsitės ir stebite vaikus.",
   },
   {
     emoji: "🔒",
     title: "Visa erdvė tik jums",
-    desc: "Šventės metu privati erdvė skirta tik jūsų svečiams — jokių pašalinių.",
+    desc: "Privati erdvė svečiams — jokių pašalinių.",
   },
   {
     emoji: "🎂",
     title: "Privati vaišių zona",
-    desc: "Jauki erdvė tortui, užkandžiams ir gimtadienio sveikinimams.",
+    desc: "Jauki erdvė tortui ir užkandžiams.",
   },
 ];
 
@@ -52,7 +56,7 @@ const BALLOONS = [
 
 export default function WhatYouGet() {
   return (
-    <section className="what section" id="what">
+    <section className="what section" id="kas-ieina">
       <div className="what-balloons" aria-hidden="true">
         {BALLOONS.map((b, i) => (
           <span
@@ -70,8 +74,8 @@ export default function WhatYouGet() {
         ))}
       </div>
       <div className="container">
-        <div className="label">Kas įeina</div>
-        <h2 className="section-heading">Kiekvieną gimtadienio programą įskaičiuota</h2>
+        <div className="label">Ką siūlome</div>
+        <h2 className="section-heading">Kas laukia BALA VR erdvėje</h2>
         <div className="features-grid">
           {features.map((f) => (
             <div

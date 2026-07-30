@@ -1,27 +1,23 @@
 const steps = [
   {
     title: "Pasirenkate paketą",
-    desc: "Išsirinkite paketą pagal vaikų skaičių ir trukmę. Rezervuokite internetu arba paskambinkite — atsakome greitai.",
+    desc: "Išsirinkite paketą pagal vaikų skaičių ir šventės trukmę, patogiai rezervuokite internetu ir patvirtinkite vietą sumokėję avansą.",
   },
   {
-    title: "Atvykstate pasiruošę",
-    desc: "Rekomenduojame atvykti 10–15 min. anksčiau. Mes pasirūpiname viskuo — jokio papildomo ruošimosi nereikia.",
+    title: "Atvykimas",
+    desc: "Atvykite ne anksčiau nei 15 min. iki šventės pradžios. Galite atsivežti savo užkandžių bei gėrimų, o šventiškesnei nuotaikai — užsisakyti stalo papuošimo paslaugą.",
   },
   {
-    title: "Vaikai žaidžia, tėvai ilsisi",
-    desc: "Mūsų instruktorius prižiūri vaikus. Jūs patogiai sėdite lounge zonoje su kava ir stebite smagumą per ekraną.",
-  },
-  {
-    title: "Tortas ir prisiminimai",
-    desc: "Galite atsivežti savo tortą ir dekoracijas. Pjauname kartu, dainuojame, fotografuojamės — ir išvykstate laimingi.",
+    title: "Žaidimas",
+    desc: "Žaidėjus supažindiname su taisyklėmis, ir jie linksmai neria į pagal amžių pritaikytus VR žaidimus. Per pertraukėles — laikas užkandžiams ir gimtadienio žvakutėms.",
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="how section" id="how">
+    <section className="how section" id="kaip-vyksta">
       <div className="container">
-        <div className="label">Viskas paprasta</div>
+        <div className="label">Trys paprasti žingsniai</div>
         <h2 className="section-heading">Kaip vyksta šventė</h2>
         <div className="how-grid">
           {steps.map((step) => (

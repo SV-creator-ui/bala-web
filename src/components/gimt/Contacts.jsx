@@ -29,7 +29,7 @@ const ClockIcon = () => (
 
 export default function Contacts() {
   return (
-    <section className="contacts section" id="contacts">
+    <section className="contacts section" id="kontaktai">
       <div className="container">
         <div className="label">Susisiekite</div>
         <h2 className="section-heading">Kontaktai ir vieta</h2>
@@ -82,9 +82,7 @@ export default function Contacts() {
               <div>
                 <div className="contact-item-title">Darbo laikas</div>
                 <div className="contact-item-value">
-                  I–V: 14:00–22:00
-                  <br />
-                  VI–VII: 10:00–22:00
+                  IŠANKSTINĖ REGISTRACIJA
                 </div>
               </div>
             </div>

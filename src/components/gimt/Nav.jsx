@@ -16,27 +16,27 @@ export default function Nav() {
 
   return (
     <nav className={`nav${scrolled ? " scrolled" : ""}`}>
-      <div className="nav-brand">
+      <a href="#pradzia" className="nav-brand" aria-label="BALA VR — į pradžią">
         <span className="nav-brand-text">
           <span className="brand-bala">BALA</span>
           <span className="brand-vr">VR</span>
         </span>
-      </div>
+      </a>
       <ul className="nav-links">
         <li>
-          <a href="#how">Kaip vyksta</a>
+          <a href="#kaip-vyksta">Kaip vyksta</a>
         </li>
         <li>
-          <a href="#packages">Paketai</a>
+          <a href="#paketai">Paketai</a>
         </li>
         <li>
-          <a href="#testimonials">Atsiliepimai</a>
+          <a href="#atsiliepimai">Atsiliepimai</a>
         </li>
         <li>
-          <a href="#faq">DUK</a>
+          <a href="#duk">DUK</a>
         </li>
         <li>
-          <a href="#contacts">Kontaktai</a>
+          <a href="#kontaktai">Kontaktai</a>
         </li>
       </ul>
       <a href="tel:+37068426686" className="nav-phone">

@@ -35,7 +35,7 @@ export default function Faq() {
   const toggle = (i) => setOpenIndex((prev) => (prev === i ? null : i));
 
   return (
-    <section className="faq section" id="faq">
+    <section className="faq section" id="duk">
       <div className="container">
         <div className="label">Dažni klausimai</div>
         <h2 className="section-heading">Atsakymai tėvams</h2>

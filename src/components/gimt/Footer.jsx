@@ -34,9 +34,7 @@ export default function Footer() {
                 Klaipėda
               </a>
               <span style={{ color: "var(--white-45)", fontSize: "16px" }}>
-                I–V: 14:00–22:00
-                <br />
-                VI–VII: 10:00–22:00
+                IŠANKSTINĖ REGISTRACIJA
               </span>
             </div>
           </div>
