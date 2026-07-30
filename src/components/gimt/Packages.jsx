@@ -1,4 +1,5 @@
 import { Tick } from "./Icons";
+import ReserveButton from "./ReserveButton";
 
 const BOOKING_URL = "https://booking.moizmo.com/lt/booking/";
 
@@ -168,13 +169,14 @@ export default function Packages() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href={pkg.bookingUrl || BOOKING_URL}
+                <ReserveButton
+                  href={BOOKING_URL}
+                  flowUrl={pkg.bookingUrl}
                   className={`btn ${pkg.cta}`}
                   style={{ width: "100%", justifyContent: "center" }}
                 >
                   REZERVUOTI
-                </a>
+                </ReserveButton>
               </div>
             </div>
           ))}

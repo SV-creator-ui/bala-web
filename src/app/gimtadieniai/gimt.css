@@ -1740,3 +1740,69 @@ html { scroll-behavior: smooth; }
   .fade-up { animation: none; }
   * { transition-duration: 1ms !important; animation-duration: 1ms !important; }
 }
+
+/* ── Rezervacijos iššokantis langas (booking popup) ── */
+.booking-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(5, 18, 23, 0.74);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: bmFade 0.2s var(--ease-out);
+}
+.booking-modal {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  height: min(88vh, 800px);
+  background: var(--bg-surface);
+  border: 1px solid var(--white-12);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: bmPop 0.24s var(--ease-out);
+}
+.booking-modal-iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #fff;
+}
+.booking-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast) ease, transform var(--dur-fast) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.booking-modal-close:hover { background: rgba(0, 0, 0, 0.78); }
+.booking-modal-close:active { transform: scale(0.92); }
+@keyframes bmFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bmPop {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (max-width: 520px) {
+  .booking-modal-overlay { padding: 0; }
+  .booking-modal { max-width: 100%; height: 100%; border-radius: 0; border: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booking-modal-overlay, .booking-modal { animation: none; }
+}
