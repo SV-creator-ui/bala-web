@@ -23,6 +23,8 @@ const packages = [
     sub: "2 val.",
     tagline: "Populiariausias pasirinkimas 10–12 vaikų gimtadieniui.",
     price: "€239",
+    bookingUrl:
+      "https://booking.moizmo.com/lt/booking/8f5a3a15-6817-4dc1-a31f-befd888973b9",
     features: [
       "Įtraukta 30 min. vaišėms",
       "Viskas iš MIDI paketo",
@@ -167,7 +169,7 @@ export default function Packages() {
                   ))}
                 </ul>
                 <a
-                  href={BOOKING_URL}
+                  href={pkg.bookingUrl || BOOKING_URL}
                   className={`btn ${pkg.cta}`}
                   style={{ width: "100%", justifyContent: "center" }}
                 >
