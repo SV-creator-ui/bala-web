@@ -1069,7 +1069,7 @@ html { scroll-behavior: smooth; }
   font-family: var(--font-display);
   font-weight: var(--fw-bold);
   font-size: 18px;
-  color: var(--teal-bright);
+  color: var(--amber);
   margin-top: auto;
   padding-top: var(--space-2);
 }
@@ -1080,7 +1080,7 @@ html { scroll-behavior: smooth; }
   font-family: var(--font-display);
   font-weight: var(--fw-bold);
   font-size: 14px;
-  color: var(--teal-bright);
+  color: var(--amber);
   margin-top: auto;
   padding-top: var(--space-2);
   display: flex; align-items: center; gap: 6px;
@@ -1159,7 +1159,7 @@ html { scroll-behavior: smooth; }
   font-weight: var(--fw-bold);
   font-size: var(--fs-price);
   line-height: 1;
-  color: var(--teal-bright);
+  color: var(--amber);
 }
 .price-period {
   font-family: var(--font-body);
