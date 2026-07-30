@@ -51,7 +51,7 @@ export default function Hero() {
           </div>
           <div className="hero-visual">
             <div className="hero-video-wrap">
-              <HeroVideo src="/hero-video.mp4" />
+              <HeroVideo src="/hero-video.mp4" sound />
             </div>
           </div>
         </div>
