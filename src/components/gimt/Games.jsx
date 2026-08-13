@@ -3,7 +3,7 @@ const games = [
   { img: "/games/g-veiksmas-1.webp", tag: "Veiksmas" },
   { img: "/games/g-nuotykis-2.webp", tag: "Nuotykis" },
   { video: "/games/g-cops-robbers.mp4", tag: "Veiksmas" },
-  { img: "/games/g-nuotykis-5.webp", tag: "Nuotykis" },
+  { video: "/games/g-nuotykis-5.mp4", tag: "Nuotykis" },
   { video: "/games/g-veiksmas-4.mp4", tag: "Nuotykis" },
   { img: "/games/g-nuotykis-3.webp", tag: "Nuotykis" },
   { video: "/games/g-veiksmas-3.mp4", tag: "Veiksmas" },

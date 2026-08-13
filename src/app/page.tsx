@@ -3,9 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "BALA VR Klaipėda — pasirink pramogą",
+  title: "BALA VR Klaipėda — pasirinkite savo pramogą",
   description:
-    "BALA VR Klaipėdoje: VR pabėgimo kambariai ir vaikų gimtadieniai. Pasirink savo nuotykį.",
+    "BALA VR Klaipėdoje: azartiški VR pabėgimo kambariai, aktyvūs komandiniai žaidimai arba privati gimtadienio šventė su vaišėmis.",
 };
 
 function Arrow() {
@@ -16,96 +16,168 @@ function Arrow() {
   );
 }
 
+function Check({ className }: { className?: string }) {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden className={`mt-0.5 flex-none ${className ?? ""}`}>
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function Features({ items, color }: { items: string[]; color: string }) {
+  return (
+    <ul className="mt-4 flex flex-col gap-2">
+      {items.map((f) => (
+        <li key={f} className="flex items-start gap-2.5 text-[13.5px] md:text-[14.5px] leading-[1.35] text-white/90">
+          <Check className={color} />
+          {f}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function ChooserPage() {
   return (
-    <main className="min-h-screen flex flex-col bg-ink text-white">
+    <main className="min-h-[100svh] flex flex-col bg-ink text-white">
       {/* Header */}
-      <header className="flex flex-col items-center text-center px-6 pt-14 pb-8 md:pt-20 md:pb-10">
+      <header className="flex flex-col items-center text-center px-6 pt-8 pb-5 md:pt-10 md:pb-6">
         <Image
-          src="/assets/logo-bala-vr.png"
+          src="/assets/logo-bala-vr-wordmark.png"
           alt="BALA VR"
-          width={190}
-          height={57}
-          className="h-[52px] md:h-[60px] w-auto"
+          width={264}
+          height={48}
+          className="h-[26px] md:h-[32px] w-auto"
           priority
         />
-        <h1 className="mt-8 font-display uppercase leading-[1.02] tracking-[-.01em] text-[clamp(30px,6vw,60px)]">
-          Pasirink savo <span className="text-volt">pramogą</span>
+        <span className="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] leading-none text-white">
+          Virtualios realybės erdvė
+        </span>
+        <h1 className="mt-4 md:mt-5 font-display uppercase leading-[1.02] tracking-[-.01em] text-[clamp(26px,4.4vw,44px)]">
+          Pasirinkite savo <span className="text-volt">pramogą</span>
         </h1>
-        <p className="mt-4 max-w-[560px] text-[15.5px] md:text-lg leading-[1.6] text-smoke-2">
-          Virtualios realybės nuotykiai Klaipėdoje — pabėgimo kambariai suaugusiems
-          ir komandoms, arba nepamirštami vaikų gimtadieniai.
-        </p>
+        <div className="mt-3 h-[47px] md:h-[50px]" aria-hidden />
       </header>
 
-      {/* Two choices */}
-      <div className="flex-1 mx-auto w-full max-w-[1180px] px-6 md:px-10 pb-14">
-        <div className="grid gap-5 md:gap-6 md:grid-cols-2 h-full">
+      {/* Three choices */}
+      <div className="flex-1 mx-auto w-full max-w-[1320px] px-6 md:px-10 pb-8 md:pb-10">
+        <div className="grid gap-4 min-[900px]:gap-5 grid-cols-1 min-[900px]:grid-cols-3 items-stretch">
           {/* VR pabėgimo kambariai */}
           <Link
             href="/pabegimo-kambariai"
-            className="group relative flex flex-col justify-end overflow-hidden rounded-3xl border border-line hover:border-volt transition-colors min-h-[58vh] md:min-h-[64vh]"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-line hover:border-volt transition-colors min-h-[380px] md:min-h-0"
           >
             <Image
-              src="/assets/hero-bala-vr-poster.jpg"
+              src="/assets/hero-drakonu-bokstas.jpg"
               alt="VR pabėgimo kambariai Klaipėdoje"
               fill
-              sizes="(min-width:768px) 560px, 100vw"
+              sizes="(min-width:768px) 440px, 100vw"
               className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/20" />
-            <div className="relative p-7 md:p-9">
-              <span className="inline-block rounded-full bg-volt/15 text-volt text-xs font-bold uppercase tracking-wide px-3 py-1.5">
-                9 scenarijai · 2–10 žaidėjų
-              </span>
-              <h2 className="mt-4 font-display uppercase text-white text-[clamp(26px,4vw,40px)] leading-[1.05]">
-                VR pabėgimo kambariai
+            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/72 to-ink/42" />
+            <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_1px_12px_rgba(0,0,0,0.65)]">
+              <h2 className="font-display uppercase text-white text-[clamp(24px,3.1vw,32px)] leading-[1.06]">
+                VR pabėgimo kambarys
               </h2>
-              <p className="mt-2 max-w-[420px] text-[14.5px] leading-[1.55] text-smoke">
-                Iki 50 min. viename iš 9 virtualių pasaulių. Galvosūkiai, komandinis
-                veiksmas ir adrenalinas.
+              <p className="mt-1.5 text-[13px] md:text-[14px] font-semibold uppercase tracking-wide text-volt">
+                Draugams, šeimoms ir kolektyvams
               </p>
-              <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-volt text-volt-ink font-bold text-[15px] px-6 py-3.5 transition-transform group-hover:-translate-y-0.5">
+              <p className="mt-3 text-[13.5px] md:text-[14.5px] leading-[1.55] text-white/85">
+                Vienas iki 50 min. pabėgimo kambarys, kuriame laukia galvosūkiai,
+                azartas ir ribotas laikas išgelbėti save ir draugus. Puikus
+                pasirinkimas žaidėjams nuo 14 metų.
+              </p>
+              <Features
+                color="text-volt"
+                items={[
+                  "Pasirinkimui net 9 pabėgimo kambariai",
+                  "Be vaišių zonos",
+                ]}
+              />
+              <span className="mt-auto inline-flex items-center gap-2 rounded-full bg-volt text-volt-ink font-bold text-[15px] px-6 py-3.5 self-start transition-transform group-hover:-translate-y-0.5 [text-shadow:none]">
                 Rinktis
                 <Arrow />
               </span>
             </div>
           </Link>
 
-          {/* Vaikų gimtadieniai */}
+          {/* Komandiniai VR žaidimai */}
+          <Link
+            href="/komandiniai-vr-zaidimai"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-colors min-h-[380px] md:min-h-0 bg-[#07242a]"
+          >
+            <Image
+              src="/assets/moteris-su-vr-akiniais-klaipedoje.webp"
+              alt="Komandiniai VR žaidimai Klaipėdoje"
+              fill
+              sizes="(min-width:768px) 440px, 100vw"
+              className="object-cover object-[50%_38%] transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/72 to-ink/42" />
+            <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_1px_12px_rgba(0,0,0,0.65)]">
+              <h2 className="font-display uppercase text-white text-[clamp(24px,3.1vw,32px)] leading-[1.06]">
+                Komandiniai VR žaidimai
+              </h2>
+              <p className="mt-1.5 text-[13px] md:text-[14px] font-semibold uppercase tracking-wide text-[#34d1e0]">
+                Žaidėjams nuo 7 metų ir suaugusiems
+              </p>
+              <p className="mt-3 text-[13.5px] md:text-[14.5px] leading-[1.55] text-white/85">
+                Trys komandiniai žaidimai per maždaug 45 minutes. Zombiai, kovos 3x3,
+                burgerių kepimas, magijos žaidimai ir kiti linksmi nuotykiai. Nuo 7 m.
+              </p>
+              <Features
+                color="text-[#34d1e0]"
+                items={[
+                  "3 skirtingi žaidimai",
+                  "Apie 45 minutes",
+                  "Be vaišių zonos",
+                ]}
+              />
+              <span
+                className="mt-6 inline-flex items-center gap-2 rounded-full text-[#04252b] font-bold text-[15px] px-6 py-3.5 self-start transition-transform group-hover:-translate-y-0.5 [text-shadow:none]"
+                style={{ background: "linear-gradient(180deg, #5be6dc 0%, #34d1e0 100%)" }}
+              >
+                Rinktis
+                <Arrow />
+              </span>
+            </div>
+          </Link>
+
+          {/* Gimtadienių paketai */}
           <Link
             href="/gimtadieniai"
-            className="group relative flex flex-col justify-end overflow-hidden rounded-3xl border border-[rgba(77,184,204,0.3)] hover:border-[#f0a500] transition-colors min-h-[58vh] md:min-h-[64vh] bg-[#0d2b35]"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(77,184,204,0.3)] hover:border-[#f0a500] transition-colors min-h-[380px] md:min-h-0 bg-[#0d2b35]"
           >
-            {/* Brand gradient + cake */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "radial-gradient(120% 90% at 70% 0%, #16495a 0%, #0d2b35 45%, #0a222a 100%)",
-              }}
-            />
             <Image
               src="/tortas.png"
-              alt=""
-              width={340}
-              height={340}
-              className="pointer-events-none absolute right-2 top-6 md:right-4 md:top-8 w-[clamp(150px,32%,260px)] h-auto opacity-90 drop-shadow-[0_16px_40px_rgba(0,0,0,0.45)] transition-transform duration-500 group-hover:-translate-y-1.5 group-hover:rotate-2"
+              alt="Gimtadienio tortas — BALA VR"
+              fill
+              sizes="(min-width:768px) 440px, 100vw"
+              className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
             />
-            <div className="relative p-7 md:p-9">
-              <span className="inline-block rounded-full bg-[rgba(240,165,0,0.14)] text-[#f0a500] text-xs font-bold uppercase tracking-wide px-3 py-1.5">
-                220 m² · iki 23 vaikų
-              </span>
-              <h2 className="mt-4 font-display uppercase text-white text-[clamp(26px,4vw,40px)] leading-[1.05]">
-                Vaikų gimtadieniai
+            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/72 to-ink/42" />
+            <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_1px_12px_rgba(0,0,0,0.65)]">
+              <h2 className="font-display uppercase text-white whitespace-nowrap text-[clamp(22px,2.5vw,30px)] leading-[1.06]">
+                Gimtadienių paketai
               </h2>
-              <p className="mt-2 max-w-[420px] text-[14.5px] leading-[1.55] text-white/70">
-                Privati VR erdvė vaikų šventei. Vaikai žaidžia ir tyrinėja virtualius
-                pasaulius, tėvai ramiai ilsisi.
+              <p className="mt-1.5 text-[13px] md:text-[14px] font-semibold uppercase tracking-wide text-[#f0a500]">
+                Privati šventė tik jūsų kompanijai
               </p>
+              <p className="mt-3 text-[13.5px] md:text-[14.5px] leading-[1.55] text-white/85">
+                Ilgesnė šventė su VR žaidimais, arkadinėmis pramogomis ir atskira vieta
+                vaišėms. Visa 220 m² erdvė skirta tik jūsų grupei.
+              </p>
+              <Features
+                color="text-[#f0a500]"
+                items={[
+                  "Privati erdvė",
+                  "Vieta vaišėms ir tortui",
+                  "VR ir arkadiniai žaidimai",
+                ]}
+              />
               <span
-                className="mt-5 inline-flex items-center gap-2 rounded-full text-[#0d2b35] font-bold text-[15px] px-6 py-3.5 transition-transform group-hover:-translate-y-0.5"
+                className="mt-6 inline-flex items-center gap-2 rounded-full text-[#0d2b35] font-bold text-[15px] px-6 py-3.5 self-start transition-transform group-hover:-translate-y-0.5 [text-shadow:none]"
                 style={{ background: "linear-gradient(180deg, #ffbf33 0%, #f0a500 100%)" }}
               >
                 Rinktis

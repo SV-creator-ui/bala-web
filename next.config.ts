@@ -1,7 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    return [
+      {
+        source: "/laisvas-zaidimas",
+        destination: "/komandiniai-vr-zaidimai",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

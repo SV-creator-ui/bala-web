@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Game } from "@/lib/bala-data";
 import { DIFFICULTY_LABEL } from "@/lib/bala-data";
+import CardLoop from "./CardLoop";
 
 const GENRE_DOT: Record<Game["genreColor"], string> = {
   green: "bg-genre-green",
@@ -27,16 +28,20 @@ export default function GameCard({ game, priority = false }: { game: Game; prior
   return (
     <article className="rounded-[18px] border-2 border-volt bg-ink-card p-3 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-[0_26px_48px_-22px_rgba(0,0,0,.75)]">
       <Link href={`/pabegimo-kambariai/kambariai/${game.slug}`} className="group relative rounded-[10px] overflow-hidden bg-ink-soft aspect-2/3 block">
-        <Image
-          src={game.poster}
-          alt={`${game.title} — VR pabėgimo kambario plakatas Klaipėdoje`}
-          fill
-          sizes="(min-width: 980px) 33vw, (min-width: 640px) 50vw, 100vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          unoptimized
-          priority={priority}
-          loading={priority ? "eager" : "lazy"}
-        />
+        {game.loop ? (
+          <CardLoop slug={game.slug} alt={`${game.title} — VR pabėgimo kambarys Klaipėdoje`} />
+        ) : (
+          <Image
+            src={game.poster}
+            alt={`${game.title} — VR pabėgimo kambario plakatas Klaipėdoje`}
+            fill
+            sizes="(min-width: 980px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            unoptimized
+            priority={priority}
+            loading={priority ? "eager" : "lazy"}
+          />
+        )}
         <span className="absolute top-2.5 left-2.5 z-2 inline-flex items-center gap-1.5 rounded-full bg-black/72 backdrop-blur-[3px] py-1.5 pl-2.5 pr-3 text-[10.5px] font-extrabold uppercase tracking-wide text-white">
           <span className={`w-[7px] h-[7px] rounded-full ${GENRE_DOT[game.genreColor]}`} />
           {game.genre}

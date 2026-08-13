@@ -47,8 +47,15 @@ export default function ReserveButton({
       <button type="button" className={className} style={style} onClick={handleClick}>
         {children}
       </button>
-      {/* Moizmo įterpimo elementas — čia įdedamas rezervacijos iframe/modalas */}
-      <div data-moizmoFlowId={flowId} data-language={language} aria-hidden="true" />
+      {/* Moizmo įterpimo elementas — čia įdedamas rezervacijos iframe/modalas.
+          position:absolute — kad tuščias konteineris neįtrauktų flex tarpo ir
+          nepaslinktų mygtuko (kitaip kortelės su flowId kaina/mygtukas nesutampa). */}
+      <div
+        data-moizmoFlowId={flowId}
+        data-language={language}
+        aria-hidden="true"
+        style={{ position: "absolute" }}
+      />
     </>
   );
 }

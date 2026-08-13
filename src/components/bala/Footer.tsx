@@ -25,8 +25,11 @@ export default function Footer() {
         {/* CTA eilutė */}
         <div className="flex flex-col gap-8 border-b border-line pb-12 md:flex-row md:items-end md:justify-between">
           <div className="max-w-[520px]">
-            <Link href="/pabegimo-kambariai" aria-label="Bala VR — pradžia" className="inline-flex">
-              <Image src="/assets/logo-bala-vr.png" alt="Bala VR" width={120} height={36} className="h-[34px] w-auto mb-5" />
+            <Link href="/pabegimo-kambariai" aria-label="Bala VR — pradžia" className="inline-flex flex-col items-start mb-5">
+              <Image src="/assets/logo-bala-vr-wordmark.png" alt="Bala VR" width={220} height={40} className="h-[20px] w-auto" />
+              <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] leading-none text-white">
+                Virtualios realybės erdvė
+              </span>
             </Link>
             <h3 className="font-display uppercase text-white leading-[1.12] text-[clamp(22px,3.4vw,34px)]">
               Pasiruošę <span className="text-volt">pabėgti?</span>

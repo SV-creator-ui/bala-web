@@ -11,6 +11,8 @@ export type Game = {
   difficulty: number;
   action: number;
   tag: "first" | "horror" | "popular";
+  /** Jei true — kortelėje rodomas cinematinis loop'as iš /assets/loops/<slug>.{webm,mp4,jpg}. */
+  loop?: boolean;
 };
 
 export const GAMES: Game[] = [
@@ -25,6 +27,7 @@ export const GAMES: Game[] = [
     difficulty: 3,
     action: 2,
     tag: "first",
+    loop: true,
   },
   {
     slug: "ninja-trials",
@@ -49,6 +52,7 @@ export const GAMES: Game[] = [
     difficulty: 3,
     action: 2,
     tag: "horror",
+    loop: true,
   },
   {
     slug: "space-station-tiberia",
@@ -61,6 +65,7 @@ export const GAMES: Game[] = [
     difficulty: 4,
     action: 1,
     tag: "popular",
+    loop: true,
   },
   {
     slug: "pirates-plague",
@@ -73,6 +78,7 @@ export const GAMES: Game[] = [
     difficulty: 2,
     action: 3,
     tag: "popular",
+    loop: true,
   },
   {
     slug: "cyberscape",
@@ -109,6 +115,7 @@ export const GAMES: Game[] = [
     difficulty: 4,
     action: 1,
     tag: "popular",
+    loop: true,
   },
   {
     slug: "runaway-train",
@@ -121,6 +128,7 @@ export const GAMES: Game[] = [
     difficulty: 5,
     action: 2,
     tag: "popular",
+    loop: true,
   },
 ];
 
