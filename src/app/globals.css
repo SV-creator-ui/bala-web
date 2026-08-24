@@ -34,6 +34,24 @@
   --animate-fx-orb-b: fxOrbB 24s ease-in-out infinite;
   --animate-fx-sweep: fxSweep 9s ease-in-out infinite;
 
+  /* Ken Burns – lėtas nuotraukų judesys pasirinkimo kortelėse */
+  --animate-ken-a: kenA 24s ease-in-out infinite alternate;
+  --animate-ken-b: kenB 28s ease-in-out infinite alternate;
+  --animate-ken-c: kenC 26s ease-in-out infinite alternate;
+
+  @keyframes kenA {
+    from { transform: scale(1.08) translate3d(0, 0, 0); }
+    to   { transform: scale(1.16) translate3d(-2.2%, -2.6%, 0); }
+  }
+  @keyframes kenB {
+    from { transform: scale(1.10) translate3d(0, 0, 0); }
+    to   { transform: scale(1.17) translate3d(2.6%, -1.6%, 0); }
+  }
+  @keyframes kenC {
+    from { transform: scale(1.08) translate3d(0, 0, 0); }
+    to   { transform: scale(1.15) translate3d(1.8%, 2.4%, 0); }
+  }
+
   @keyframes heroIn {
     from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: translateY(0); }

@@ -125,7 +125,12 @@ export default function Footer() {
         {/* Apatinė juosta */}
         <div className="flex flex-col gap-3 border-t border-line pt-7 text-[13px] text-smoke-2 md:flex-row md:items-center md:justify-between">
           <span>© {year} Bala VR · Pajūrio g. 5B, Klaipėda</span>
-          <span>Sukurta su meile virtualiai realybei.</span>
+          <div className="flex items-center gap-4">
+            <a href="/taisykles" className="font-semibold text-smoke transition-colors hover:text-white">
+              Taisyklės
+            </a>
+            <span>Sukurta su meile virtualiai realybei.</span>
+          </div>
         </div>
       </div>
     </footer>

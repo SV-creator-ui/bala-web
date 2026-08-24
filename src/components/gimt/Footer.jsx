@@ -56,7 +56,12 @@ export default function Footer() {
         <div className="footer-bottom">
           <p className="footer-copy">© 2025 BALA VR. Visos teisės saugomos.</p>
           <div className="footer-accent-line"></div>
-          <p className="footer-copy">Klaipėda · Lietuva</p>
+          <p className="footer-copy">
+            <a href="/taisykles" style={{ color: "inherit", textDecoration: "underline" }}>
+              Taisyklės
+            </a>{" "}
+            · Klaipėda · Lietuva
+          </p>
         </div>
       </div>
     </footer>

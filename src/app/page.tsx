@@ -67,15 +67,18 @@ export default function ChooserPage() {
             href="/pabegimo-kambariai"
             className="group relative flex flex-col overflow-hidden rounded-3xl border border-line hover:border-volt transition-colors min-h-[380px] md:min-h-0"
           >
-            <Image
-              src="/assets/hero-drakonu-bokstas.jpg"
-              alt="VR pabėgimo kambariai Klaipėdoje"
-              fill
-              sizes="(min-width:768px) 440px, 100vw"
-              className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/72 to-ink/42" />
+            <div className="absolute inset-0 animate-ken-a will-change-transform motion-reduce:animate-none">
+              <Image
+                src="/assets/hero-drakonu-bokstas.jpg"
+                alt="VR pabėgimo kambariai Klaipėdoje"
+                fill
+                sizes="(min-width:768px) 440px, 100vw"
+                className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                priority
+              />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/50 md:via-ink/72 md:to-ink/42" />
+            <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-ink/55 to-transparent md:from-ink/25" />
             <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_1px_12px_rgba(0,0,0,0.65)]">
               <h2 className="font-display uppercase text-white text-[clamp(24px,3.1vw,32px)] leading-[1.06]">
                 VR pabėgimo kambarys
@@ -107,14 +110,17 @@ export default function ChooserPage() {
             href="/komandiniai-vr-zaidimai"
             className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-colors min-h-[380px] md:min-h-0 bg-[#07242a]"
           >
-            <Image
-              src="/assets/moteris-su-vr-akiniais-klaipedoje.webp"
-              alt="Komandiniai VR žaidimai Klaipėdoje"
-              fill
-              sizes="(min-width:768px) 440px, 100vw"
-              className="object-cover object-[50%_38%] transition-transform duration-500 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/72 to-ink/42" />
+            <div className="absolute inset-0 animate-ken-b will-change-transform motion-reduce:animate-none">
+              <Image
+                src="/assets/moteris-su-vr-akiniais-klaipedoje.webp"
+                alt="Komandiniai VR žaidimai Klaipėdoje"
+                fill
+                sizes="(min-width:768px) 440px, 100vw"
+                className="object-cover object-[50%_38%] transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/50 md:via-ink/72 md:to-ink/42" />
+            <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-ink/55 to-transparent md:from-ink/25" />
             <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_1px_12px_rgba(0,0,0,0.65)]">
               <h2 className="font-display uppercase text-white text-[clamp(24px,3.1vw,32px)] leading-[1.06]">
                 Komandiniai VR žaidimai
@@ -149,14 +155,17 @@ export default function ChooserPage() {
             href="/gimtadieniai"
             className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(77,184,204,0.3)] hover:border-[#f0a500] transition-colors min-h-[380px] md:min-h-0 bg-[#0d2b35]"
           >
-            <Image
-              src="/tortas.png"
-              alt="Gimtadienio tortas — BALA VR"
-              fill
-              sizes="(min-width:768px) 440px, 100vw"
-              className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/72 to-ink/42" />
+            <div className="absolute inset-0 animate-ken-c will-change-transform motion-reduce:animate-none">
+              <Image
+                src="/tortas.png"
+                alt="Gimtadienio tortas — BALA VR"
+                fill
+                sizes="(min-width:768px) 440px, 100vw"
+                className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/50 md:via-ink/72 md:to-ink/42" />
+            <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-ink/55 to-transparent md:from-ink/25" />
             <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_1px_12px_rgba(0,0,0,0.65)]">
               <h2 className="font-display uppercase text-white whitespace-nowrap text-[clamp(22px,2.5vw,30px)] leading-[1.06]">
                 Gimtadienių paketai
