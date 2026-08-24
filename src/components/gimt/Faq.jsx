@@ -13,7 +13,7 @@ const faqs = [
   },
   {
     q: "Ar galime atsivežti tortą ir dekoracijas?",
-    a: "Žinoma! Galite atsivežti savo tortą, gėrimų, dekoracijų. Mes pasirūpiname stalais ir erdve. Tereikia pranešti iš anksto.",
+    a: "Žinoma! Galite atsivežti arba užsisakyti maistą, tortą, gėrimų, pasipuošti dekoracijas.",
   },
   {
     q: "Kiek iš anksto reikia rezervuoti?",
