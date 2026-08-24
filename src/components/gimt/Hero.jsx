@@ -26,29 +26,18 @@ export default function Hero() {
             </div>
           </div>
           <div className="hero-text">
-            <div className="label hero-eyebrow fade-up">Privati VR šventė</div>
             <h1 className="hero-h1 fade-up fade-up-1">
-              Vaikų gimtadienis Klaipėdoje,{" "}
-              <em>kur nereikia galvoti, kuo juos užimti</em>
+              Nepamirštamas vaikų gimtadienis Klaipėdoje{" "}
+              <em>— BALA VR erdvėje</em>
             </h1>
-            <p
-              className="hero-sub fade-up fade-up-2"
-              style={{ marginBottom: "var(--space-4)" }}
-            >
-              Privati 220 m² BALA VR erdvė tik jūsų šventei: VR misijos,
-              interaktyvi siena, nemokami arkadiniai žaidimai, instruktoriaus
-              priežiūra ir poilsio zona tėvams.
-            </p>
             <p className="hero-sub fade-up fade-up-2">
-              Vaikai žaidžia komandomis, laksto tarp veiklų, švenčia su tortu — o
-              jūs galite ramiai išgerti kavos ir stebėti viską per ekraną.
+              Privati 220 m² BALA VR erdvė tik jūsų šventei: VR komandiniai
+              žaidimai, interaktyvi siena, arkadiniai žaidimai, instruktoriaus
+              priežiūra ir poilsio zona tėvams.
             </p>
             <div className="hero-ctas fade-up fade-up-3">
               <a href={BOOKING_URL} className="btn btn-primary">
-                PASIRINKTI PAKETĄ
-              </a>
-              <a href="tel:+37068426686" className="btn btn-ghost">
-                SKAMBINTI
+                TIKRINTI LAISVUS LAIKUS
               </a>
             </div>
             <div className="hero-stats-row in-hero-text">
