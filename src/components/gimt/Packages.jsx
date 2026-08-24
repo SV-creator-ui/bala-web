@@ -41,7 +41,7 @@ const packages = [
     name: "VIP",
     sub: "2.5 val.",
     tagline:
-      "Geriausias balansas: daugiau VR, daugiau laiko tortui ir mažiau skubėjimo.",
+      "Dar daugiau VR žaidimų, daugiau laiko tortui ir mažiau skubėjimo.",
     price: "€289",
     features: [
       "2,5 val. apsilankymas",
@@ -58,7 +58,7 @@ const packages = [
   {
     name: "GOLD",
     sub: "3 val.",
-    tagline: "Kai norite šventės be spaudimo ir su daugiau laiko poilsiui.",
+    tagline: "Kai norite išskirtinės šventės su daug laiko VR ir poilsiui.",
     price: "€359",
     features: [
       "3 val. apsilankymas",
@@ -159,8 +159,10 @@ export default function Packages() {
               )}
               <div className="price-card-content">
                 <div>
-                  <div className="price-name">{pkg.name}</div>
-                  <div className="price-sub">{pkg.sub}</div>
+                  <div className="price-head">
+                    <div className="price-name">{pkg.name}</div>
+                    <div className="price-sub">{pkg.sub}</div>
+                  </div>
                   <div className="price-tagline">{pkg.tagline}</div>
                 </div>
                 <div className="price-amount">
@@ -237,19 +239,7 @@ export default function Packages() {
               <div className="extra-desc">
                 Kai šventė įsisiūbuoja ir nesinori skubėti namo.
               </div>
-              <ul className="extra-list" style={{ marginTop: "4px" }}>
-                <li className="extra-list-item">
-                  <Tick className="extra-check" size={14} />
-                  +15 min — €30
-                </li>
-                <li className="extra-list-item">
-                  <Tick className="extra-check" size={14} />
-                  +30 min — €50
-                </li>
-              </ul>
-              <div className="extra-price" style={{ fontSize: "16px" }}>
-                nuo €30
-              </div>
+              <div className="extra-price">+15 min — €30</div>
             </div>
 
             {/* 4. Popkornas */}

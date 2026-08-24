@@ -1145,11 +1145,16 @@ html { scroll-behavior: smooth; }
   font-size: var(--fs-h4);
   color: var(--amber);
 }
+.price-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 .price-sub {
   font-family: var(--font-body);
   font-size: 16px;
   color: var(--white-45);
-  margin-top: 4px;
 }
 .price-amount {
   display: flex; align-items: baseline; gap: 6px;
@@ -1169,10 +1174,10 @@ html { scroll-behavior: smooth; }
 .price-tagline {
   font-family: var(--font-body);
   font-size: 16px;
-  color: var(--teal-bright);
+  color: var(--white);
   line-height: 1.5;
-  margin-top: 6px;
-  opacity: 0.85;
+  margin-top: 14px;
+  opacity: 1;
   min-height: 72px; /* suvienodina aukštį, kad kainos būtų vienoje linijoje */
 }
 .price-divider {

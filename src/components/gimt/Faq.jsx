@@ -5,11 +5,11 @@ import { useState } from "react";
 const faqs = [
   {
     q: "Nuo kokio amžiaus galima žaisti VR?",
-    a: "VR žaidimams rekomenduojame nuo 7 metų. Arkadiniai žaidimai — nuo mažesnio amžiaus. Instruktorius visada padeda ir prižiūri.",
+    a: "VR žaidimai - nuo 7 metų. Arkadiniai žaidimai — nuo mažesnio amžiaus. Instruktorius visada padeda ir prižiūri.",
   },
   {
     q: "Ar tėvai taip pat gali žaisti VR?",
-    a: "Taip! Tėvai gali išbandyti VR ausinukus, jei lieka laisva vieta. Dauguma tėvų renkasi ilsėtis lounge zonoje — ir tai labai gerai supranta.",
+    a: "Tėvai gali išbandyti VR komandinius žaidimus, jei lieka laisva vieta. Jei norima žaisti be pertraukų - reikia užsakyti VR MAX papildymą.",
   },
   {
     q: "Ar galime atsivežti tortą ir dekoracijas?",
@@ -21,11 +21,11 @@ const faqs = [
   },
   {
     q: "Kas prižiūri vaikus šventės metu?",
-    a: "Kiekvienos šventės metu dirba mūsų instruktorius — jis padeda apsirengti ausinukus, aiškina žaidimo taisykles, prižiūri saugumą ir seka laiką.",
+    a: "Kiekvienos šventės metu dirba mūsų instruktorius — jis padeda užsidėti VR akinius, paaiškina žaidimo taisykles, prižiūri ir seka laiką.",
   },
   {
     q: "Ką daryti, jei vaikų bus daugiau nei planuota?",
-    a: "Paskambinkite kuo anksčiau — mes pasistengime surasti sprendimą. Maksimalus talpa — 23 žaidėjai vienu metu. Papildomi svečiai gali laukti lounge zonoje.",
+    a: "Rekomenduojame laikytis nurodyto žaidėjų skaičiaus, jog žaidėjams netektų ilgai laukti savo eilės. Taip pat galima užsakyti papildomus VR akinius. 1 VR akiniai - 20 eur.",
   },
 ];
 
