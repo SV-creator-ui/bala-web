@@ -22,6 +22,7 @@ const packages = [
   },
   {
     name: "MAKSI",
+    deco: "balloon",
     sub: "2 val.",
     tagline: "Populiariausias pasirinkimas 10–12 vaikų gimtadieniui.",
     price: "€239",
@@ -39,6 +40,7 @@ const packages = [
   },
   {
     name: "VIP",
+    deco: "heart",
     sub: "2.5 val.",
     tagline:
       "Dar daugiau VR žaidimų, daugiau laiko tortui ir mažiau skubėjimo.",
@@ -57,6 +59,7 @@ const packages = [
   },
   {
     name: "GOLD",
+    deco: "cake",
     sub: "3 val.",
     tagline: "Kai norite išskirtinės šventės su daug laiko VR ir poilsiui.",
     price: "€359",
@@ -104,8 +107,8 @@ const PopcornIcon = () => (
 );
 
 
-// Skraidančios širdelės VIP kortelės fone (fiksuotos reikšmės — be hydration klaidų).
-const VIP_HEARTS = [
+// Skraidančios dekoracijos kortelės fone (fiksuotos reikšmės — be hydration klaidų).
+const DECO_ITEMS = [
   { left: 8, size: 16, dur: 3.2, delay: 0.0, shade: "#ff8fb3", r: -18 },
   { left: 20, size: 22, dur: 3.9, delay: 0.6, shade: "#ff6f9c", r: 14 },
   { left: 33, size: 14, dur: 3.0, delay: 1.1, shade: "#ffa6c4", r: -10 },
@@ -116,13 +119,16 @@ const VIP_HEARTS = [
   { left: 90, size: 23, dur: 4.2, delay: 0.5, shade: "#ff5c8a", r: 18 },
 ];
 
-function VipHearts() {
+const DECO_CHAR = { heart: "♥", balloon: "🎈", cake: "🎂" };
+
+function CardDeco({ type }) {
+  const char = DECO_CHAR[type];
   return (
-    <div className="vip-hearts" aria-hidden="true">
-      {VIP_HEARTS.map((h, i) => (
+    <div className="card-deco" aria-hidden="true">
+      {DECO_ITEMS.map((h, i) => (
         <span
           key={i}
-          className="vip-heart"
+          className={`deco-item deco-${type}`}
           style={{
             "--left": `${h.left}%`,
             "--size": `${h.size}px`,
@@ -132,7 +138,7 @@ function VipHearts() {
             "--r": `${h.r}deg`,
           }}
         >
-          ♥
+          {char}
         </span>
       ))}
     </div>
@@ -151,7 +157,7 @@ export default function Packages() {
               className={`price-card${pkg.featured ? " featured" : ""}`}
               key={pkg.name}
             >
-              {pkg.featured && <VipHearts />}
+              {pkg.deco && <CardDeco type={pkg.deco} />}
               {pkg.featured && (
                 <div className="price-badge">
                   <span className="badge badge-amber">POPULIARIAUSIAS</span>

@@ -1208,8 +1208,8 @@ html { scroll-behavior: smooth; }
 }
 .price-badge { z-index: 2; }
 
-/* ── VIP skraidančios širdelės (užvedus pelę) ── */
-.vip-hearts {
+/* ── Skraidančios dekoracijos kortelėse (užvedus pelę) ── */
+.card-deco {
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -1217,28 +1217,34 @@ html { scroll-behavior: smooth; }
   pointer-events: none;
   z-index: 0;
 }
-.vip-heart {
+.deco-item {
   position: absolute;
   bottom: -8%;
   left: var(--left);
   font-size: var(--size);
   line-height: 1;
-  color: var(--shade);
   opacity: 0;
   will-change: transform, opacity;
+}
+.deco-heart {
+  color: var(--shade);
   filter: drop-shadow(0 2px 6px rgba(255, 90, 140, 0.45));
 }
-.price-card.featured:hover .vip-heart {
-  animation: heartFloat var(--dur) linear var(--delay) infinite;
+.deco-balloon,
+.deco-cake {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
 }
-@keyframes heartFloat {
+.price-card:hover .deco-item {
+  animation: decoFloat var(--dur) linear var(--delay) infinite;
+}
+@keyframes decoFloat {
   0%   { transform: translateY(0) scale(0.5) rotate(0deg); opacity: 0; }
   12%  { opacity: 0.95; }
   85%  { opacity: 0.8; }
   100% { transform: translateY(-360px) scale(1.1) rotate(var(--r, 15deg)); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .price-card.featured:hover .vip-heart { animation: none; }
+  .price-card:hover .deco-item { animation: none; }
 }
 
 /* ── TESTIMONIALS ── */
