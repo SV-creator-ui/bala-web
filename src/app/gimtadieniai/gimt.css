@@ -1230,21 +1230,43 @@ html { scroll-behavior: smooth; }
   color: var(--shade);
   filter: drop-shadow(0 2px 6px rgba(255, 90, 140, 0.45));
 }
-.deco-balloon,
-.deco-cake {
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
+/* Balionai ir tortas — SVG, kurių plotį valdo --size (padidinti, kad geriau matytųsi). */
+.deco-balloon svg {
+  width: calc(var(--size) * 1.7);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.28));
+}
+.deco-cake svg {
+  width: calc(var(--size) * 1.9);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+}
+.cake-flame {
+  transform-origin: 16px 5px;
+  animation: cakeFlicker 0.5s ease-in-out infinite alternate;
+}
+@keyframes cakeFlicker {
+  0%   { transform: scale(1) translateX(0); opacity: 0.95; }
+  100% { transform: scale(1.12, 1.18) translateX(0.4px); opacity: 1; }
 }
 .price-card:hover .deco-item {
   animation: decoFloat var(--dur) linear var(--delay) infinite;
 }
+/* Tolygus (pastovaus greičio) kilimas — translateY tiesiškai kinta laike, be sustojimų. */
 @keyframes decoFloat {
-  0%   { transform: translateY(0) scale(0.5) rotate(0deg); opacity: 0; }
-  12%  { opacity: 0.95; }
-  85%  { opacity: 0.8; }
-  100% { transform: translateY(-360px) scale(1.1) rotate(var(--r, 15deg)); opacity: 0; }
+  0%   { transform: translateY(0) translateX(0) scale(0.6) rotate(0deg); opacity: 0; }
+  8%   { opacity: 0.95; }
+  25%  { transform: translateY(-95px) translateX(7px) scale(1) rotate(calc(var(--r) * 0.4)); }
+  50%  { transform: translateY(-190px) translateX(-7px) scale(1.05) rotate(calc(var(--r) * -0.35)); }
+  75%  { transform: translateY(-285px) translateX(7px) scale(1.08) rotate(calc(var(--r) * 0.3)); }
+  92%  { opacity: 0.8; }
+  100% { transform: translateY(-380px) translateX(0) scale(1.1) rotate(var(--r, 15deg)); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .price-card:hover .deco-item { animation: none; }
+  .cake-flame { animation: none; }
 }
 
 /* ── TESTIMONIALS ── */

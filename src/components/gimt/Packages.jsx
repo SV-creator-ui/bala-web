@@ -121,13 +121,73 @@ const DECO_ITEMS = [
   { left: 90, size: 23, dur: 4.2, delay: 0.5, shade: "#ff5c8a", r: 18 },
 ];
 
-const DECO_CHAR = { heart: "♥", balloon: "🎈", cake: "🎂" };
+// Įvairiaspalviai balionai — kiekvienam elementui sava šventinė spalva.
+const BALLOON_COLORS = [
+  { body: "#ff5c8a", hi: "#ffa9c4" }, // rožinis
+  { body: "#4dabf7", hi: "#a5d8ff" }, // mėlynas
+  { body: "#ffd43b", hi: "#ffec99" }, // geltonas
+  { body: "#69db7c", hi: "#b2f2bb" }, // žalias
+  { body: "#b197fc", hi: "#d0bfff" }, // violetinis
+  { body: "#ff922b", hi: "#ffc078" }, // oranžinis
+  { body: "#ff6b9d", hi: "#ffb3c9" }, // koralinis
+  { body: "#3bc9db", hi: "#99e9f2" }, // turkis
+];
+
+const HeartDeco = () => "♥";
+
+function BalloonDeco({ color }) {
+  return (
+    <svg viewBox="0 0 24 34" fill="none" aria-hidden="true">
+      <ellipse cx="12" cy="11" rx="9" ry="11" fill={color.body} />
+      {/* blizgesys */}
+      <ellipse cx="8.5" cy="7" rx="2.6" ry="3.6" fill={color.hi} opacity="0.85" />
+      {/* mazgelis */}
+      <path d="M12 22 L10 25 h4 z" fill={color.body} />
+      {/* siūlelis */}
+      <path
+        d="M12 25 q3 3 0.5 5 q-2.5 2 0 4"
+        stroke="rgba(0,0,0,0.28)"
+        strokeWidth="0.8"
+        fill="none"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function CakeDeco() {
+  return (
+    <svg viewBox="0 0 32 34" fill="none" aria-hidden="true">
+      {/* liepsnelė */}
+      <ellipse cx="16" cy="4" rx="2" ry="3.2" fill="#ffcf33" className="cake-flame" />
+      <ellipse cx="16" cy="4.6" rx="1" ry="1.8" fill="#ff8a3d" className="cake-flame" />
+      {/* žvakutė */}
+      <rect x="14.6" y="7" width="2.8" height="7" rx="1" fill="#ff5c8a" />
+      <rect x="14.6" y="8.8" width="2.8" height="1.6" fill="#fff0f5" opacity="0.85" />
+      {/* viršutinė glazūra su varvekliais */}
+      <path
+        d="M5 18 q3.5 -4 5.5 0 q2.5 -4 5.5 0 q3 -4 5.5 0 q2.5 -3.5 5.5 0 v3 H5 z"
+        fill="#ffe3ef"
+      />
+      {/* torto korpusas */}
+      <rect x="5" y="20.5" width="22" height="11" rx="2.5" fill="#ff8fb3" />
+      {/* apatinis dekoro dryžis */}
+      <rect x="5" y="27" width="22" height="2.4" fill="#ff5c8a" opacity="0.7" />
+      {/* lėkštė */}
+      <rect x="3" y="31" width="26" height="2.4" rx="1.2" fill="#f0a500" />
+    </svg>
+  );
+}
 
 function CardDeco({ type }) {
-  const char = DECO_CHAR[type];
+  // Tortai didesni — rodome rečiau, kad neatrodytų per tankiai.
+  const items =
+    type === "cake"
+      ? DECO_ITEMS.filter((_, i) => i % 2 === 0) // ~pusė, išdėstyta plačiai
+      : DECO_ITEMS;
   return (
     <div className="card-deco" aria-hidden="true">
-      {DECO_ITEMS.map((h, i) => (
+      {items.map((h, i) => (
         <span
           key={i}
           className={`deco-item deco-${type}`}
@@ -140,7 +200,11 @@ function CardDeco({ type }) {
             "--r": `${h.r}deg`,
           }}
         >
-          {char}
+          {type === "balloon" && (
+            <BalloonDeco color={BALLOON_COLORS[i % BALLOON_COLORS.length]} />
+          )}
+          {type === "cake" && <CakeDeco />}
+          {type === "heart" && <HeartDeco />}
         </span>
       ))}
     </div>

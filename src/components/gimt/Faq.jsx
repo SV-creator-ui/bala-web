@@ -17,11 +17,11 @@ const faqs = [
   },
   {
     q: "Kiek iš anksto reikia rezervuoti?",
-    a: "Savaitgalių laikas užpildomas 2–3 savaitės iš anksto. Darbo dienos — dažnai pasiekiamos trumpesniam laikotarpiui. Rezervuokite kuo greičiau.",
+    a: "Savaitgalių laikas užpildomas 2–3 savaitės iš anksto. Darbo dienos — dažnai būna laisvesnės. Norėdami užsitikrinti norimą laiką - rezervuokite kuo greičiau.",
   },
   {
     q: "Kas prižiūri vaikus šventės metu?",
-    a: "Kiekvienos šventės metu dirba mūsų instruktorius — jis padeda užsidėti VR akinius, paaiškina žaidimo taisykles, prižiūri ir seka laiką.",
+    a: "Kiekvienos šventės metu dirba mūsų instruktorius — jis padeda užsidėti VR akinius, paaiškina žaidimo taisykles ir seka laiką. Už vaikų taisyklių laikymąsi atsako tėvai.",
   },
   {
     q: "Ką daryti, jei vaikų bus daugiau nei planuota?",
