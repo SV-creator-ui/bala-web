@@ -59,7 +59,17 @@ Failas [`src/lib/booking/config.ts`](src/lib/booking/config.ts):
 Kainos: [`src/lib/booking/pricing.ts`](src/lib/booking/pricing.ts)
 (2 asm.=50 €, 3 asm.=65 €, 4–10 asm.=20 €/asm.).
 
+## Admin skydelis (Fazė 2) — `/admin`
+Rezervacijų valdymas: sąrašas, filtrai, būsenų keitimas (apmokėta / atšaukta),
+seansų blokavimas (remontas, privatūs renginiai).
+
+- **DEMO režimas:** kol nėra Supabase, `/admin` rodo pavyzdinius duomenis.
+  Prisijungimo slaptažodis: `demo`.
+- **Tikras režimas:** nustatykite `ADMIN_PASSWORD` aplinkos kintamąjį + Supabase.
+  Tada prisijungimui naudojamas jūsų slaptažodis, o duomenys — realūs.
+- **Sauga:** jei Supabase yra, bet `ADMIN_PASSWORD` nenustatytas, `/admin` bus
+  užrakinta (kad realūs duomenys neliktų su numatytu slaptažodžiu).
+
 ## Kas dar bus (kitos fazės)
-- **Fazė 2:** admin skydelis (rezervacijų sąrašas, laikų blokavimas).
 - **Fazė 3:** automatiniai el. laiškai (patvirtinimas, priminimas).
 - **Fazė 4:** nuolaidų kodai, kelios kalbos, statistika.
