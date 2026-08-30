@@ -78,6 +78,16 @@ export async function updateBookingStatus(id: string, status: BookingStatus): Pr
   if (error) throw error;
 }
 
+export async function rescheduleBooking(id: string, date: string, time: string): Promise<void> {
+  if (!dbConfigured()) {
+    demoBookings = demoBookings.map((b) => (b.id === id ? { ...b, date, time } : b));
+    return;
+  }
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.from("bookings").update({ date, time }).eq("id", id);
+  if (error) throw error;
+}
+
 export async function listBlackouts(): Promise<Blackout[]> {
   if (!dbConfigured()) {
     return [...demoBlackouts].sort((a, b) => a.date.localeCompare(b.date));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { generateSlots } from "@/lib/booking/config";
 import { formatEur } from "@/lib/booking/pricing";
 
@@ -49,6 +49,7 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
   const [to, setTo] = useState("");
   const [status, setStatus] = useState("all");
   const [busy, setBusy] = useState<string | null>(null);
+  const [rescheduleId, setRescheduleId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -76,6 +77,16 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
     });
     await load();
     setBusy(null);
+  }
+
+  async function rescheduleBooking(id: string, date: string, time: string): Promise<{ ok: boolean; error?: string }> {
+    const res = await fetch(`/api/admin/bookings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date, time }),
+    });
+    const d = await res.json().catch(() => ({}));
+    return { ok: res.ok, error: d.error };
   }
 
   async function logout() {
@@ -155,7 +166,8 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
               <tr><td colSpan={6} className="px-4 py-10 text-center text-smoke-2">Rezervacijų nėra.</td></tr>
             ) : (
               bookings.map((b) => (
-                <tr key={b.id} className="border-t border-line align-top">
+                <Fragment key={b.id}>
+                <tr className="border-t border-line align-top">
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="font-semibold">{fmtDate(b.date)}</div>
                     <div className="font-mono text-smoke-2">{b.time}</div>
@@ -182,6 +194,9 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
                         <ActionBtn onClick={() => setBookingStatus(b.id, "paid")} disabled={busy === b.id} kind="ok">Apmokėta</ActionBtn>
                       )}
                       {b.status !== "cancelled" && (
+                        <ActionBtn onClick={() => setRescheduleId(rescheduleId === b.id ? null : b.id)} disabled={busy === b.id} kind="ghost">Perkelti</ActionBtn>
+                      )}
+                      {b.status !== "cancelled" && (
                         <ActionBtn onClick={() => setBookingStatus(b.id, "cancelled")} disabled={busy === b.id} kind="danger">Atšaukti</ActionBtn>
                       )}
                       {b.status === "cancelled" && (
@@ -190,6 +205,20 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
                     </div>
                   </td>
                 </tr>
+                {rescheduleId === b.id && (
+                  <tr className="border-t border-line bg-ink-card/50">
+                    <td colSpan={6} className="px-4 py-4">
+                      <RescheduleForm
+                        currentDate={b.date}
+                        currentTime={b.time}
+                        onDone={() => { setRescheduleId(null); load(); }}
+                        onCancel={() => setRescheduleId(null)}
+                        onSubmit={(date, time) => rescheduleBooking(b.id, date, time)}
+                      />
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))
             )}
           </tbody>
@@ -237,6 +266,72 @@ function ActionBtn({ children, onClick, disabled, kind }: {
     <button onClick={onClick} disabled={disabled} className={`rounded-lg border px-3 py-1.5 text-[12.5px] font-semibold transition disabled:opacity-40 ${cls}`}>
       {children}
     </button>
+  );
+}
+
+function RescheduleForm({ currentDate, currentTime, onSubmit, onDone, onCancel }: {
+  currentDate: string; currentTime: string;
+  onSubmit: (date: string, time: string) => Promise<{ ok: boolean; error?: string }>;
+  onDone: () => void; onCancel: () => void;
+}) {
+  const [date, setDate] = useState(currentDate);
+  const [time, setTime] = useState(currentTime);
+  const [slots, setSlots] = useState<{ time: string; available: boolean }[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setSlots(null);
+    fetch(`/api/availability?date=${date}`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setSlots(d.slots ?? []); })
+      .catch(() => { if (!cancelled) setSlots([]); });
+    return () => { cancelled = true; };
+  }, [date]);
+
+  async function save() {
+    setBusy(true);
+    setError("");
+    const r = await onSubmit(date, time);
+    if (r.ok) onDone();
+    else { setError(r.error || "Nepavyko perkelti"); setBusy(false); }
+  }
+
+  // Ar pasirinktas laikas laisvas (arba tas pats, kaip dabartinis)
+  const chosen = slots?.find((s) => s.time === time);
+  const timeOk = date === currentDate && time === currentTime ? true : chosen?.available ?? false;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="font-mono text-[11px] uppercase tracking-wider text-smoke-2">
+        Perkelti iš: <span className="text-white">{fmtDate(currentDate)} {currentTime}</span>
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="font-mono text-[10.5px] uppercase tracking-wider text-smoke-2">Nauja data</span>
+          <input type="date" value={date} onChange={(e) => { setDate(e.target.value); setTime(""); }} className="rounded-lg border border-line bg-ink px-3 py-2 text-white [color-scheme:dark]" />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="font-mono text-[10.5px] uppercase tracking-wider text-smoke-2">Naujas laikas</span>
+          <select value={time} onChange={(e) => setTime(e.target.value)} className="rounded-lg border border-line bg-ink px-3 py-2 text-white [color-scheme:dark] min-w-[130px]">
+            <option value="">— pasirink —</option>
+            {(slots ?? []).map((s) => (
+              <option key={s.time} value={s.time} disabled={!s.available && !(date === currentDate && s.time === currentTime)}>
+                {s.time}{!s.available && !(date === currentDate && s.time === currentTime) ? " (užimta)" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button onClick={save} disabled={busy || !time || !timeOk} className="rounded-lg bg-volt px-4 py-2 font-bold text-volt-ink transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0">
+          {busy ? "Perkeliama…" : "Patvirtinti perkėlimą"}
+        </button>
+        <button onClick={onCancel} className="rounded-lg border border-line-strong px-4 py-2 text-sm font-semibold text-smoke hover:text-white">
+          Atšaukti
+        </button>
+      </div>
+      {error && <p className="text-sm font-semibold text-genre-pink">{error}</p>}
+    </div>
   );
 }
 
