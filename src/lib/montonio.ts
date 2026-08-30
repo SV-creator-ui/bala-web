@@ -29,6 +29,16 @@ function baseUrl(): string {
     : "https://sandbox-stargate.montonio.com";
 }
 
+/** Ar Montonio raktai sukonfigūruoti (galima priimti mokėjimus) */
+export function montonioConfigured(): boolean {
+  return !!(process.env.MONTONIO_ACCESS_KEY && process.env.MONTONIO_SECRET_KEY);
+}
+
+/** Testavimo režimas — mokėjimas praleidžiamas (tik su aiškiu BOOKING_TEST_MODE=1) */
+export function bookingTestMode(): boolean {
+  return process.env.BOOKING_TEST_MODE === "1";
+}
+
 export type CreateOrderParams = {
   merchantReference: string;
   amount: number; // suma, kurią klientas moka dabar (avansas), EUR

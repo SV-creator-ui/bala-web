@@ -12,7 +12,7 @@ import { isSlotAvailable } from "@/lib/booking/availability";
 import { grandTotal, depositEur } from "@/lib/booking/pricing";
 import { BOOKING, ADDONS, generateSlots } from "@/lib/booking/config";
 import { validName, validPhone, validEmail, validFutureDate } from "@/lib/booking/validation";
-import { createMontonioOrder } from "@/lib/montonio";
+import { createMontonioOrder, montonioConfigured, bookingTestMode } from "@/lib/montonio";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +56,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Netinkami laukai: " + errors.join(", ") }, { status: 400 });
   }
 
+  // --- Ar galime priimti rezervaciją? ---
+  const montonioReady = montonioConfigured();
+  const testMode = bookingTestMode();
+  if (!montonioReady && !testMode) {
+    return NextResponse.json(
+      { error: "Mokėjimai laikinai nesukonfigūruoti. Susisiekite su mumis telefonu." },
+      { status: 503 },
+    );
+  }
+
   try {
     // --- Ar seansas dar laisvas? ---
     if (!(await isSlotAvailable(date, time))) {
@@ -72,7 +82,8 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseAdmin();
 
-    // --- Įrašome pending rezervaciją ---
+    // --- Įrašome rezervaciją ---
+    // Testavimo režime iškart "paid" (mokėjimas praleidžiamas), kitu atveju "pending".
     const { data: inserted, error: insErr } = await supabase
       .from("bookings")
       .insert({
@@ -83,16 +94,25 @@ export async function POST(req: Request) {
         customer_name: name.trim(),
         customer_phone: phone.trim(),
         customer_email: email.trim(),
-        note,
+        note: testMode ? `[TEST] ${note ?? ""}`.trim() : note,
         total_eur: total,
         deposit_eur: deposit,
-        status: "pending",
+        status: montonioReady ? "pending" : "paid",
         merchant_reference: merchantReference,
       })
       .select("id")
       .single();
 
     if (insErr) throw insErr;
+
+    // --- Testavimo režimas: praleidžiam mokėjimą, vedam tiesiai į patvirtinimą ---
+    if (!montonioReady) {
+      return NextResponse.json({
+        paymentUrl: `/rezervacija/patvirtinta?ref=${encodeURIComponent(merchantReference)}&test=1`,
+        merchantReference,
+        test: true,
+      });
+    }
 
     // --- Montonio mokėjimas (avansas) ---
     const base = siteUrl(req);
