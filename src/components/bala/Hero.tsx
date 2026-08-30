@@ -39,7 +39,7 @@ export default function Hero() {
           </div>
           <div className="flex flex-wrap gap-3.5 mb-6 animate-hero-in [animation-delay:.34s]">
             <a
-              href="#kontaktai"
+              href="/rezervacija"
               className="inline-flex items-center justify-center rounded-full bg-volt px-[30px] py-4 text-[15px] font-bold text-volt-ink transition-transform hover:-translate-y-0.5 hover:bg-volt-deep"
             >
               Rezervuoti dabar

@@ -163,9 +163,7 @@ export default async function GameDetailPage({
               </div>
 
               <a
-                href="https://bala.lt/"
-                target="_blank"
-                rel="noreferrer"
+                href="/rezervacija"
                 className="mt-7 w-full text-center rounded-full bg-volt text-volt-ink font-bold text-[15px] py-4 transition-[background,transform] hover:bg-volt-deep hover:-translate-y-0.5"
               >
                 Rezervuoti dabar

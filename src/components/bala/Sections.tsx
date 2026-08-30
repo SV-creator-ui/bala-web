@@ -165,7 +165,7 @@ export function KainosSection() {
         </RevealOnScroll>
         <RevealOnScroll className="flex justify-center mt-9">
           <a
-            href="#kontaktai"
+            href="/rezervacija"
             className="inline-flex items-center justify-center rounded-full bg-volt px-[34px] py-4 text-[15px] font-bold text-volt-ink transition-transform hover:-translate-y-0.5 hover:bg-volt-deep"
           >
             Rezervuoti dabar
@@ -232,7 +232,7 @@ export function FirstTimeSection() {
             Nereikia nieko išmanyti apie technologijas. Ateini, užsidedi akinius – ir viskas prasideda savaime.
           </p>
           <a
-            href="#kontaktai"
+            href="/rezervacija"
             className="inline-flex items-center justify-center rounded-full bg-ink text-white px-[30px] py-4 text-[15px] font-bold transition-transform hover:-translate-y-0.5 hover:bg-black"
           >
             Rezervuoti dabar
@@ -307,9 +307,7 @@ export function CtaBandSection() {
         </div>
         <div className="flex flex-wrap gap-3.5">
           <a
-            href="https://bala.lt/"
-            target="_blank"
-            rel="noreferrer"
+            href="/rezervacija"
             className="inline-flex items-center justify-center rounded-full bg-ink text-white px-[30px] py-4 text-[15px] font-bold transition-transform hover:-translate-y-0.5 hover:bg-black"
           >
             Rezervuoti dabar
@@ -359,8 +357,8 @@ export function KontaktaiSection() {
                 icon: CompassIcon,
                 label: "Rezervacija",
                 value: (
-                  <a href="https://bala.lt/" target="_blank" rel="noreferrer" className="text-volt hover:underline">
-                    bala.lt
+                  <a href="/rezervacija" className="text-volt hover:underline">
+                    Rezervuoti online
                   </a>
                 ),
               },
@@ -385,9 +383,7 @@ export function KontaktaiSection() {
           </div>
           <div className="flex gap-3 flex-wrap mt-8">
             <a
-              href="https://bala.lt/"
-              target="_blank"
-              rel="noreferrer"
+              href="/rezervacija"
               className="inline-flex items-center justify-center rounded-full bg-volt px-[30px] py-4 text-[15px] font-bold text-volt-ink transition-transform hover:-translate-y-0.5 hover:bg-volt-deep"
             >
               Rezervuoti dabar

@@ -37,7 +37,7 @@ export default function BlogPost() {
           <Link href="/pabegimo-kambariai#scenarijai" className="hidden sm:inline text-xs font-bold uppercase tracking-wide text-white hover:text-volt transition-colors">
             Scenarijai
           </Link>
-          <Link href="/pabegimo-kambariai#kontaktai" className="inline-flex items-center rounded-md bg-volt px-5 py-3 text-xs font-extrabold uppercase tracking-wide text-black hover:brightness-105 transition">
+          <Link href="/rezervacija" className="inline-flex items-center rounded-md bg-volt px-5 py-3 text-xs font-extrabold uppercase tracking-wide text-black hover:brightness-105 transition">
             Rezervuoti dabar
           </Link>
         </nav>
@@ -109,7 +109,7 @@ export default function BlogPost() {
               Vienas žaidimas trunka apie 45 minutes, o kaina – nuo 20 € žmogui. Rasite mus adresu Pajūrio g. 5B, Klaipėdoje.
             </p>
             <div className="flex gap-3 flex-wrap mt-6">
-              <Link href="/pabegimo-kambariai#kainos" className="inline-flex items-center rounded-md bg-volt px-6 py-3.5 text-[13px] font-extrabold uppercase tracking-wide text-black hover:brightness-105 transition">
+              <Link href="/rezervacija" className="inline-flex items-center rounded-md bg-volt px-6 py-3.5 text-[13px] font-extrabold uppercase tracking-wide text-black hover:brightness-105 transition">
                 Rezervuoti dabar
               </Link>
               <Link
@@ -184,7 +184,7 @@ export default function BlogPost() {
           <p className="text-base leading-[1.55] text-black/80 max-w-[520px] mx-auto mb-5.5">
             Surink komandą nuo 2 iki 6 žaidėjų ir išbandyk VR pabėgimo kambarį „Bala VR“ Klaipėdoje.
           </p>
-          <Link href="/pabegimo-kambariai#kainos" className="inline-flex items-center rounded-md bg-black text-white px-7 py-4 text-[13px] font-extrabold uppercase tracking-wide hover:opacity-90 transition">
+          <Link href="/rezervacija" className="inline-flex items-center rounded-md bg-black text-white px-7 py-4 text-[13px] font-extrabold uppercase tracking-wide hover:opacity-90 transition">
             Rezervuoti dabar
           </Link>
         </div>

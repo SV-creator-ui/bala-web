@@ -56,7 +56,7 @@ export default function BlogPost() {
           <Link href="/pabegimo-kambariai/kambariai" className="hidden sm:inline text-xs font-bold uppercase tracking-wide text-white hover:text-volt transition-colors">
             Kambariai
           </Link>
-          <Link href="/pabegimo-kambariai#kontaktai" className="inline-flex items-center rounded-md bg-volt px-5 py-3 text-xs font-extrabold uppercase tracking-wide text-black hover:brightness-105 transition">
+          <Link href="/rezervacija" className="inline-flex items-center rounded-md bg-volt px-5 py-3 text-xs font-extrabold uppercase tracking-wide text-black hover:brightness-105 transition">
             Rezervuoti dabar
           </Link>
         </nav>
@@ -206,7 +206,7 @@ export default function BlogPost() {
           <p className="text-base leading-[1.55] text-black/80 max-w-[520px] mx-auto mb-5.5">
             Surink 2–6 žaidėjų komandą ir išsirink scenarijų – „Bala VR“ Klaipėdoje.
           </p>
-          <Link href="/pabegimo-kambariai#kainos" className="inline-flex items-center rounded-md bg-black text-white px-7 py-4 text-[13px] font-extrabold uppercase tracking-wide hover:opacity-90 transition">
+          <Link href="/rezervacija" className="inline-flex items-center rounded-md bg-black text-white px-7 py-4 text-[13px] font-extrabold uppercase tracking-wide hover:opacity-90 transition">
             Rezervuoti dabar
           </Link>
         </div>
