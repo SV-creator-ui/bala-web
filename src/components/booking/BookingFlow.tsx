@@ -73,6 +73,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const [note, setNote] = useState("");
   const [touched, setTouched] = useState({ name: false, phone: false, email: false });
 
+  const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -130,7 +131,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
       case 2: return !!(date && time);
       case 3: return players >= 1;
       case 4: return validName(name) && validPhone(phone) && validEmail(email);
-      case 5: return true;
+      case 5: return agreed;
       default: return false;
     }
   }
@@ -265,7 +266,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               touched={touched} setTouched={setTouched}
             />
           )}
-          {step === 5 && <StepPayment deposit={deposit} rest={total - deposit} error={error} />}
+          {step === 5 && <StepPayment deposit={deposit} rest={total - deposit} error={error} agreed={agreed} setAgreed={setAgreed} />}
         </div>
 
         <Summary
@@ -689,7 +690,10 @@ function Field({ label, value, onChange, onBlur, error, ok, placeholder, inputMo
 }
 
 /* ---------------- Step 5: Payment ---------------- */
-function StepPayment({ deposit, rest, error }: { deposit: number; rest: number; error: string | null }) {
+function StepPayment({ deposit, rest, error, agreed, setAgreed }: {
+  deposit: number; rest: number; error: string | null;
+  agreed: boolean; setAgreed: (v: boolean) => void;
+}) {
   return (
     <div>
       <div className="max-w-[560px]">
@@ -709,6 +713,27 @@ function StepPayment({ deposit, rest, error }: { deposit: number; rest: number; 
           </div>
           <div className="font-display text-3xl whitespace-nowrap">{formatEur(deposit)} €</div>
         </div>
+
+        <label className="mt-6 flex cursor-pointer items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-volt"
+          />
+          <span className="text-smoke">
+            Susipažinau su{" "}
+            <a
+              href="/taisykles"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-volt underline underline-offset-2 hover:opacity-80"
+            >
+              BALA VR taisyklėmis
+            </a>{" "}
+            ir su jomis sutinku.
+          </span>
+        </label>
 
         {error && <p className="mt-4 text-sm font-semibold text-genre-pink">{error}</p>}
       </div>
