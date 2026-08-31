@@ -19,7 +19,7 @@ import { isClosedHoliday } from "@/lib/booking/holidays";
 import { validName, validPhone, validEmail } from "@/lib/booking/validation";
 
 type SlotStatus = { time: string; available: boolean };
-const STEP_LABELS = ["Tipas", "Laikas", "Dalyviai", "Kontaktai", "Apmokėjimas"] as const;
+const STEP_LABELS = ["Tipas", "Laikas", "Žaidėjai", "Kontaktai", "Apmokėjimas"] as const;
 const LAST_STEP = STEP_LABELS.length;
 
 const MONTHS = ["Sausis","Vasaris","Kovas","Balandis","Gegužė","Birželis","Liepa","Rugpjūtis","Rugsėjis","Spalis","Lapkritis","Gruodis"];
@@ -193,10 +193,10 @@ export default function BookingFlow({ initialType, initialPkgId }: {
       : step === 3
       ? {
           n: 3,
-          title: type === "party" ? "Dalyviai" : "Žaidėjai",
+          title: "Žaidėjai",
           intro:
             type === "party"
-              ? `Kiek dalyvių šventėje? Paketo kaina fiksuota (iki ${pkg ? pkg.maxPlayers : BOOKING.maxPlayers} žaid.).`
+              ? `Galimas žaidėjų skaičius – ${pkg ? pkg.maxPlayers : BOOKING.maxPlayers}.`
               : `2–${BOOKING.maxPlayers} žaidėjų. Nuo 7 asm. žaidžiama dviem komandomis vienu metu.`,
         }
       : step === 4
@@ -582,7 +582,7 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms 
       <div className="flex flex-col gap-5 max-w-[460px]">
         <div className="flex items-center justify-between rounded-2xl border border-line bg-ink-card px-6 py-5">
           <div>
-            <h3 className="font-display uppercase text-lg">{type === "party" ? "Dalyvių skaičius" : "Žaidėjų skaičius"}</h3>
+            <h3 className="font-display uppercase text-lg">{type === "party" ? "Planuojamas žaidėjų skaičius" : "Žaidėjų skaičius"}</h3>
             {type === "room" && (
               <p className="text-xs text-smoke-2 mt-1">
                 {formatEur(rooms)} € grupei ({formatEur(rooms / players)} €/asm.)
