@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { isSlotAvailable } from "@/lib/booking/availability";
 import { grandTotal } from "@/lib/booking/pricing";
-import { BOOKING, ADDONS, generateSlots, depositFor, type BookingType } from "@/lib/booking/config";
+import { BOOKING, ADDONS, generateSlotsForDate, dayHours, depositFor, type BookingType } from "@/lib/booking/config";
 import { bookingWindowHHMM } from "@/lib/booking/window";
 import {
   getPartyPackage,
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
   // --- Bendra validacija ---
   const errors: string[] = [];
   if (!validFutureDate(date)) errors.push("data");
-  if (!generateSlots().includes(time)) errors.push("laikas");
+  else if (!generateSlotsForDate(date).includes(time)) errors.push("laikas");
   if (!validName(name)) errors.push("vardas");
   if (!validPhone(phone)) errors.push("telefonas");
   if (!validEmail(email)) errors.push("el. paštas");
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { blockStart, blockEnd } = bookingWindowHHMM(type, time, packageId, addons);
+    const { blockStart, blockEnd } = bookingWindowHHMM(type, time, packageId, addons, dayHours(date).openMin);
     const merchantReference = `BALA-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const supabase = getSupabaseAdmin();
 

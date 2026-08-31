@@ -5,16 +5,6 @@
  */
 
 export const BOOKING = {
-  /** Darbo pradžia (valanda, 24h formatu) */
-  openHour: 12,
-  /** Paskutinio seanso PRADŽIOS valanda (imtinai) */
-  closeHour: 21,
-  /**
-   * Kada patalpa realiai užsidaro (valanda). Iki šio laiko turi tilpti visas
-   * užimtas rezervacijos langas (įskaitant kambario trukmę ar paketo buferius).
-   * Pvz. kambarys, pradėtas 21:00, trunka 60 min. ir baigiasi 22:00.
-   */
-  closeEndHour: 22,
   /** Seansų (pradžios laikų) intervalas minutėmis */
   slotStepMin: 30,
 
@@ -67,16 +57,53 @@ export function toHHMM(min: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-/** Darbo lango pradžia/pabaiga minutėmis */
-export const dayStartMin = BOOKING.openHour * 60;
-export const dayEndMin = BOOKING.closeEndHour * 60;
+/* ------------------------- Darbo valandos ------------------------- */
+/**
+ * Darbo valandos pagal savaitės dieną (getDay(): 0=Sk … 6=Št).
+ *   Penktadienis (5) + savaitgalis (Št 6, Sk 0): 10:00–21:30.
+ *   Pirmadienis–ketvirtadienis (1–4):            11:00–20:30.
+ * `openMin` — atidarymas; `closeEndMin` — iki kada turi tilpti visas užimtas
+ * langas (įskaitant kambario trukmę ar paketo buferius).
+ */
+export type DayHours = { openMin: number; closeEndMin: number };
+export function dayHours(dateStr: string): DayHours {
+  const wd = new Date(dateStr + "T00:00:00").getDay();
+  const earlyOpen = wd === 5 || wd === 6 || wd === 0;
+  return earlyOpen
+    ? { openMin: 10 * 60, closeEndMin: 21 * 60 + 30 }
+    : { openMin: 11 * 60, closeEndMin: 20 * 60 + 30 };
+}
 
-/** Sugeneruoja visų galimų PRADŽIOS laikų sąrašą, pvz. ["12:00",...,"21:00"] */
+/** Atidarymo laikas (min.), nuo kurio galioja „rytinės apsaugos" taisyklė */
+export const EARLY_OPEN_MIN = 10 * 60;
+/**
+ * Kai diena atidaroma 10 val. — ŠVENTĖS (party) pradžia negalima šiais laikais,
+ * kad rytinis 10:00 langas neliktų tuščias. Kambariams (room) NETAIKOMA.
+ */
+export const PARTY_BLOCKED_STARTS_EARLY = new Set(["11:30", "12:00", "12:30"]);
+
+/** Dienos slotų ribos: atidarymas, uždarymas ir paskutinis PRADŽIOS laikas. */
+export function slotRangeForDate(dateStr: string): { openMin: number; closeEndMin: number; lastStartMin: number } {
+  const { openMin, closeEndMin } = dayHours(dateStr);
+  // Paskutinis pradžios laikas = kad tilptų bent trumpiausia rezervacija (kambarys).
+  return { openMin, closeEndMin, lastStartMin: closeEndMin - BOOKING.roomDurationMin };
+}
+
+/** Konkrečios dienos galimi PRADŽIOS laikai. */
+export function generateSlotsForDate(dateStr: string): string[] {
+  const { openMin, lastStartMin } = slotRangeForDate(dateStr);
+  const slots: string[] = [];
+  for (let m = openMin; m <= lastStartMin; m += BOOKING.slotStepMin) slots.push(toHHMM(m));
+  return slots;
+}
+
+/**
+ * Platus laikų sąrašas (visų dienų sąjunga) — naudojamas TIK admin blackout
+ * pasirinkimui. Realiam laisvumui naudokite generateSlotsForDate(date).
+ */
 export function generateSlots(): string[] {
   const slots: string[] = [];
-  for (let m = BOOKING.openHour * 60; m <= BOOKING.closeHour * 60; m += BOOKING.slotStepMin) {
-    slots.push(toHHMM(m));
-  }
+  for (let m = 10 * 60; m <= 21 * 60; m += BOOKING.slotStepMin) slots.push(toHHMM(m));
   return slots;
 }
 

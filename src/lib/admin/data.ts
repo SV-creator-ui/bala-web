@@ -5,6 +5,7 @@
  */
 import { getSupabaseAdmin, type BookingRow } from "@/lib/supabase/server";
 import { bookingWindowHHMM } from "@/lib/booking/window";
+import { dayHours } from "@/lib/booking/config";
 import { dbConfigured } from "./auth";
 
 export type Blackout = { id: string; date: string; time: string | null; reason: string | null };
@@ -56,7 +57,7 @@ function mkParty(
   name: string, phone: string, email: string, date: string, time: string,
   packageId: string, players: number, status: BookingStatus, total: number, deposit: number, note: string | null = null,
 ): BookingRow {
-  const w = bookingWindowHHMM("party", time, packageId);
+  const w = bookingWindowHHMM("party", time, packageId, [], dayHours(date).openMin);
   return {
     id: "demo-" + Math.random().toString(36).slice(2, 9),
     created_at: new Date().toISOString(),
@@ -117,7 +118,7 @@ export async function rescheduleBooking(id: string, date: string, time: string):
   const existing = await getBooking(id);
   const type = existing?.type === "party" ? "party" : "room";
   const addons = Array.isArray(existing?.addons) ? existing!.addons : [];
-  const w = bookingWindowHHMM(type, time, existing?.package_id ?? null, addons);
+  const w = bookingWindowHHMM(type, time, existing?.package_id ?? null, addons, dayHours(date).openMin);
 
   if (!dbConfigured()) {
     demoBookings = demoBookings.map((b) =>

@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/admin/auth";
 import { updateBookingStatus, rescheduleBooking, getBooking, type BookingStatus } from "@/lib/admin/data";
 import { getAvailability } from "@/lib/booking/availability";
-import { generateSlots } from "@/lib/booking/config";
+import { generateSlotsForDate } from "@/lib/booking/config";
 import { validFutureDate } from "@/lib/booking/validation";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (body.date || body.time) {
     const date = String(body.date || "");
     const time = String(body.time || "");
-    if (!validFutureDate(date) || !generateSlots().includes(time)) {
+    if (!validFutureDate(date) || !generateSlotsForDate(date).includes(time)) {
       return NextResponse.json({ error: "Netinkama data arba laikas" }, { status: 400 });
     }
     try {

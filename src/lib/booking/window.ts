@@ -19,18 +19,17 @@ export function bookingWindow(
   time: string,
   packageId?: string | null,
   addons: string[] = [],
+  openMin?: number,
 ): Interval {
   const start = toMin(time);
   if (type === "party") {
     const pkg = getPartyPackage(packageId || "");
-    if (!pkg) {
-      // Nežinomas paketas — saugiai grąžiname bent buferių langą.
-      return { startMin: start - BOOKING.partyBufferBeforeMin, endMin: start + BOOKING.partyBufferAfterMin };
-    }
-    return {
-      startMin: start - BOOKING.partyBufferBeforeMin,
-      endMin: start + partyDurationMin(pkg, addons) + BOOKING.partyBufferAfterMin,
-    };
+    const dur = pkg ? partyDurationMin(pkg, addons) : 0;
+    // Priešbuferis (svečiams atvykti). Jei šventė prasideda atidarymo metu —
+    // buferis „prigludinamas" prie atidarymo (pirma šventė gali būti 10:00).
+    let startMin = start - BOOKING.partyBufferBeforeMin;
+    if (openMin != null && startMin < openMin) startMin = openMin;
+    return { startMin, endMin: start + dur + BOOKING.partyBufferAfterMin };
   }
   // Įprastas kambario apsilankymas
   return { startMin: start, endMin: start + BOOKING.roomDurationMin };
@@ -42,8 +41,9 @@ export function bookingWindowHHMM(
   time: string,
   packageId?: string | null,
   addons: string[] = [],
+  openMin?: number,
 ): { blockStart: string; blockEnd: string } {
-  const w = bookingWindow(type, time, packageId, addons);
+  const w = bookingWindow(type, time, packageId, addons, openMin);
   return { blockStart: toHHMM(w.startMin), blockEnd: toHHMM(w.endMin) };
 }
 

@@ -6,7 +6,10 @@
  * neužkliudo užblokuotų (blackouts) laikų.
  */
 import { getSupabaseAdmin } from "@/lib/supabase/server";
-import { BOOKING, generateSlots, dayStartMin, dayEndMin, toMin, type BookingType } from "./config";
+import {
+  BOOKING, generateSlotsForDate, dayHours, toMin,
+  EARLY_OPEN_MIN, PARTY_BLOCKED_STARTS_EARLY, type BookingType,
+} from "./config";
 import { bookingWindow, overlaps, type Interval } from "./window";
 
 export type SlotStatus = { time: string; available: boolean };
@@ -40,7 +43,8 @@ function existingInterval(b: {
 
 export async function getAvailability(date: string, query: AvailabilityQuery): Promise<SlotStatus[]> {
   const supabase = getSupabaseAdmin();
-  const slots = generateSlots();
+  const slots = generateSlotsForDate(date);
+  const { openMin, closeEndMin } = dayHours(date);
 
   const holdCutoff = new Date(Date.now() - BOOKING.pendingHoldMin * 60_000).toISOString();
 
@@ -73,10 +77,15 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
   return slots.map((time) => {
     if (wholeDayBlocked) return { time, available: false };
 
-    const w = bookingWindow(query.type, time, query.packageId ?? null, query.addons ?? []);
+    // Rytinė apsauga: 10 val. dienomis šventės pradžia negalima 11:30/12:00/12:30.
+    if (query.type === "party" && openMin === EARLY_OPEN_MIN && PARTY_BLOCKED_STARTS_EARLY.has(time)) {
+      return { time, available: false };
+    }
+
+    const w = bookingWindow(query.type, time, query.packageId ?? null, query.addons ?? [], openMin);
 
     // 1) Ar langas telpa į darbo laiką?
-    if (w.startMin < dayStartMin || w.endMin > dayEndMin) return { time, available: false };
+    if (w.startMin < openMin || w.endMin > closeEndMin) return { time, available: false };
 
     // 2) Ar neužkliudo užblokuotų laikų?
     if (blackoutIntervals.some((bo) => overlaps(w, bo))) return { time, available: false };

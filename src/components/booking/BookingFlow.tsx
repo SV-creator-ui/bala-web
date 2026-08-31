@@ -7,7 +7,8 @@
  * Kaina ir avansas rodomi iš @/lib/booking (tas pats šaltinis kaip serveryje).
  */
 import { useEffect, useMemo, useState } from "react";
-import { BOOKING, ADDONS, depositFor, type BookingType } from "@/lib/booking/config";
+import { BOOKING, ADDONS, depositFor, dayHours, type BookingType } from "@/lib/booking/config";
+import { bookingWindowHHMM } from "@/lib/booking/window";
 import { roomsPrice, grandTotal, formatEur } from "@/lib/booking/pricing";
 import {
   PARTY_PACKAGES, PARTY_EXTRAS, getPartyPackage,
@@ -196,6 +197,9 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               slotsLoading={slotsLoading}
               type={type!}
               pkg={pkg}
+              block={type === "party" && pkg && date && time
+                ? bookingWindowHHMM("party", time, pkgId, partyExtras, dayHours(date).openMin)
+                : null}
             />
           )}
           {step === 3 && (
@@ -403,12 +407,13 @@ function TypeCard({ active, onClick, emoji, title, desc }: {
 }
 
 /* ---------------- Step 2: Date + Time ---------------- */
-function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime, slots, slotsLoading, type, pkg }: {
+function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime, slots, slotsLoading, type, pkg, block }: {
   today: Date; viewMonth: Date; setViewMonth: (d: Date) => void;
   date: string | null; setDate: (d: string) => void;
   time: string | null; setTime: (t: string) => void;
   slots: SlotStatus[] | null; slotsLoading: boolean;
   type: BookingType; pkg: ReturnType<typeof getPartyPackage>;
+  block: { blockStart: string; blockEnd: string } | null;
 }) {
   const y = viewMonth.getFullYear();
   const m = viewMonth.getMonth();
@@ -512,9 +517,9 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
           {date && !slotsLoading && slots && slots.every((s) => !s.available) && (
             <p className="text-smoke text-sm mt-3">Šią dieną laisvų laikų nėra. Pasirink kitą dieną.</p>
           )}
-          {type === "party" && pkg && time && (
+          {type === "party" && pkg && time && block && (
             <p className="mt-3 text-[12.5px] text-smoke-2">
-              Šventė {time}. Salė rezervuojama nuo {shift(time, -BOOKING.partyBufferBeforeMin)} iki {shift(time, pkg.durationMin + BOOKING.partyBufferAfterMin)}.
+              Šventė {time}. Salė rezervuojama nuo {block.blockStart} iki {block.blockEnd}.
             </p>
           )}
         </div>
@@ -771,11 +776,4 @@ function StepHead({ n, title }: { n: number; title: string }) {
 function fmtDateGen(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   return `${d.getDate()} ${MONTHS_GEN[d.getMonth()]}, ${WD[d.getDay()]}`;
-}
-
-/** "13:00" pastumtas per delta min. -> "HH:MM" */
-function shift(hhmm: string, deltaMin: number): string {
-  const [h, m] = hhmm.split(":").map(Number);
-  const t = h * 60 + m + deltaMin;
-  return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(((t % 60) + 60) % 60).padStart(2, "0")}`;
 }
