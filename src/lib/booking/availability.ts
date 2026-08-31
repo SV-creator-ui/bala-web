@@ -11,6 +11,7 @@ import {
   EARLY_OPEN_MIN, PARTY_BLOCKED_STARTS_EARLY, type BookingType,
 } from "./config";
 import { bookingWindow, overlaps, type Interval } from "./window";
+import { isClosedHoliday } from "./holidays";
 
 export type SlotStatus = { time: string; available: boolean };
 
@@ -42,8 +43,14 @@ function existingInterval(b: {
 }
 
 export async function getAvailability(date: string, query: AvailabilityQuery): Promise<SlotStatus[]> {
-  const supabase = getSupabaseAdmin();
   const slots = generateSlotsForDate(date);
+
+  // Kalėdų dienomis (gruodžio 24–26) patalpa uždaryta — jokių laisvų laikų.
+  if (isClosedHoliday(date)) {
+    return slots.map((time) => ({ time, available: false }));
+  }
+
+  const supabase = getSupabaseAdmin();
   const { openMin, closeEndMin } = dayHours(date);
 
   const holdCutoff = new Date(Date.now() - BOOKING.pendingHoldMin * 60_000).toISOString();

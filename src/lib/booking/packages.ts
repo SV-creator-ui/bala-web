@@ -6,6 +6,7 @@
  * Duomenys atitinka viešą kainoraštį (gimtadieniai / Packages.jsx).
  */
 import { BOOKING } from "./config";
+import { isPublicHoliday } from "./holidays";
 
 export type PartyPackageId = "maksi" | "vip" | "gold";
 
@@ -136,9 +137,17 @@ export function isDiscountWeekday(dateStr: string): boolean {
   return wd >= 1 && wd <= 4;
 }
 
+/**
+ * Ar konkrečiai datai galioja I–IV nuolaida?
+ * Taip, jei tai pirmadienis–ketvirtadienis IR ne valstybinė šventė.
+ */
+export function isDiscountDay(dateStr: string): boolean {
+  return isDiscountWeekday(dateStr) && !isPublicHoliday(dateStr);
+}
+
 /** I–IV nuolaida konkrečiai datai (0 arba PARTY_WEEKDAY_DISCOUNT_EUR). */
 export function partyDiscount(dateStr: string): number {
-  return isDiscountWeekday(dateStr) ? PARTY_WEEKDAY_DISCOUNT_EUR : 0;
+  return isDiscountDay(dateStr) ? PARTY_WEEKDAY_DISCOUNT_EUR : 0;
 }
 
 /** Pasirinktų paketo papildymų suma. */

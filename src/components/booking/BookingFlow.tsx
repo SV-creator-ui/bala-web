@@ -12,9 +12,10 @@ import { bookingWindowHHMM } from "@/lib/booking/window";
 import { roomsPrice, grandTotal, formatEur } from "@/lib/booking/pricing";
 import {
   PARTY_PACKAGES, PARTY_EXTRAS, getPartyPackage,
-  partyTotal, partyDiscount, isDiscountWeekday,
+  partyTotal, partyDiscount, isDiscountDay,
   type PartyPackageId,
 } from "@/lib/booking/packages";
+import { isClosedHoliday } from "@/lib/booking/holidays";
 import { validName, validPhone, validEmail } from "@/lib/booking/validation";
 
 type SlotStatus = { time: string; available: boolean };
@@ -493,18 +494,24 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
               const cellDate = new Date(y, m, d);
               const iso = ymd(cellDate);
               const past = startOfDay(cellDate) < today;
+              const closed = isClosedHoliday(iso); // Kalėdos — uždaryta
+              const disabled = past || closed;
               const isToday = startOfDay(cellDate).getTime() === today.getTime();
               const selected = date === iso;
-              const discount = type === "party" && !past && isDiscountWeekday(iso);
+              const discount = type === "party" && !disabled && isDiscountDay(iso);
               return (
                 <button
                   key={d}
                   onClick={() => setDate(iso)}
-                  disabled={past}
+                  disabled={disabled}
                   className={`relative grid aspect-square place-items-center rounded-lg text-sm font-semibold transition ${
-                    selected ? "bg-volt text-volt-ink" : past ? "text-smoke-2 opacity-35 cursor-not-allowed" : "hover:bg-white/5"
+                    selected
+                      ? "bg-volt text-volt-ink"
+                      : disabled
+                      ? `text-smoke-2 opacity-35 cursor-not-allowed ${closed ? "line-through" : ""}`
+                      : "hover:bg-white/5"
                   }`}
-                  title={discount ? "I–IV: −20 € nuolaida" : undefined}
+                  title={closed ? "Kalėdos — uždaryta" : discount ? "I–IV: −20 € nuolaida" : undefined}
                 >
                   {d}
                   {isToday && <span className={`absolute bottom-1 h-1 w-1 rounded-full ${selected ? "bg-volt-ink" : "bg-volt"}`} />}
