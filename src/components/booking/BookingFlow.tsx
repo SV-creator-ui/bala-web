@@ -33,14 +33,29 @@ function startOfDay(d: Date): Date {
   return x;
 }
 
-export default function BookingFlow() {
-  const [step, setStep] = useState(1);
+export default function BookingFlow({ initialType, initialPkgId }: {
+  initialType?: BookingType;
+  initialPkgId?: string;
+}) {
+  // Iš anksto parinktas paketas (tik jei tipas — party ir paketas galiojantis)
+  const initialPkg = initialType === "party"
+    ? PARTY_PACKAGES.find((x) => x.id === initialPkgId)?.id ?? null
+    : null;
+
   const today = useMemo(() => startOfDay(new Date()), []);
   const [viewMonth, setViewMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
 
-  const [type, setType] = useState<BookingType | null>(null);
-  const [typeLocked, setTypeLocked] = useState(false); // tipas parinktas iš URL (nerodom tipo kortelių)
-  const [pkgId, setPkgId] = useState<PartyPackageId | null>(null);
+  // Kai tipas ateina iš URL (iš gimtadienių puslapio), iškart peršokam į 2 žingsnį
+  // (party — jei paketas jau žinomas; room — visada). Kitaip pradedam nuo 1.
+  const [step, setStep] = useState(() => {
+    if (initialType === "room") return 2;
+    if (initialType === "party" && initialPkg) return 2;
+    return 1;
+  });
+
+  const [type, setType] = useState<BookingType | null>(initialType ?? null);
+  const [typeLocked] = useState(!!initialType); // tipas parinktas iš URL (nerodom tipo kortelių)
+  const [pkgId, setPkgId] = useState<PartyPackageId | null>(initialPkg);
   const [partyExtras, setPartyExtras] = useState<string[]>([]);
 
   const [date, setDate] = useState<string | null>(null);
@@ -61,25 +76,6 @@ export default function BookingFlow() {
   const [error, setError] = useState<string | null>(null);
 
   const pkg = type === "party" && pkgId ? getPartyPackage(pkgId) : undefined;
-
-  // Iš anksto parinktas tipas/paketas iš URL (?type=party&pkg=maksi)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const q = new URLSearchParams(window.location.search);
-    const t = q.get("type");
-    const p = q.get("pkg");
-    if (t === "party") {
-      setType("party");
-      setTypeLocked(true);
-      const valid = PARTY_PACKAGES.find((x) => x.id === p);
-      if (valid) { setPkgId(valid.id); setStep(2); }
-    } else if (t === "room") {
-      setType("room");
-      setTypeLocked(true);
-      setStep(2);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Kai keičiasi paketas — dalyvių skaičių laikom paketo ribose
   useEffect(() => {
