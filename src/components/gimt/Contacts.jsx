@@ -1,4 +1,4 @@
-const BOOKING_URL = "https://booking.moizmo.com/lt/booking/";
+const BOOKING_URL = "/rezervacija?type=party";
 const MAPS_LINK = "https://maps.google.com/?q=Pajūrio+g.+5B,+Klaipėda";
 const MAPS_EMBED =
   "https://www.google.com/maps?q=Paj%C5%ABrio%20g.%205B,%20Klaip%C4%97da&z=15&output=embed";

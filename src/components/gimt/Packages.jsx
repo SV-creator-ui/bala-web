@@ -1,11 +1,13 @@
 import { Tick } from "./Icons";
-import ReserveButton from "./ReserveButton";
 
-const BOOKING_URL = "https://booking.moizmo.com/lt/booking/";
+// Rezervacija tvarkoma vidinėje sistemoje (/rezervacija) — paketas parenkamas
+// per URL parametrą, kad grafikas būtų bendras su pabėgimo kambariais.
+const bookingHref = (pkgId) => `/rezervacija?type=party&pkg=${pkgId}`;
 
 const packages = [
   {
     name: "MIDI",
+    pkgId: "midi",
     sub: "1.5 val.",
     tagline: "Trumpai, aktyviai šventei mažesnei grupei.",
     price: "€189",
@@ -22,11 +24,11 @@ const packages = [
   },
   {
     name: "MAKSI",
+    pkgId: "maksi",
     deco: "balloon",
     sub: "2 val.",
     tagline: "Populiariausias pasirinkimas 10–12 vaikų gimtadieniui.",
     price: "€239",
-    flowId: "8f5a3a15-6817-4dc1-a31f-befd888973b9",
     features: [
       "2 val. apsilankymas",
       "Įtraukta ~ 30 min. vaišėms",
@@ -40,6 +42,7 @@ const packages = [
   },
   {
     name: "VIP",
+    pkgId: "vip",
     deco: "heart",
     sub: "2.5 val.",
     tagline:
@@ -60,6 +63,7 @@ const packages = [
   },
   {
     name: "GOLD",
+    pkgId: "gold",
     deco: "cake",
     sub: "3 val.",
     tagline: "Kai norite išskirtinės šventės su daug laiko VR ir poilsiui.",
@@ -250,14 +254,13 @@ export default function Packages() {
                     </li>
                   ))}
                 </ul>
-                <ReserveButton
-                  href={BOOKING_URL}
-                  flowId={pkg.flowId}
+                <a
+                  href={bookingHref(pkg.pkgId)}
                   className={`btn ${pkg.cta}`}
                   style={{ width: "100%", justifyContent: "center" }}
                 >
                   REZERVUOTI
-                </ReserveButton>
+                </a>
               </div>
             </div>
           ))}

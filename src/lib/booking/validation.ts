@@ -28,6 +28,11 @@ export function validEmail(raw: string): boolean {
   return EMAIL_RE.test(raw.trim());
 }
 
+/** Rezervacijos tipas */
+export function validBookingType(v: string): v is "room" | "party" {
+  return v === "room" || v === "party";
+}
+
 /** Data formatu YYYY-MM-DD, ne praeityje (pagal serverio laiką) */
 export function validFutureDate(dateStr: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;

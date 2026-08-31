@@ -3,11 +3,16 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { generateSlots } from "@/lib/booking/config";
 import { formatEur } from "@/lib/booking/pricing";
+import { getPartyPackage } from "@/lib/booking/packages";
 
 type Booking = {
   id: string;
+  type: "room" | "party";
+  package_id: string | null;
   date: string;
   time: string;
+  block_start: string | null;
+  block_end: string | null;
   players: number;
   customer_name: string;
   customer_phone: string;
@@ -18,6 +23,14 @@ type Booking = {
   status: "pending" | "paid" | "cancelled" | "expired";
   merchant_reference: string;
 };
+
+function serviceLabel(b: Booking): string {
+  if (b.type === "party") {
+    const pkg = getPartyPackage(b.package_id ?? "");
+    return pkg ? `Paketas ${pkg.name}` : "Šventės paketas";
+  }
+  return "Pabėgimo kambarys";
+}
 type Blackout = { id: string; date: string; time: string | null; reason: string | null };
 
 const SLOTS = generateSlots();
@@ -152,6 +165,7 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
           <thead>
             <tr className="bg-ink-card text-left font-mono text-[11px] uppercase tracking-wider text-smoke-2">
               <th className="px-4 py-3">Data / laikas</th>
+              <th className="px-4 py-3">Paslauga</th>
               <th className="px-4 py-3">Klientas</th>
               <th className="px-4 py-3">Žaid.</th>
               <th className="px-4 py-3">Suma / avansas</th>
@@ -161,9 +175,9 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-smoke-2">Kraunama…</td></tr>
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-smoke-2">Kraunama…</td></tr>
             ) : bookings.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-smoke-2">Rezervacijų nėra.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-smoke-2">Rezervacijų nėra.</td></tr>
             ) : (
               bookings.map((b) => (
                 <Fragment key={b.id}>
@@ -171,6 +185,16 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="font-semibold">{fmtDate(b.date)}</div>
                     <div className="font-mono text-smoke-2">{b.time}</div>
+                    {b.block_start && b.block_end && (
+                      <div className="font-mono text-[11px] text-smoke-2 mt-0.5">salė {b.block_start}–{b.block_end}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block rounded-full border px-2.5 py-1 text-[11px] font-bold ${
+                      b.type === "party" ? "border-genre-pink/40 bg-genre-pink/10 text-genre-pink" : "border-line-strong text-smoke"
+                    }`}>
+                      {serviceLabel(b)}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="font-semibold">{b.customer_name}</div>
@@ -207,7 +231,7 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
                 </tr>
                 {rescheduleId === b.id && (
                   <tr className="border-t border-line bg-ink-card/50">
-                    <td colSpan={6} className="px-4 py-4">
+                    <td colSpan={7} className="px-4 py-4">
                       <RescheduleForm
                         currentDate={b.date}
                         currentTime={b.time}

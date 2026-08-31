@@ -26,8 +26,12 @@ export function getSupabaseAdmin(): SupabaseClient {
 export type BookingRow = {
   id: string;
   created_at: string;
+  type: "room" | "party";
+  package_id: string | null;
   date: string; // YYYY-MM-DD
-  time: string; // "14:30"
+  time: string; // "14:30" — klientui rodoma pradžia
+  block_start: string | null; // "13:30" — realiai užimto lango pradžia
+  block_end: string | null; // "16:30" — realiai užimto lango pabaiga
   players: number;
   addons: string[];
   customer_name: string;

@@ -4,6 +4,7 @@
  * būtų galima iškart pamatyti ir išbandyti be DB).
  */
 import { getSupabaseAdmin, type BookingRow } from "@/lib/supabase/server";
+import { bookingWindowHHMM } from "@/lib/booking/window";
 import { dbConfigured } from "./auth";
 
 export type Blackout = { id: string; date: string; time: string | null; reason: string | null };
@@ -26,8 +27,8 @@ let demoBookings: BookingRow[] = [
   mkBooking("Jonas Petraitis", "+370 612 34567", "jonas@pastas.lt", iso(0), "16:30", 4, "paid", 80, 30),
   mkBooking("Rūta Kazlauskė", "+370 655 11223", "ruta@gmail.com", iso(0), "18:00", 2, "paid", 50, 30, "Gimtadienis"),
   mkBooking("Tomas Butkus", "+370 600 99887", "tomas@pastas.lt", iso(1), "13:30", 6, "pending", 120, 30),
-  mkBooking("Greta Norvilaitė", "+370 611 22334", "greta@pastas.lt", iso(2), "19:30", 3, "paid", 65, 30, "Bernvakaris"),
-  mkBooking("Mindaugas Šarka", "+370 622 55667", "m.sarka@pastas.lt", iso(3), "15:00", 8, "paid", 160, 30, "Įmonės renginys"),
+  mkParty("Greta Norvilaitė", "+370 611 22334", "greta@pastas.lt", iso(2), "13:00", "maksi", 11, "paid", 219, 50, "Vaiko gimtadienis"),
+  mkParty("Mindaugas Šarka", "+370 622 55667", "m.sarka@pastas.lt", iso(3), "15:30", "gold", 14, "paid", 359, 50, "Įmonės renginys"),
   mkBooking("Aistė Jankauskaitė", "+370 633 44556", "aiste@pastas.lt", iso(-2), "12:00", 2, "cancelled", 50, 30),
 ];
 let demoBlackouts: Blackout[] = [
@@ -38,10 +39,30 @@ function mkBooking(
   name: string, phone: string, email: string, date: string, time: string,
   players: number, status: BookingStatus, total: number, deposit: number, note: string | null = null,
 ): BookingRow {
+  const w = bookingWindowHHMM("room", time);
   return {
     id: "demo-" + Math.random().toString(36).slice(2, 9),
     created_at: new Date().toISOString(),
-    date, time, players, addons: [],
+    type: "room", package_id: null,
+    date, time, block_start: w.blockStart, block_end: w.blockEnd,
+    players, addons: [],
+    customer_name: name, customer_phone: phone, customer_email: email, note,
+    total_eur: total, deposit_eur: deposit, status,
+    montonio_uuid: null, merchant_reference: "BALA-DEMO-" + Math.random().toString(36).slice(2, 6).toUpperCase(),
+  };
+}
+
+function mkParty(
+  name: string, phone: string, email: string, date: string, time: string,
+  packageId: string, players: number, status: BookingStatus, total: number, deposit: number, note: string | null = null,
+): BookingRow {
+  const w = bookingWindowHHMM("party", time, packageId);
+  return {
+    id: "demo-" + Math.random().toString(36).slice(2, 9),
+    created_at: new Date().toISOString(),
+    type: "party", package_id: packageId,
+    date, time, block_start: w.blockStart, block_end: w.blockEnd,
+    players, addons: [],
     customer_name: name, customer_phone: phone, customer_email: email, note,
     total_eur: total, deposit_eur: deposit, status,
     montonio_uuid: null, merchant_reference: "BALA-DEMO-" + Math.random().toString(36).slice(2, 6).toUpperCase(),
@@ -78,13 +99,37 @@ export async function updateBookingStatus(id: string, status: BookingStatus): Pr
   if (error) throw error;
 }
 
-export async function rescheduleBooking(id: string, date: string, time: string): Promise<void> {
+export async function getBooking(id: string): Promise<BookingRow | null> {
   if (!dbConfigured()) {
-    demoBookings = demoBookings.map((b) => (b.id === id ? { ...b, date, time } : b));
+    return demoBookings.find((b) => b.id === id) ?? null;
+  }
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.from("bookings").select("*").eq("id", id).single();
+  if (error) return null;
+  return data as BookingRow;
+}
+
+/**
+ * Perkelia rezervaciją į kitą laiką ir PERSKAIČIUOJA užimtą langą pagal
+ * rezervacijos tipą/paketą (kad grafikas liktų teisingas).
+ */
+export async function rescheduleBooking(id: string, date: string, time: string): Promise<void> {
+  const existing = await getBooking(id);
+  const type = existing?.type === "party" ? "party" : "room";
+  const addons = Array.isArray(existing?.addons) ? existing!.addons : [];
+  const w = bookingWindowHHMM(type, time, existing?.package_id ?? null, addons);
+
+  if (!dbConfigured()) {
+    demoBookings = demoBookings.map((b) =>
+      b.id === id ? { ...b, date, time, block_start: w.blockStart, block_end: w.blockEnd } : b,
+    );
     return;
   }
   const supabase = getSupabaseAdmin();
-  const { error } = await supabase.from("bookings").update({ date, time }).eq("id", id);
+  const { error } = await supabase
+    .from("bookings")
+    .update({ date, time, block_start: w.blockStart, block_end: w.blockEnd })
+    .eq("id", id);
   if (error) throw error;
 }
 

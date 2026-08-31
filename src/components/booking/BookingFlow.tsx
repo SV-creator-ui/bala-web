@@ -1,17 +1,23 @@
 "use client";
 
 /**
- * Rezervacijos srautas — 4 žingsniai: Laikas → Žaidėjai → Kontaktai → Apmokėjimas.
- * Kambario NEPASIRENKA — scenarijų klientas renkasi atvykęs.
- * Kaina rodoma iš @/lib/booking (tas pats šaltinis kaip serveryje).
+ * Rezervacijos srautas — bendras VR pabėgimo kambariui IR gimtadienio/šventės
+ * paketams (vienas grafikas). 5 žingsniai:
+ *   Tipas → Laikas → Dalyviai → Kontaktai → Apmokėjimas.
+ * Kaina ir avansas rodomi iš @/lib/booking (tas pats šaltinis kaip serveryje).
  */
 import { useEffect, useMemo, useState } from "react";
-import { BOOKING, ADDONS, generateSlots } from "@/lib/booking/config";
-import { roomsPrice, grandTotal, addonsPrice, formatEur, depositEur } from "@/lib/booking/pricing";
+import { BOOKING, ADDONS, depositFor, type BookingType } from "@/lib/booking/config";
+import { roomsPrice, grandTotal, formatEur } from "@/lib/booking/pricing";
+import {
+  PARTY_PACKAGES, PARTY_EXTRAS, getPartyPackage,
+  partyTotal, partyDiscount, isDiscountWeekday,
+  type PartyPackageId,
+} from "@/lib/booking/packages";
 import { validName, validPhone, validEmail } from "@/lib/booking/validation";
 
 type SlotStatus = { time: string; available: boolean };
-const STEP_LABELS = ["Laikas", "Žaidėjai", "Kontaktai", "Apmokėjimas"] as const;
+const STEP_LABELS = ["Tipas", "Laikas", "Dalyviai", "Kontaktai", "Apmokėjimas"] as const;
 const LAST_STEP = STEP_LABELS.length;
 
 const MONTHS = ["Sausis","Vasaris","Kovas","Balandis","Gegužė","Birželis","Liepa","Rugpjūtis","Rugsėjis","Spalis","Lapkritis","Gruodis"];
@@ -31,6 +37,11 @@ export default function BookingFlow() {
   const [step, setStep] = useState(1);
   const today = useMemo(() => startOfDay(new Date()), []);
   const [viewMonth, setViewMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+
+  const [type, setType] = useState<BookingType | null>(null);
+  const [pkgId, setPkgId] = useState<PartyPackageId | null>(null);
+  const [partyExtras, setPartyExtras] = useState<string[]>([]);
+
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [slots, setSlots] = useState<SlotStatus[] | null>(null);
@@ -48,31 +59,78 @@ export default function BookingFlow() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const priceReady = step >= 2;
-  const rooms = roomsPrice(players);
-  const total = grandTotal(players, addons);
-  const deposit = depositEur;
+  const pkg = type === "party" && pkgId ? getPartyPackage(pkgId) : undefined;
 
-  // Užkrauname laisvus laikus, kai pasirenkama data
+  // Iš anksto parinktas tipas/paketas iš URL (?type=party&pkg=maksi)
   useEffect(() => {
-    if (!date) return;
+    if (typeof window === "undefined") return;
+    const q = new URLSearchParams(window.location.search);
+    const t = q.get("type");
+    const p = q.get("pkg");
+    if (t === "party") {
+      setType("party");
+      const valid = PARTY_PACKAGES.find((x) => x.id === p);
+      if (valid) { setPkgId(valid.id); setStep(2); }
+    } else if (t === "room") {
+      setType("room");
+      setStep(2);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Kai keičiasi paketas — dalyvių skaičių laikom paketo ribose
+  useEffect(() => {
+    if (type === "party" && pkg) {
+      setPlayers((p) => Math.min(Math.max(1, p), pkg.maxPlayers));
+    } else if (type === "room") {
+      setPlayers((p) => Math.min(Math.max(BOOKING.minPlayers, p), BOOKING.maxPlayers));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, pkgId]);
+
+  // Priedai, kurie eina į kainą / grafiką pagal tipą
+  const activeAddons = type === "party" ? partyExtras : addons;
+  const addonsKey = activeAddons.join(",");
+
+  // Užkrauname laisvus laikus, kai turim tipą + datą (ir kai keičiasi trukmė)
+  useEffect(() => {
+    if (!date || !type || (type === "party" && !pkgId)) return;
     let cancelled = false;
     setSlotsLoading(true);
     setSlots(null);
-    fetch(`/api/availability?date=${date}`)
+    const params = new URLSearchParams({ date, type });
+    if (type === "party" && pkgId) params.set("pkg", pkgId);
+    if (addonsKey) params.set("addons", addonsKey);
+    fetch(`/api/availability?${params.toString()}`)
       .then((r) => r.json())
-      .then((d) => { if (!cancelled) setSlots(d.slots ?? []); })
+      .then((d) => {
+        if (cancelled) return;
+        const list: SlotStatus[] = d.slots ?? [];
+        setSlots(list);
+        // Jei pasirinktas laikas nebeliko laisvas — išvalome
+        setTime((t) => (t && list.some((s) => s.time === t && s.available) ? t : null));
+      })
       .catch(() => { if (!cancelled) setSlots([]); })
       .finally(() => { if (!cancelled) setSlotsLoading(false); });
     return () => { cancelled = true; };
-  }, [date]);
+  }, [date, type, pkgId, addonsKey]);
+
+  // Kainos
+  const deposit = type ? depositFor(type) : 0;
+  const rooms = type === "room" ? roomsPrice(players) : 0;
+  const total = type === "party" && pkg && date
+    ? partyTotal(pkg, date, partyExtras)
+    : type === "room"
+    ? grandTotal(players, addons)
+    : 0;
 
   function canProceed(): boolean {
     switch (step) {
-      case 1: return !!(date && time);
-      case 2: return players >= BOOKING.minPlayers;
-      case 3: return validName(name) && validPhone(phone) && validEmail(email);
-      case 4: return true;
+      case 1: return type === "room" || (type === "party" && !!pkgId);
+      case 2: return !!(date && time);
+      case 3: return players >= 1;
+      case 4: return validName(name) && validPhone(phone) && validEmail(email);
+      case 5: return true;
       default: return false;
     }
   }
@@ -84,7 +142,10 @@ export default function BookingFlow() {
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, time, players, addons, name, phone, email, note }),
+        body: JSON.stringify({
+          type, packageId: pkgId, date, time, players,
+          addons: activeAddons, name, phone, email, note,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Nepavyko sukurti rezervacijos");
@@ -113,6 +174,16 @@ export default function BookingFlow() {
       <div className="mt-8 grid gap-7 lg:grid-cols-[1fr_320px] items-start">
         <div>
           {step === 1 && (
+            <StepType
+              type={type}
+              setType={(t) => { setType(t); setTime(null); if (t === "room") setPkgId(null); }}
+              pkgId={pkgId}
+              setPkgId={(id) => { setPkgId(id); setTime(null); }}
+              partyExtras={partyExtras}
+              setPartyExtras={(a) => { setPartyExtras(a); setTime(null); }}
+            />
+          )}
+          {step === 2 && (
             <StepDate
               today={today}
               viewMonth={viewMonth}
@@ -123,12 +194,18 @@ export default function BookingFlow() {
               setTime={setTime}
               slots={slots}
               slotsLoading={slotsLoading}
+              type={type!}
+              pkg={pkg}
             />
           )}
-          {step === 2 && (
-            <StepPlayers players={players} setPlayers={setPlayers} addons={addons} setAddons={setAddons} rooms={rooms} />
-          )}
           {step === 3 && (
+            <StepPlayers
+              type={type!} pkg={pkg}
+              players={players} setPlayers={setPlayers}
+              addons={addons} setAddons={setAddons} rooms={rooms}
+            />
+          )}
+          {step === 4 && (
             <StepContact
               name={name} setName={setName}
               phone={phone} setPhone={setPhone}
@@ -137,15 +214,18 @@ export default function BookingFlow() {
               touched={touched} setTouched={setTouched}
             />
           )}
-          {step === 4 && <StepPayment deposit={deposit} rest={total - deposit} error={error} />}
+          {step === 5 && <StepPayment deposit={deposit} rest={total - deposit} error={error} />}
         </div>
 
         <Summary
-          priceReady={priceReady}
+          step={step}
+          type={type}
+          pkg={pkg}
           date={date}
           time={time}
           players={players}
           addons={addons}
+          partyExtras={partyExtras}
           rooms={rooms}
           total={total}
           deposit={deposit}
@@ -199,12 +279,122 @@ function Steps({ step }: { step: number }) {
   );
 }
 
-/* ---------------- Step 1: Date + Time ---------------- */
-function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime, slots, slotsLoading }: {
+/* ---------------- Step 1: Type + package ---------------- */
+function StepType({ type, setType, pkgId, setPkgId, partyExtras, setPartyExtras }: {
+  type: BookingType | null; setType: (t: BookingType) => void;
+  pkgId: PartyPackageId | null; setPkgId: (id: PartyPackageId) => void;
+  partyExtras: string[]; setPartyExtras: (a: string[]) => void;
+}) {
+  return (
+    <div>
+      <StepHead n={1} title="Ką rezervuojate?" />
+      <p className="text-smoke text-sm mb-5 max-w-[60ch]">
+        Pasirinkite įprastą VR pabėgimo kambario apsilankymą arba gimtadienio / šventės paketą.
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-2 max-w-[620px]">
+        <TypeCard
+          active={type === "room"}
+          onClick={() => setType("room")}
+          emoji="🥽"
+          title="VR pabėgimo kambarys"
+          desc="Įprastas apsilankymas 2–10 žaidėjų. Scenarijų renkatės vietoje."
+        />
+        <TypeCard
+          active={type === "party"}
+          onClick={() => setType("party")}
+          emoji="🎂"
+          title="Gimtadienio / šventės paketas"
+          desc="Pilnas šventės paketas su vaišėms skirtu laiku ir instruktoriumi."
+        />
+      </div>
+
+      {type === "party" && (
+        <>
+          <h3 className="font-display uppercase text-lg mt-8 mb-3">Pasirinkite paketą</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {PARTY_PACKAGES.map((p) => {
+              const on = pkgId === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setPkgId(p.id)}
+                  className={`relative rounded-2xl border px-5 py-4 text-left transition ${
+                    on ? "border-volt bg-volt/10" : "border-line bg-ink-card hover:border-line-strong"
+                  }`}
+                >
+                  {p.featured && (
+                    <span className="absolute right-3 top-3 rounded-full bg-volt/20 px-2 py-0.5 text-[10px] font-bold uppercase text-volt">
+                      Populiariausias
+                    </span>
+                  )}
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="font-display text-xl uppercase">{p.name}</span>
+                    <span className="font-mono text-sm text-smoke-2">{p.durationLabel}</span>
+                  </div>
+                  <p className="mt-1 text-[13px] text-smoke">{p.tagline}</p>
+                  <div className="mt-3 flex items-baseline gap-2">
+                    <span className="font-display text-2xl">€{p.price}</span>
+                    <span className="text-xs text-smoke-2">iki {p.maxPlayers} žaid.</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-[12.5px] text-smoke-2">
+            −{formatEur(20)} € nuolaida I–IV dienomis (pirmadienį–ketvirtadienį) — pritaikoma pasirinkus datą.
+          </p>
+
+          <h3 className="font-display uppercase text-lg mt-8 mb-3">Papildymai <span className="text-smoke-2 text-sm normal-case">(nebūtina)</span></h3>
+          <div className="flex flex-col gap-2.5 max-w-[560px]">
+            {PARTY_EXTRAS.map((e) => {
+              const on = partyExtras.includes(e.id);
+              return (
+                <button
+                  key={e.id}
+                  onClick={() => setPartyExtras(on ? partyExtras.filter((x) => x !== e.id) : [...partyExtras, e.id])}
+                  className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left ${on ? "border-volt bg-volt/10" : "border-line bg-ink-card hover:border-line-strong"}`}
+                >
+                  <span className={`grid h-5 w-5 place-items-center rounded-md border-2 text-volt-ink text-xs font-extrabold ${on ? "bg-volt border-volt" : "border-line-strong"}`}>{on ? "✓" : ""}</span>
+                  <span className="flex-1">
+                    <b className="text-[15px]">{e.name}</b>
+                    <span className="block text-xs text-smoke-2">{e.desc}</span>
+                  </span>
+                  <span className="font-mono font-semibold whitespace-nowrap">+{e.price} €</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TypeCard({ active, onClick, emoji, title, desc }: {
+  active: boolean; onClick: () => void; emoji: string; title: string; desc: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col gap-2 rounded-2xl border px-5 py-5 text-left transition ${
+        active ? "border-volt bg-volt/10" : "border-line bg-ink-card hover:border-line-strong"
+      }`}
+    >
+      <span className="text-3xl">{emoji}</span>
+      <span className="font-display uppercase text-lg leading-tight">{title}</span>
+      <span className="text-[13px] text-smoke">{desc}</span>
+    </button>
+  );
+}
+
+/* ---------------- Step 2: Date + Time ---------------- */
+function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime, slots, slotsLoading, type, pkg }: {
   today: Date; viewMonth: Date; setViewMonth: (d: Date) => void;
   date: string | null; setDate: (d: string) => void;
   time: string | null; setTime: (t: string) => void;
   slots: SlotStatus[] | null; slotsLoading: boolean;
+  type: BookingType; pkg: ReturnType<typeof getPartyPackage>;
 }) {
   const y = viewMonth.getFullYear();
   const m = viewMonth.getMonth();
@@ -217,12 +407,14 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
   for (let i = 0; i < startDow; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
+  const intro = type === "party"
+    ? `Rodomas pradžios laikas. Prieš ir po šventės rezervuojame po 30 min. (${BOOKING.partyBufferBeforeMin} min. atvykti, ${BOOKING.partyBufferAfterMin} min. susitvarkyti).`
+    : `Rezervuok VR pabėgimo kambario laiką. Konkretų scenarijų pasirinksi atvykęs.`;
+
   return (
     <div>
-      <StepHead n={1} title="Data ir laikas" />
-      <p className="text-smoke text-sm mb-5 max-w-[60ch]">
-        Rezervuok VR pabėgimo kambario laiką. Konkretų scenarijų pasirinksi atvykęs. Seansai kas {BOOKING.slotStepMin} min.
-      </p>
+      <StepHead n={2} title="Data ir laikas" />
+      <p className="text-smoke text-sm mb-5 max-w-[62ch]">{intro}</p>
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="rounded-2xl border border-line bg-ink-card p-4">
           <div className="flex items-center justify-between mb-3">
@@ -252,6 +444,7 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
               const past = startOfDay(cellDate) < today;
               const isToday = startOfDay(cellDate).getTime() === today.getTime();
               const selected = date === iso;
+              const discount = type === "party" && !past && isDiscountWeekday(iso);
               return (
                 <button
                   key={d}
@@ -260,13 +453,20 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
                   className={`relative grid aspect-square place-items-center rounded-lg text-sm font-semibold transition ${
                     selected ? "bg-volt text-volt-ink" : past ? "text-smoke-2 opacity-35 cursor-not-allowed" : "hover:bg-white/5"
                   }`}
+                  title={discount ? "I–IV: −20 € nuolaida" : undefined}
                 >
                   {d}
                   {isToday && <span className={`absolute bottom-1 h-1 w-1 rounded-full ${selected ? "bg-volt-ink" : "bg-volt"}`} />}
+                  {discount && !selected && <span className="absolute right-1 top-1 h-1 w-1 rounded-full bg-genre-green" />}
                 </button>
               );
             })}
           </div>
+          {type === "party" && (
+            <p className="mt-2 flex items-center gap-1.5 font-mono text-[10.5px] text-smoke-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-genre-green" /> I–IV: −20 € nuolaida
+            </p>
+          )}
         </div>
 
         <div>
@@ -298,45 +498,62 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
           {date && !slotsLoading && slots && slots.every((s) => !s.available) && (
             <p className="text-smoke text-sm mt-3">Šią dieną laisvų laikų nėra. Pasirink kitą dieną.</p>
           )}
+          {type === "party" && pkg && time && (
+            <p className="mt-3 text-[12.5px] text-smoke-2">
+              Šventė {time}. Salė rezervuojama nuo {shift(time, -BOOKING.partyBufferBeforeMin)} iki {shift(time, pkg.durationMin + BOOKING.partyBufferAfterMin)}.
+            </p>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-/* ---------------- Step 2: Players ---------------- */
-function StepPlayers({ players, setPlayers, addons, setAddons, rooms }: {
+/* ---------------- Step 3: Players (+ extras) ---------------- */
+function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms }: {
+  type: BookingType; pkg: ReturnType<typeof getPartyPackage>;
   players: number; setPlayers: (n: number) => void;
   addons: string[]; setAddons: (a: string[]) => void; rooms: number;
 }) {
+  const min = type === "party" ? 1 : BOOKING.minPlayers;
+  const max = type === "party" && pkg ? pkg.maxPlayers : BOOKING.maxPlayers;
+  const helper = type === "party"
+    ? `Kiek dalyvių šventėje? Paketo kaina fiksuota (iki ${max} žaid.).`
+    : `2–${BOOKING.maxPlayers} žaidėjų. Nuo 7 asm. žaidžiama dviem komandomis vienu metu.`;
+
   return (
     <div>
-      <StepHead n={2} title="Žaidėjai" />
-      <p className="text-smoke text-sm mb-5">2–{BOOKING.maxPlayers} žaidėjų. Nuo 7 asm. žaidžiama dviem komandomis vienu metu.</p>
+      <StepHead n={3} title={type === "party" ? "Dalyviai" : "Žaidėjai"} />
+      <p className="text-smoke text-sm mb-5">{helper}</p>
       <div className="flex flex-col gap-5 max-w-[460px]">
         <div className="flex items-center justify-between rounded-2xl border border-line bg-ink-card px-6 py-5">
           <div>
-            <h3 className="font-display uppercase text-lg">Žaidėjų skaičius</h3>
-            <p className="text-xs text-smoke-2 mt-1">
-              {formatEur(rooms)} € grupei ({formatEur(rooms / players)} €/asm.)
-            </p>
+            <h3 className="font-display uppercase text-lg">{type === "party" ? "Dalyvių skaičius" : "Žaidėjų skaičius"}</h3>
+            {type === "room" && (
+              <p className="text-xs text-smoke-2 mt-1">
+                {formatEur(rooms)} € grupei ({formatEur(rooms / players)} €/asm.)
+              </p>
+            )}
+            {type === "party" && pkg && (
+              <p className="text-xs text-smoke-2 mt-1">Paketas {pkg.name} · iki {pkg.maxPlayers} žaid.</p>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setPlayers(Math.max(BOOKING.minPlayers, players - 1))}
-              disabled={players <= BOOKING.minPlayers}
+              onClick={() => setPlayers(Math.max(min, players - 1))}
+              disabled={players <= min}
               className="grid h-10 w-10 place-items-center rounded-full border border-line-strong text-2xl leading-none hover:border-volt disabled:opacity-30 disabled:cursor-not-allowed"
             >−</button>
             <span className="font-display text-3xl w-9 text-center">{players}</span>
             <button
-              onClick={() => setPlayers(Math.min(BOOKING.maxPlayers, players + 1))}
-              disabled={players >= BOOKING.maxPlayers}
+              onClick={() => setPlayers(Math.min(max, players + 1))}
+              disabled={players >= max}
               className="grid h-10 w-10 place-items-center rounded-full border border-line-strong text-2xl leading-none hover:border-volt disabled:opacity-30 disabled:cursor-not-allowed"
             >+</button>
           </div>
         </div>
 
-        {ADDONS.length > 0 && (
+        {type === "room" && ADDONS.length > 0 && (
           <div>
             <h4 className="font-mono text-sm uppercase tracking-wider text-smoke-2 mb-3">Papildomai</h4>
             <div className="flex flex-col gap-2.5">
@@ -365,7 +582,7 @@ function StepPlayers({ players, setPlayers, addons, setAddons, rooms }: {
   );
 }
 
-/* ---------------- Step 3: Contact ---------------- */
+/* ---------------- Step 4: Contact ---------------- */
 function StepContact({ name, setName, phone, setPhone, email, setEmail, note, setNote, touched, setTouched }: {
   name: string; setName: (v: string) => void;
   phone: string; setPhone: (v: string) => void;
@@ -377,7 +594,7 @@ function StepContact({ name, setName, phone, setPhone, email, setEmail, note, se
   const nameOk = validName(name), phoneOk = validPhone(phone), emailOk = validEmail(email);
   return (
     <div>
-      <StepHead n={3} title="Tavo kontaktai" />
+      <StepHead n={4} title="Tavo kontaktai" />
       <p className="text-smoke text-sm mb-5">Į šiuos duomenis atsiųsime patvirtinimą ir priminimą prieš vizitą.</p>
       <div className="grid gap-4 sm:grid-cols-2 max-w-[560px]">
         <Field label="Vardas" value={name} onChange={setName}
@@ -397,7 +614,7 @@ function StepContact({ name, setName, phone, setPhone, email, setEmail, note, se
         <div className="sm:col-span-2">
           <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Pastabos (nebūtina)</label>
           <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3}
-            placeholder="Pvz. švenčiame gimtadienį, būsime 15 min. anksčiau…"
+            placeholder="Pvz. gimtadienio vaiko amžius, tortas, alergijos…"
             className="w-full rounded-xl border border-line bg-ink-card px-3.5 py-3 text-white focus:outline-none focus:border-volt" />
         </div>
       </div>
@@ -428,11 +645,11 @@ function Field({ label, value, onChange, onBlur, error, ok, placeholder, inputMo
   );
 }
 
-/* ---------------- Step 4: Payment ---------------- */
+/* ---------------- Step 5: Payment ---------------- */
 function StepPayment({ deposit, rest, error }: { deposit: number; rest: number; error: string | null }) {
   return (
     <div>
-      <StepHead n={4} title="Apmokėjimas" />
+      <StepHead n={5} title="Apmokėjimas" />
       <p className="text-smoke text-sm mb-5">Vietai rezervuoti sumokamas {formatEur(deposit)} € avansas. Likutį sumokėsi vietoje.</p>
       <div className="max-w-[560px]">
         <div className="flex items-center gap-3.5 rounded-xl border border-volt bg-ink-card px-4.5 py-4 mb-6">
@@ -447,7 +664,7 @@ function StepPayment({ deposit, rest, error }: { deposit: number; rest: number; 
         <div className="flex items-center justify-between gap-4 rounded-xl border border-volt/40 bg-volt/10 px-5 py-4.5">
           <div>
             <h4 className="font-display uppercase text-[15px]">Avansas dabar</h4>
-            <p className="text-sm text-smoke mt-1">Likutis {formatEur(rest)} € — vietoje po žaidimo</p>
+            <p className="text-sm text-smoke mt-1">Likutis {formatEur(rest)} € — vietoje</p>
           </div>
           <div className="font-display text-3xl whitespace-nowrap">{formatEur(deposit)} €</div>
         </div>
@@ -459,26 +676,46 @@ function StepPayment({ deposit, rest, error }: { deposit: number; rest: number; 
 }
 
 /* ---------------- Summary ---------------- */
-function Summary({ priceReady, date, time, players, addons, rooms, total, deposit }: {
-  priceReady: boolean; date: string | null; time: string | null;
-  players: number; addons: string[]; rooms: number; total: number; deposit: number;
+function Summary({ step, type, pkg, date, time, players, addons, partyExtras, rooms, total, deposit }: {
+  step: number; type: BookingType | null; pkg: ReturnType<typeof getPartyPackage>;
+  date: string | null; time: string | null; players: number;
+  addons: string[]; partyExtras: string[]; rooms: number; total: number; deposit: number;
 }) {
+  const priceReady = !!type && (type === "room" ? step >= 3 : !!pkg && !!date);
+  const discount = type === "party" && date ? partyDiscount(date) : 0;
+
   return (
     <aside className="rounded-2xl border border-line bg-ink-card p-5 lg:sticky lg:top-5">
       <h3 className="font-mono text-xs uppercase tracking-wider text-smoke-2 mb-4">Tavo rezervacija</h3>
       <div className="flex items-center gap-3 border-b border-line pb-4 mb-4">
-        <div className="grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br from-neutral-700 to-black text-xl">🥽</div>
+        <div className="grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br from-neutral-700 to-black text-xl">
+          {type === "party" ? "🎂" : "🥽"}
+        </div>
         <div>
-          <h4 className="font-display uppercase text-[15px] leading-tight">VR pabėgimo kambarys</h4>
-          <span className="font-mono text-xs text-smoke-2">Scenarijus — vietoje</span>
+          <h4 className="font-display uppercase text-[15px] leading-tight">
+            {type === "party" ? (pkg ? `Paketas ${pkg.name}` : "Šventės paketas") : "VR pabėgimo kambarys"}
+          </h4>
+          <span className="font-mono text-xs text-smoke-2">
+            {type === "party" ? (pkg ? pkg.durationLabel : "Pasirink paketą") : "Scenarijus — vietoje"}
+          </span>
         </div>
       </div>
       <SumLine label="Data" value={date ? fmtDateGen(date) : "—"} />
-      <SumLine label="Laikas" value={time || "—"} />
+      <SumLine label={type === "party" ? "Pradžia" : "Laikas"} value={time || "—"} />
       {priceReady ? (
         <>
-          <SumLine label={`Žaidėjai · ${players} asm.`} value={`${formatEur(rooms)} €`} />
-          {ADDONS.filter((a) => addons.includes(a.id)).map((a) => (
+          {type === "room" && <SumLine label={`Žaidėjai · ${players} asm.`} value={`${formatEur(rooms)} €`} />}
+          {type === "party" && pkg && (
+            <>
+              <SumLine label={`Paketas ${pkg.name}`} value={`${formatEur(pkg.price)} €`} />
+              {discount > 0 && <SumLine label="I–IV nuolaida" value={`−${formatEur(discount)} €`} muted />}
+              {PARTY_EXTRAS.filter((e) => partyExtras.includes(e.id)).map((e) => (
+                <SumLine key={e.id} label={`+ ${e.name}`} value={`${e.price} €`} muted />
+              ))}
+              <SumLine label={`Dalyviai · ${players} asm.`} value="įskaičiuota" muted />
+            </>
+          )}
+          {type === "room" && addons.length > 0 && ADDONS.filter((a) => addons.includes(a.id)).map((a) => (
             <SumLine key={a.id} label={`+ ${a.name}`} value={`${a.price} €`} muted />
           ))}
           <div className="mt-2 flex items-baseline justify-between border-t border-line pt-4">
@@ -490,7 +727,9 @@ function Summary({ priceReady, date, time, players, addons, rooms, total, deposi
           </p>
         </>
       ) : (
-        <p className="pt-1 text-[12.5px] italic text-smoke-2">Kaina paaiškės pasirinkus žaidėjų skaičių.</p>
+        <p className="pt-1 text-[12.5px] italic text-smoke-2">
+          {!type ? "Pasirink, ką rezervuoji." : type === "party" ? "Kaina paaiškės pasirinkus paketą ir datą." : "Kaina paaiškės pasirinkus žaidėjų skaičių."}
+        </p>
       )}
     </aside>
   );
@@ -518,4 +757,11 @@ function StepHead({ n, title }: { n: number; title: string }) {
 function fmtDateGen(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   return `${d.getDate()} ${MONTHS_GEN[d.getMonth()]}, ${WD[d.getDay()]}`;
+}
+
+/** "13:00" pastumtas per delta min. -> "HH:MM" */
+function shift(hhmm: string, deltaMin: number): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const t = h * 60 + m + deltaMin;
+  return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(((t % 60) + 60) % 60).padStart(2, "0")}`;
 }

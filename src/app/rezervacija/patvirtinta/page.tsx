@@ -8,6 +8,7 @@ import Footer from "@/components/bala/Footer";
 import { getSupabaseAdmin, type BookingRow } from "@/lib/supabase/server";
 import { verifyMontonioToken, bookingTestMode } from "@/lib/montonio";
 import { formatEur } from "@/lib/booking/pricing";
+import { getPartyPackage } from "@/lib/booking/packages";
 
 export const dynamic = "force-dynamic";
 
@@ -80,14 +81,22 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
                   <span className="font-mono text-sm">{booking.merchant_reference}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4 px-6 py-5">
-                  <Item k="Paslauga" v="VR pabėgimo kambarys" full />
+                  <Item
+                    k="Paslauga"
+                    v={booking.type === "party"
+                      ? `Gimtadienio paketas${getPartyPackage(booking.package_id ?? "") ? " " + getPartyPackage(booking.package_id!)!.name : ""}`
+                      : "VR pabėgimo kambarys"}
+                    full
+                  />
                   <Item k="Data" v={fmtDate(booking.date)} />
-                  <Item k="Laikas" v={booking.time} />
-                  <Item k="Žaidėjai" v={`${booking.players} asm.`} />
+                  <Item k={booking.type === "party" ? "Pradžia" : "Laikas"} v={booking.time} />
+                  <Item k={booking.type === "party" ? "Dalyviai" : "Žaidėjai"} v={`${booking.players} asm.`} />
                   <Item k="Sumokėtas avansas" v={`${formatEur(Number(booking.deposit_eur))} € (iš ${formatEur(Number(booking.total_eur))} €)`} full />
                 </div>
                 <div className="border-t border-dashed border-line px-6 py-4 text-sm text-smoke">
-                  📍 BALA VR, Klaipėda · scenarijų pasirinksi atvykęs · likutį sumokėsi vietoje
+                  {booking.type === "party"
+                    ? <>📍 BALA VR, Klaipėda · atvykite ~15 min. anksčiau · likutį sumokėsi vietoje</>
+                    : <>📍 BALA VR, Klaipėda · scenarijų pasirinksi atvykęs · likutį sumokėsi vietoje</>}
                 </div>
               </div>
             </div>

@@ -1,17 +1,29 @@
 /**
  * POST /api/bookings
- * Sukuria "pending" rezervaciją, inicijuoja Montonio avanso mokėjimą ir
- * grąžina apmokėjimo nuorodą (paymentUrl).
+ * Sukuria "pending" rezervaciją (įprastą kambarį ARBA gimtadienio/šventės
+ * paketą), inicijuoja Montonio avanso mokėjimą ir grąžina apmokėjimo nuorodą.
  *
- * SVARBU: kaina IR avansas skaičiuojami serveryje — klientas atsiųstoms
- * sumoms nepasitikime.
+ * SVARBU: kaina, avansas IR užimtas laiko langas skaičiuojami serveryje —
+ * klientui atsiųstoms reikšmėms nepasitikime.
  */
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { isSlotAvailable } from "@/lib/booking/availability";
-import { grandTotal, depositEur } from "@/lib/booking/pricing";
-import { BOOKING, ADDONS, generateSlots } from "@/lib/booking/config";
-import { validName, validPhone, validEmail, validFutureDate } from "@/lib/booking/validation";
+import { grandTotal } from "@/lib/booking/pricing";
+import { BOOKING, ADDONS, generateSlots, depositFor, type BookingType } from "@/lib/booking/config";
+import { bookingWindowHHMM } from "@/lib/booking/window";
+import {
+  getPartyPackage,
+  partyTotal,
+  PARTY_EXTRAS,
+} from "@/lib/booking/packages";
+import {
+  validName,
+  validPhone,
+  validEmail,
+  validFutureDate,
+  validBookingType,
+} from "@/lib/booking/validation";
 import { createMontonioOrder, montonioConfigured, bookingTestMode } from "@/lib/montonio";
 
 export const dynamic = "force-dynamic";
@@ -30,31 +42,54 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Netinkami duomenys" }, { status: 400 });
   }
 
+  const type: BookingType = validBookingType(String(body.type)) ? (String(body.type) as BookingType) : "room";
   const date = String(body.date || "");
   const time = String(body.time || "");
   const players = Number(body.players);
   const rawAddons = Array.isArray(body.addons) ? (body.addons as unknown[]).map(String) : [];
+  const packageId = body.packageId ? String(body.packageId) : null;
   const name = String(body.name || "");
   const phone = String(body.phone || "");
   const email = String(body.email || "");
   const note = body.note ? String(body.note).slice(0, 500) : null;
 
-  // --- Validacija ---
+  // --- Bendra validacija ---
   const errors: string[] = [];
   if (!validFutureDate(date)) errors.push("data");
   if (!generateSlots().includes(time)) errors.push("laikas");
-  if (!Number.isInteger(players) || players < BOOKING.minPlayers || players > BOOKING.maxPlayers)
-    errors.push("žaidėjai");
   if (!validName(name)) errors.push("vardas");
   if (!validPhone(phone)) errors.push("telefonas");
   if (!validEmail(email)) errors.push("el. paštas");
 
-  const validAddonIds = ADDONS.map((a) => a.id);
-  const addons = rawAddons.filter((id) => validAddonIds.includes(id));
+  // --- Tipui specifinė validacija + kainos/priedų sanitizavimas ---
+  let total: number;
+  let addons: string[];
 
-  if (errors.length) {
-    return NextResponse.json({ error: "Netinkami laukai: " + errors.join(", ") }, { status: 400 });
+  if (type === "party") {
+    const pkg = getPartyPackage(packageId || "");
+    if (!pkg) errors.push("paketas");
+    const validExtraIds = PARTY_EXTRAS.map((e) => e.id);
+    addons = rawAddons.filter((id) => validExtraIds.includes(id));
+    if (pkg && (!Number.isInteger(players) || players < 1 || players > pkg.maxPlayers)) {
+      errors.push("žaidėjai");
+    }
+    if (errors.length) {
+      return NextResponse.json({ error: "Netinkami laukai: " + errors.join(", ") }, { status: 400 });
+    }
+    total = partyTotal(pkg!, date, addons);
+  } else {
+    const validAddonIds = ADDONS.map((a) => a.id);
+    addons = rawAddons.filter((id) => validAddonIds.includes(id));
+    if (!Number.isInteger(players) || players < BOOKING.minPlayers || players > BOOKING.maxPlayers) {
+      errors.push("žaidėjai");
+    }
+    if (errors.length) {
+      return NextResponse.json({ error: "Netinkami laukai: " + errors.join(", ") }, { status: 400 });
+    }
+    total = grandTotal(players, addons);
   }
+
+  const deposit = depositFor(type);
 
   // --- Ar galime priimti rezervaciją? ---
   const montonioReady = montonioConfigured();
@@ -67,28 +102,27 @@ export async function POST(req: Request) {
   }
 
   try {
-    // --- Ar seansas dar laisvas? ---
-    if (!(await isSlotAvailable(date, time))) {
+    // --- Ar laikas dar laisvas šiam langui? (bendras grafikas) ---
+    if (!(await isSlotAvailable(date, time, { type, packageId, addons }))) {
       return NextResponse.json(
         { error: "Deja, šis laikas ką tik užimtas. Pasirinkite kitą." },
         { status: 409 },
       );
     }
 
-    // --- Kainos (serveryje) ---
-    const total = grandTotal(players, addons);
-    const deposit = depositEur;
+    const { blockStart, blockEnd } = bookingWindowHHMM(type, time, packageId, addons);
     const merchantReference = `BALA-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-
     const supabase = getSupabaseAdmin();
 
-    // --- Įrašome rezervaciją ---
-    // Testavimo režime iškart "paid" (mokėjimas praleidžiamas), kitu atveju "pending".
     const { data: inserted, error: insErr } = await supabase
       .from("bookings")
       .insert({
+        type,
+        package_id: type === "party" ? packageId : null,
         date,
         time,
+        block_start: blockStart,
+        block_end: blockEnd,
         players,
         addons,
         customer_name: name.trim(),
@@ -105,7 +139,7 @@ export async function POST(req: Request) {
 
     if (insErr) throw insErr;
 
-    // --- Testavimo režimas: praleidžiam mokėjimą, vedam tiesiai į patvirtinimą ---
+    // --- Testavimo režimas: praleidžiam mokėjimą ---
     if (!montonioReady) {
       return NextResponse.json({
         paymentUrl: `/rezervacija/patvirtinta?ref=${encodeURIComponent(merchantReference)}&test=1`,
@@ -116,15 +150,17 @@ export async function POST(req: Request) {
 
     // --- Montonio mokėjimas (avansas) ---
     const base = siteUrl(req);
+    const label = type === "party"
+      ? `BALA VR gimtadienio paketo avansas — ${date} ${time}`
+      : `BALA VR pabėgimo kambario avansas — ${date} ${time}`;
     const order = await createMontonioOrder({
       merchantReference,
       amount: deposit,
       returnUrl: `${base}/rezervacija/patvirtinta`,
       notificationUrl: `${base}/api/montonio/webhook`,
-      description: `BALA VR pabėgimo kambario avansas — ${date} ${time}`,
+      description: label,
     });
 
-    // --- Išsaugome Montonio uuid ---
     await supabase.from("bookings").update({ montonio_uuid: order.uuid }).eq("id", inserted.id);
 
     return NextResponse.json({ paymentUrl: order.paymentUrl, merchantReference });

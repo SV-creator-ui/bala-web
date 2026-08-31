@@ -5,9 +5,14 @@
 create table if not exists public.bookings (
   id                 uuid primary key default gen_random_uuid(),
   created_at         timestamptz not null default now(),
+  type               text not null default 'room'       -- 'room' | 'party'
+                       check (type in ('room','party')),
+  package_id         text,                              -- paketo id ('maksi'...) kai type='party'
   date               date not null,
-  time               text not null,                     -- "14:30"
-  players            int  not null check (players between 2 and 10),
+  time               text not null,                     -- klientui rodoma pradžia "14:30"
+  block_start        text,                              -- realiai užimto lango pradžia "13:30"
+  block_end          text,                              -- realiai užimto lango pabaiga "16:30"
+  players            int  not null check (players between 1 and 30),
   addons             jsonb not null default '[]'::jsonb,
   customer_name      text not null,
   customer_phone     text not null,

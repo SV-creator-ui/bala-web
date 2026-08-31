@@ -1,6 +1,6 @@
 import HeroVideo from "./HeroVideo";
 
-const BOOKING_URL = "https://booking.moizmo.com/lt/booking/";
+const BOOKING_URL = "/rezervacija?type=party";
 
 const stats = [
   { num: "500+", label: "Gimtadienių" },

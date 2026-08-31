@@ -1,4 +1,4 @@
-const BOOKING_URL = "https://booking.moizmo.com/lt/booking/";
+const BOOKING_URL = "/rezervacija?type=party";
 
 export default function ScarcityCta() {
   return (

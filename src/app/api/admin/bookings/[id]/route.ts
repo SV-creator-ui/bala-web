@@ -5,8 +5,8 @@
  */
 import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/admin/auth";
-import { updateBookingStatus, rescheduleBooking, type BookingStatus } from "@/lib/admin/data";
-import { isSlotAvailable } from "@/lib/booking/availability";
+import { updateBookingStatus, rescheduleBooking, getBooking, type BookingStatus } from "@/lib/admin/data";
+import { getAvailability } from "@/lib/booking/availability";
 import { generateSlots } from "@/lib/booking/config";
 import { validFutureDate } from "@/lib/booking/validation";
 
@@ -33,7 +33,20 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "Netinkama data arba laikas" }, { status: 400 });
     }
     try {
-      if (!(await isSlotAvailable(date, time))) {
+      const existing = await getBooking(id);
+      if (!existing) {
+        return NextResponse.json({ error: "Rezervacija nerasta" }, { status: 404 });
+      }
+      const type = existing.type === "party" ? "party" : "room";
+      const addons = Array.isArray(existing.addons) ? existing.addons : [];
+      const slots = await getAvailability(date, {
+        type,
+        packageId: existing.package_id,
+        addons,
+        excludeId: id,
+      });
+      const ok = slots.some((s) => s.time === time && s.available);
+      if (!ok) {
         return NextResponse.json({ error: "Šis laikas jau užimtas. Pasirinkite kitą." }, { status: 409 });
       }
       await rescheduleBooking(id, date, time);
