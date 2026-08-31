@@ -6,6 +6,7 @@
 import { getSupabaseAdmin, type BookingRow } from "@/lib/supabase/server";
 import { bookingWindowHHMM } from "@/lib/booking/window";
 import { dayHours } from "@/lib/booking/config";
+import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 import { dbConfigured } from "./auth";
 
 export type Blackout = { id: string; date: string; time: string | null; reason: string | null };
@@ -50,6 +51,7 @@ function mkBooking(
     customer_name: name, customer_phone: phone, customer_email: email, note,
     total_eur: total, deposit_eur: deposit, status,
     montonio_uuid: null, merchant_reference: "BALA-DEMO-" + Math.random().toString(36).slice(2, 6).toUpperCase(),
+    gcal_event_id: null,
   };
 }
 
@@ -67,6 +69,7 @@ function mkParty(
     customer_name: name, customer_phone: phone, customer_email: email, note,
     total_eur: total, deposit_eur: deposit, status,
     montonio_uuid: null, merchant_reference: "BALA-DEMO-" + Math.random().toString(36).slice(2, 6).toUpperCase(),
+    gcal_event_id: null,
   };
 }
 
@@ -98,6 +101,7 @@ export async function updateBookingStatus(id: string, status: BookingStatus): Pr
   const supabase = getSupabaseAdmin();
   const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
   if (error) throw error;
+  await syncBookingCalendar(id); // paid -> sukurti/atnaujinti; cancelled -> ištrinti
 }
 
 export async function getBooking(id: string): Promise<BookingRow | null> {
@@ -132,6 +136,7 @@ export async function rescheduleBooking(id: string, date: string, time: string):
     .update({ date, time, block_start: w.blockStart, block_end: w.blockEnd })
     .eq("id", id);
   if (error) throw error;
+  await syncBookingCalendar(id); // atnaujinti kalendoriaus įvykio laiką
 }
 
 export async function listBlackouts(): Promise<Blackout[]> {

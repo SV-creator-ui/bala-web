@@ -2,6 +2,7 @@ import Footer from "@/components/gimt/Footer";
 import { formatEur } from "@/lib/booking/pricing";
 import { getPartyPackage } from "@/lib/booking/packages";
 import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/confirm";
+import { googleCalendarRenderUrl } from "@/lib/booking/calendar-link";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +76,15 @@ export default async function Page({ searchParams }) {
                   📍 BALA VR, Klaipėda · atvykite ~15 min. anksčiau · likutį sumokėsite vietoje
                 </div>
               </div>
+
+              <a
+                href={googleCalendarRenderUrl(booking)}
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-secondary gimt-conf-cal"
+              >
+                📅 Pridėti į Google kalendorių
+              </a>
             </>
           )}
 

@@ -25,6 +25,7 @@ import {
   validBookingType,
 } from "@/lib/booking/validation";
 import { createMontonioOrder, montonioConfigured, bookingTestMode } from "@/lib/montonio";
+import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -144,8 +145,9 @@ export async function POST(req: Request) {
       ? "/gimtadieniai/rezervacija/patvirtinta"
       : "/rezervacija/patvirtinta";
 
-    // --- Testavimo režimas: praleidžiam mokėjimą ---
+    // --- Testavimo režimas: praleidžiam mokėjimą (iškart „paid") ---
     if (!montonioReady) {
+      await syncBookingCalendar(inserted.id); // į Google Calendar (jei sukonfigūruota)
       return NextResponse.json({
         paymentUrl: `${confirmPath}?ref=${encodeURIComponent(merchantReference)}&test=1`,
         merchantReference,

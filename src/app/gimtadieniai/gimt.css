@@ -1958,3 +1958,4 @@ html { scroll-behavior: smooth; }
   font-size: 15px;
   color: var(--text-secondary);
 }
+.gimt-conf-cal { margin-top: var(--space-6); }

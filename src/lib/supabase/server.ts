@@ -43,4 +43,5 @@ export type BookingRow = {
   status: "pending" | "paid" | "cancelled" | "expired";
   montonio_uuid: string | null;
   merchant_reference: string;
+  gcal_event_id: string | null; // Google Calendar įvykio id (jei sukurtas)
 };

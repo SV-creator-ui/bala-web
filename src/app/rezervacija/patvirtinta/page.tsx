@@ -8,6 +8,7 @@ import Footer from "@/components/bala/Footer";
 import { formatEur } from "@/lib/booking/pricing";
 import { getPartyPackage } from "@/lib/booking/packages";
 import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/confirm";
+import { googleCalendarRenderUrl } from "@/lib/booking/calendar-link";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
                     : <>📍 BALA VR, Klaipėda · scenarijų pasirinksi atvykęs · likutį sumokėsi vietoje</>}
                 </div>
               </div>
+
+              <a
+                href={googleCalendarRenderUrl(booking)}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-5 inline-flex items-center gap-2 rounded-full border border-line-strong px-5 py-2.5 text-sm font-semibold hover:border-volt hover:text-volt"
+              >
+                📅 Pridėti į Google kalendorių
+              </a>
             </div>
           )}
 
