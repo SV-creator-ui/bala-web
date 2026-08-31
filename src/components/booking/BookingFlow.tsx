@@ -726,7 +726,7 @@ function Summary({ step, type, pkg, date, time, players, addons, partyExtras, ro
               {PARTY_EXTRAS.filter((e) => partyExtras.includes(e.id)).map((e) => (
                 <SumLine key={e.id} label={`+ ${e.name}`} value={`${e.price} €`} muted />
               ))}
-              <SumLine label={`Dalyviai · ${players} asm.`} value="įskaičiuota" muted />
+              <SumLine label="Įskaičiuota" value={`iki ${pkg.maxPlayers} žaidėjų`} muted />
             </>
           )}
           {type === "room" && addons.length > 0 && ADDONS.filter((a) => addons.includes(a.id)).map((a) => (
