@@ -139,10 +139,15 @@ export async function POST(req: Request) {
 
     if (insErr) throw insErr;
 
+    // Gimtadienių paketai turi savo dizaino patvirtinimo puslapį.
+    const confirmPath = type === "party"
+      ? "/gimtadieniai/rezervacija/patvirtinta"
+      : "/rezervacija/patvirtinta";
+
     // --- Testavimo režimas: praleidžiam mokėjimą ---
     if (!montonioReady) {
       return NextResponse.json({
-        paymentUrl: `/rezervacija/patvirtinta?ref=${encodeURIComponent(merchantReference)}&test=1`,
+        paymentUrl: `${confirmPath}?ref=${encodeURIComponent(merchantReference)}&test=1`,
         merchantReference,
         test: true,
       });
@@ -156,7 +161,7 @@ export async function POST(req: Request) {
     const order = await createMontonioOrder({
       merchantReference,
       amount: deposit,
-      returnUrl: `${base}/rezervacija/patvirtinta`,
+      returnUrl: `${base}${confirmPath}`,
       notificationUrl: `${base}/api/montonio/webhook`,
       description: label,
     });

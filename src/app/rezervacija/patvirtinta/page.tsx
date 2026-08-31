@@ -5,10 +5,9 @@
 import Link from "next/link";
 import Nav from "@/components/bala/Nav";
 import Footer from "@/components/bala/Footer";
-import { getSupabaseAdmin, type BookingRow } from "@/lib/supabase/server";
-import { verifyMontonioToken, bookingTestMode } from "@/lib/montonio";
 import { formatEur } from "@/lib/booking/pricing";
 import { getPartyPackage } from "@/lib/booking/packages";
+import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/confirm";
 
 export const dynamic = "force-dynamic";
 
@@ -18,50 +17,9 @@ function fmtDate(iso: string): string {
   return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-async function resolveBooking(token: string | undefined): Promise<{ status: "paid" | "pending" | "error"; booking?: BookingRow }> {
-  if (!token) return { status: "error" };
-  try {
-    const payload = await verifyMontonioToken(token);
-    const ref = payload.merchantReference;
-    if (!ref) return { status: "error" };
-
-    const supabase = getSupabaseAdmin();
-
-    // Jei apmokėta — pažymime paid (idempotentiškai; webhook gali dar nespėti)
-    if (payload.paymentStatus === "PAID") {
-      await supabase.from("bookings").update({ status: "paid" }).eq("merchant_reference", ref).eq("status", "pending");
-    }
-
-    const { data } = await supabase.from("bookings").select("*").eq("merchant_reference", ref).single();
-    const booking = data as BookingRow | null;
-    if (!booking) return { status: "error" };
-    return { status: booking.status === "paid" ? "paid" : "pending", booking };
-  } catch {
-    return { status: "error" };
-  }
-}
-
-/** Testavimo režimas — paieška pagal merchant_reference (be Montonio) */
-async function resolveByRef(ref: string | undefined): Promise<{ status: "paid" | "pending" | "error"; booking?: BookingRow }> {
-  if (!ref || !bookingTestMode()) return { status: "error" };
-  try {
-    const supabase = getSupabaseAdmin();
-    const { data } = await supabase.from("bookings").select("*").eq("merchant_reference", ref).single();
-    const booking = data as BookingRow | null;
-    if (!booking) return { status: "error" };
-    return { status: booking.status === "paid" ? "paid" : "pending", booking };
-  } catch {
-    return { status: "error" };
-  }
-}
-
 export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
-  const tokenRaw = sp["order-token"] ?? sp["order_token"];
-  const token = Array.isArray(tokenRaw) ? tokenRaw[0] : tokenRaw;
-  const refRaw = sp["ref"];
-  const ref = Array.isArray(refRaw) ? refRaw[0] : refRaw;
-
+  const { token, ref } = readConfirmParams(sp);
   const { status, booking } = token ? await resolveBooking(token) : await resolveByRef(ref);
 
   return (

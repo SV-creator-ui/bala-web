@@ -1846,3 +1846,108 @@ html { scroll-behavior: smooth; }
   --color-genre-blue: #4db8cc;
   --color-genre-pink: #ff6b6b;
 }
+
+/* ── Patvirtinimo (bilieto) puslapis ── */
+.gimt-conf-main {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 20px 96px;
+}
+.gimt-conf {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+}
+.gimt-conf-check {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto var(--space-6);
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--grad-amber);
+  color: var(--teal-deep);
+  font-size: 40px;
+  font-weight: 800;
+  box-shadow: var(--glow-amber);
+}
+.gimt-conf-check.gimt-conf-wait {
+  background: transparent;
+  border: 3px solid var(--teal-bright);
+  color: var(--teal-bright);
+  box-shadow: none;
+}
+.gimt-conf-check.gimt-conf-err {
+  background: transparent;
+  border: 3px solid #ff6b6b;
+  color: #ff6b6b;
+  box-shadow: none;
+}
+.gimt-conf-title {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  font-size: clamp(26px, 4.5vw, 38px);
+  line-height: 1.1;
+  color: var(--white);
+  margin-bottom: var(--space-3);
+}
+.gimt-conf-lead {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-8);
+}
+.gimt-conf-lead strong { color: var(--white); }
+
+.gimt-ticket {
+  text-align: left;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--teal-line);
+  background: var(--bg-raised);
+  box-shadow: var(--shadow-raised);
+}
+.gimt-ticket-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  background: var(--grad-amber);
+  color: var(--teal-deep);
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.02em;
+}
+.gimt-ticket-ref {
+  font-family: var(--font-body);
+  font-weight: var(--fw-semibold);
+  font-size: 13px;
+}
+.gimt-ticket-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 16px;
+  padding: 22px 24px;
+}
+.gimt-ticket-item--full { grid-column: 1 / -1; }
+.gimt-ticket-k {
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.gimt-ticket-v {
+  font-family: var(--font-display);
+  font-weight: var(--fw-semibold);
+  font-size: 17px;
+  color: var(--white);
+}
+.gimt-ticket-foot {
+  border-top: 1px dashed var(--teal-line);
+  padding: 16px 24px;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
