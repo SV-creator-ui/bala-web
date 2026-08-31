@@ -551,7 +551,8 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
           )}
           {type === "party" && pkg && time && block && (
             <p className="mt-3 text-[12.5px] text-smoke-2">
-              Šventė {time}. Salė rezervuojama nuo {block.blockStart} iki {block.blockEnd}.
+              Šventė {time}. Salė rezervuojama nuo {block.blockStart} iki {block.blockEnd}.{" "}
+              Išeiti būtina iki {addMin(block.blockEnd, 5)}.
             </p>
           )}
         </div>
@@ -823,4 +824,11 @@ function StepHead({ n, title }: { n: number; title: string }) {
 function fmtDateGen(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   return `${d.getDate()} ${MONTHS_GEN[d.getMonth()]}, ${WD[d.getDay()]}`;
+}
+
+/** Prideda n minučių prie "HH:MM" laiko. Pvz. addMin("20:30", 5) -> "20:35". */
+function addMin(hhmm: string, n: number): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const t = h * 60 + m + n;
+  return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
 }
