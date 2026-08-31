@@ -127,7 +127,7 @@ export async function sendBookingEmails(b: BookingRow): Promise<void> {
   const from = `"BALA VR" <${gmailUser()}>`;
   const isParty = b.type === "party";
 
-  await Promise.allSettled([
+  const results = await Promise.allSettled([
     transporter().sendMail({
       from,
       to: b.customer_email,
@@ -142,4 +142,15 @@ export async function sendBookingEmails(b: BookingRow): Promise<void> {
       html: adminHtml(b),
     }),
   ]);
+
+  // Žurnalas (matoma Vercel loguose) — kad būtų aišku, ar laiškai išsiuntė.
+  const who = ["klientui " + b.customer_email, "adminui " + adminEmail()];
+  results.forEach((r, i) => {
+    if (r.status === "fulfilled") {
+      console.log(`[email] OK ${who[i]} messageId=${(r.value as { messageId?: string }).messageId}`);
+    } else {
+      const reason = r.reason instanceof Error ? r.reason.message : String(r.reason);
+      console.error(`[email] KLAIDA ${who[i]}: ${reason}`);
+    }
+  });
 }
