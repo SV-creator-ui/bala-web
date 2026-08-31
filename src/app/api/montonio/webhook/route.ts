@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { verifyMontonioToken } from "@/lib/montonio";
 import { syncBookingCalendarByRef } from "@/lib/booking/calendar-sync";
+import { notifyBookingPaidByRef } from "@/lib/booking/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
         .eq("merchant_reference", ref)
         .eq("status", "pending"); // tik jei dar nebuvo apmokėta
       await syncBookingCalendarByRef(ref); // į Google Calendar (jei sukonfigūruota)
-      // Čia vėliau (Fazė 3) — el. laiško klientui/adminui siuntimas.
+      await notifyBookingPaidByRef(ref); // patvirtinimo laiškai klientui + adminui
     }
 
     return NextResponse.json({ ok: true });

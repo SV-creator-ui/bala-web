@@ -7,6 +7,7 @@ import { getSupabaseAdmin, type BookingRow } from "@/lib/supabase/server";
 import { bookingWindowHHMM } from "@/lib/booking/window";
 import { dayHours } from "@/lib/booking/config";
 import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
+import { notifyBookingPaid } from "@/lib/booking/notify";
 import { dbConfigured } from "./auth";
 
 export type Blackout = { id: string; date: string; time: string | null; reason: string | null };
@@ -52,6 +53,7 @@ function mkBooking(
     total_eur: total, deposit_eur: deposit, status,
     montonio_uuid: null, merchant_reference: "BALA-DEMO-" + Math.random().toString(36).slice(2, 6).toUpperCase(),
     gcal_event_id: null,
+    emails_sent_at: null,
   };
 }
 
@@ -70,6 +72,7 @@ function mkParty(
     total_eur: total, deposit_eur: deposit, status,
     montonio_uuid: null, merchant_reference: "BALA-DEMO-" + Math.random().toString(36).slice(2, 6).toUpperCase(),
     gcal_event_id: null,
+    emails_sent_at: null,
   };
 }
 
@@ -102,6 +105,7 @@ export async function updateBookingStatus(id: string, status: BookingStatus): Pr
   const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
   if (error) throw error;
   await syncBookingCalendar(id); // paid -> sukurti/atnaujinti; cancelled -> ištrinti
+  if (status === "paid") await notifyBookingPaid(id); // patvirtinimo laiškai (vieną kartą)
 }
 
 export async function getBooking(id: string): Promise<BookingRow | null> {

@@ -24,7 +24,8 @@ create table if not exists public.bookings (
                        check (status in ('pending','paid','cancelled','expired')),
   montonio_uuid      text,
   merchant_reference text not null unique,
-  gcal_event_id      text                               -- Google Calendar įvykio id
+  gcal_event_id      text,                              -- Google Calendar įvykio id
+  emails_sent_at     timestamptz                        -- kada išsiųsti patvirtinimo laiškai
 );
 
 create index if not exists bookings_date_time_idx on public.bookings (date, time);
