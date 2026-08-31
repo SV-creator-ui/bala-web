@@ -167,11 +167,58 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // Antraštė + įvadas — pilno pločio virš dviejų kolonų, kad suvestinė dešinėje
+  // sulygiuotų su kairės pusės turinio blokais (paketais, kalendoriumi ir t. t.).
+  const partyOnly = typeLocked && type === "party";
+  const head =
+    step === 1
+      ? {
+          n: 1,
+          title: partyOnly ? "Pasirinkite paketą" : "Ką rezervuojate?",
+          intro: partyOnly
+            ? "Pasirinkite gimtadienio / šventės paketą. Papildymus galite pridėti žemiau."
+            : "Pasirinkite įprastą VR pabėgimo kambario apsilankymą arba gimtadienio / šventės paketą.",
+        }
+      : step === 2
+      ? {
+          n: 2,
+          title: "Data ir laikas",
+          intro:
+            type === "party"
+              ? `Rodomas pradžios laikas. Prieš ir po šventės rezervuojame po 30 min. (${BOOKING.partyBufferBeforeMin} min. atvykti, ${BOOKING.partyBufferAfterMin} min. susitvarkyti).`
+              : "Rezervuok VR pabėgimo kambario laiką. Konkretų scenarijų pasirinksi atvykęs.",
+        }
+      : step === 3
+      ? {
+          n: 3,
+          title: type === "party" ? "Dalyviai" : "Žaidėjai",
+          intro:
+            type === "party"
+              ? `Kiek dalyvių šventėje? Paketo kaina fiksuota (iki ${pkg ? pkg.maxPlayers : BOOKING.maxPlayers} žaid.).`
+              : `2–${BOOKING.maxPlayers} žaidėjų. Nuo 7 asm. žaidžiama dviem komandomis vienu metu.`,
+        }
+      : step === 4
+      ? {
+          n: 4,
+          title: "Tavo kontaktai",
+          intro: "Į šiuos duomenis atsiųsime patvirtinimą ir priminimą prieš vizitą.",
+        }
+      : {
+          n: 5,
+          title: "Apmokėjimas",
+          intro: `Vietai rezervuoti sumokamas ${formatEur(deposit)} € avansas. Likutį sumokėsi vietoje.`,
+        };
+
   return (
     <div>
       <Steps step={step} />
 
-      <div className="mt-8 grid gap-7 lg:grid-cols-[1fr_320px] items-start">
+      <div className="mt-8">
+        <StepHead n={head.n} title={head.title} />
+        <p className="mt-2 max-w-[64ch] text-sm text-smoke">{head.intro}</p>
+      </div>
+
+      <div className="mt-6 grid gap-7 lg:grid-cols-[1fr_320px] items-start">
         <div>
           {step === 1 && (
             <StepType
@@ -295,63 +342,53 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
 
   return (
     <div>
-      <StepHead n={1} title={partyOnly ? "Pasirinkite paketą" : "Ką rezervuojate?"} />
-
       {!partyOnly && (
-        <>
-          <p className="text-smoke text-sm mb-5 max-w-[60ch]">
-            Pasirinkite įprastą VR pabėgimo kambario apsilankymą arba gimtadienio / šventės paketą.
-          </p>
-
-          <div className="grid gap-3 sm:grid-cols-2 max-w-[620px]">
-            <TypeCard
-              active={type === "room"}
-              onClick={() => setType("room")}
-              emoji="🥽"
-              title="VR pabėgimo kambarys"
-              desc="Įprastas apsilankymas 2–10 žaidėjų. Scenarijų renkatės vietoje."
-            />
-            <TypeCard
-              active={type === "party"}
-              onClick={() => setType("party")}
-              emoji="🎂"
-              title="Gimtadienio / šventės paketas"
-              desc="Pilnas šventės paketas su vaišėms skirtu laiku ir instruktoriumi."
-            />
-          </div>
-        </>
+        <div className="grid gap-3 sm:grid-cols-2 max-w-[620px]">
+          <TypeCard
+            active={type === "room"}
+            onClick={() => setType("room")}
+            emoji="🥽"
+            title="VR pabėgimo kambarys"
+            desc="Įprastas apsilankymas 2–10 žaidėjų. Scenarijų renkatės vietoje."
+          />
+          <TypeCard
+            active={type === "party"}
+            onClick={() => setType("party")}
+            emoji="🎂"
+            title="Gimtadienio / šventės paketas"
+            desc="Pilnas šventės paketas su vaišėms skirtu laiku ir instruktoriumi."
+          />
+        </div>
       )}
 
       {type === "party" && (
         <>
           {!partyOnly && <h3 className="font-display uppercase text-lg mt-8 mb-3">Pasirinkite paketą</h3>}
-          {partyOnly && (
-            <p className="text-smoke text-sm mb-5 max-w-[60ch]">
-              Pasirinkite gimtadienio / šventės paketą. Papildymus galite pridėti žemiau.
-            </p>
-          )}
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             {PARTY_PACKAGES.map((p) => {
               const on = pkgId === p.id;
               return (
                 <button
                   key={p.id}
                   onClick={() => setPkgId(p.id)}
-                  className={`rounded-2xl border px-5 py-4 text-left transition ${
+                  className={`flex h-full flex-col rounded-2xl border px-5 py-5 text-left transition ${
                     on ? "border-volt bg-volt/10" : "border-line bg-ink-card hover:border-line-strong"
                   }`}
                 >
-                  {p.featured && (
-                    <span className="mb-2 inline-block rounded-full bg-volt/20 px-2 py-0.5 text-[10px] font-bold uppercase text-volt">
-                      Populiariausias
-                    </span>
-                  )}
-                  <div className="flex items-baseline justify-between gap-3">
+                  {/* Fiksuoto aukščio ženkliuko eilutė — kad pavadinimai visose kortelėse sutaptų */}
+                  <div className="mb-2 h-[18px]">
+                    {p.featured && (
+                      <span className="inline-block rounded-full bg-volt/20 px-2 py-0.5 text-[10px] font-bold uppercase text-volt">
+                        Populiariausias
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2">
                     <span className="font-display text-xl uppercase">{p.name}</span>
                     <span className="font-mono text-sm text-smoke-2 whitespace-nowrap">{p.durationLabel}</span>
                   </div>
-                  <p className="mt-1 text-[13px] text-smoke">{p.tagline}</p>
-                  <div className="mt-3 flex items-baseline gap-2">
+                  <p className="mt-1 flex-1 text-[13px] text-smoke">{p.tagline}</p>
+                  <div className="mt-4 flex items-baseline gap-2">
                     <span className="font-display text-2xl">€{p.price}</span>
                     <span className="text-xs text-smoke-2">iki {p.maxPlayers} žaid.</span>
                   </div>
@@ -426,14 +463,8 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
   for (let i = 0; i < startDow; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  const intro = type === "party"
-    ? `Rodomas pradžios laikas. Prieš ir po šventės rezervuojame po 30 min. (${BOOKING.partyBufferBeforeMin} min. atvykti, ${BOOKING.partyBufferAfterMin} min. susitvarkyti).`
-    : `Rezervuok VR pabėgimo kambario laiką. Konkretų scenarijų pasirinksi atvykęs.`;
-
   return (
     <div>
-      <StepHead n={2} title="Data ir laikas" />
-      <p className="text-smoke text-sm mb-5 max-w-[62ch]">{intro}</p>
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="rounded-2xl border border-line bg-ink-card p-4">
           <div className="flex items-center justify-between mb-3">
@@ -536,14 +567,9 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms 
 }) {
   const min = type === "party" ? 1 : BOOKING.minPlayers;
   const max = type === "party" && pkg ? pkg.maxPlayers : BOOKING.maxPlayers;
-  const helper = type === "party"
-    ? `Kiek dalyvių šventėje? Paketo kaina fiksuota (iki ${max} žaid.).`
-    : `2–${BOOKING.maxPlayers} žaidėjų. Nuo 7 asm. žaidžiama dviem komandomis vienu metu.`;
 
   return (
     <div>
-      <StepHead n={3} title={type === "party" ? "Dalyviai" : "Žaidėjai"} />
-      <p className="text-smoke text-sm mb-5">{helper}</p>
       <div className="flex flex-col gap-5 max-w-[460px]">
         <div className="flex items-center justify-between rounded-2xl border border-line bg-ink-card px-6 py-5">
           <div>
@@ -613,8 +639,6 @@ function StepContact({ name, setName, phone, setPhone, email, setEmail, note, se
   const nameOk = validName(name), phoneOk = validPhone(phone), emailOk = validEmail(email);
   return (
     <div>
-      <StepHead n={4} title="Tavo kontaktai" />
-      <p className="text-smoke text-sm mb-5">Į šiuos duomenis atsiųsime patvirtinimą ir priminimą prieš vizitą.</p>
       <div className="grid gap-4 sm:grid-cols-2 max-w-[560px]">
         <Field label="Vardas" value={name} onChange={setName}
           onBlur={() => name.trim() && setTouched({ ...touched, name: true })}
@@ -668,8 +692,6 @@ function Field({ label, value, onChange, onBlur, error, ok, placeholder, inputMo
 function StepPayment({ deposit, rest, error }: { deposit: number; rest: number; error: string | null }) {
   return (
     <div>
-      <StepHead n={5} title="Apmokėjimas" />
-      <p className="text-smoke text-sm mb-5">Vietai rezervuoti sumokamas {formatEur(deposit)} € avansas. Likutį sumokėsi vietoje.</p>
       <div className="max-w-[560px]">
         <div className="flex items-center gap-3.5 rounded-xl border border-volt bg-ink-card px-4.5 py-4 mb-6">
           <span className="grid h-5 w-5 place-items-center rounded-full border-2 border-volt"><span className="h-2.5 w-2.5 rounded-full bg-volt" /></span>

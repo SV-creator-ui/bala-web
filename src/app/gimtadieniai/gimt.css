@@ -1837,14 +1837,21 @@ html { scroll-behavior: smooth; }
   --color-line: rgba(77, 184, 204, 0.22);
   --color-line-strong: rgba(77, 184, 204, 0.42);
   --color-white: #ffffff;
-  --color-smoke: rgba(255, 255, 255, 0.84);
-  --color-smoke-2: rgba(255, 255, 255, 0.60);
+  /* Visas pagalbinis tekstas – grynai baltas (be pilkų atspalvių) */
+  --color-smoke: #ffffff;
+  --color-smoke-2: #ffffff;
   --color-volt: #f0a500;
   --color-volt-deep: #d69400;
   --color-volt-ink: #0d2b35;
   --color-genre-green: #4db8cc;
   --color-genre-blue: #4db8cc;
   --color-genre-pink: #ff6b6b;
+  color: #ffffff;
+}
+/* Jokių šešėlių prie teksto rezervacijos formoje */
+.gimt-booking,
+.gimt-booking * {
+  text-shadow: none !important;
 }
 
 /* ── Patvirtinimo (bilieto) puslapis ── */
