@@ -1,4 +1,4 @@
-const BOOKING_URL = "/rezervacija?type=party";
+const BOOKING_URL = "/gimtadieniai/rezervacija";
 
 // Vidurinė CTA juostelė — greitas kelias į rezervaciją nelaukiant paketų sekcijos.
 export default function MidCta() {

@@ -337,18 +337,18 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
                 <button
                   key={p.id}
                   onClick={() => setPkgId(p.id)}
-                  className={`relative rounded-2xl border px-5 py-4 text-left transition ${
+                  className={`rounded-2xl border px-5 py-4 text-left transition ${
                     on ? "border-volt bg-volt/10" : "border-line bg-ink-card hover:border-line-strong"
                   }`}
                 >
                   {p.featured && (
-                    <span className="absolute right-3 top-3 rounded-full bg-volt/20 px-2 py-0.5 text-[10px] font-bold uppercase text-volt">
+                    <span className="mb-2 inline-block rounded-full bg-volt/20 px-2 py-0.5 text-[10px] font-bold uppercase text-volt">
                       Populiariausias
                     </span>
                   )}
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="font-display text-xl uppercase">{p.name}</span>
-                    <span className="font-mono text-sm text-smoke-2">{p.durationLabel}</span>
+                    <span className="font-mono text-sm text-smoke-2 whitespace-nowrap">{p.durationLabel}</span>
                   </div>
                   <p className="mt-1 text-[13px] text-smoke">{p.tagline}</p>
                   <div className="mt-3 flex items-baseline gap-2">

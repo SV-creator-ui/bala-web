@@ -1,4 +1,4 @@
-const BOOKING_URL = "/rezervacija?type=party";
+const BOOKING_URL = "/gimtadieniai/rezervacija";
 
 export default function ScarcityCta() {
   return (

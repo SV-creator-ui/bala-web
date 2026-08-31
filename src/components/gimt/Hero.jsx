@@ -1,6 +1,6 @@
 import HeroVideo from "./HeroVideo";
 
-const BOOKING_URL = "/rezervacija?type=party";
+const BOOKING_URL = "/gimtadieniai/rezervacija";
 
 const stats = [
   { num: "500+", label: "Gimtadienių" },

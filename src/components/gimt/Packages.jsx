@@ -1,8 +1,8 @@
 import { Tick } from "./Icons";
 
-// Rezervacija tvarkoma vidinėje sistemoje (/rezervacija) — paketas parenkamas
-// per URL parametrą, kad grafikas būtų bendras su pabėgimo kambariais.
-const bookingHref = (pkgId) => `/rezervacija?type=party&pkg=${pkgId}`;
+// Rezervacija tvarkoma gimtadienių dizaino puslapyje; paketas parenkamas per
+// URL parametrą (grafikas bendras su pabėgimo kambariais).
+const bookingHref = (pkgId) => `/gimtadieniai/rezervacija?pkg=${pkgId}`;
 
 const packages = [
   {

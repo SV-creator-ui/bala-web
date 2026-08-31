@@ -1774,3 +1774,75 @@ html { scroll-behavior: smooth; }
   .fade-up { animation: none; }
   * { transition-duration: 1ms !important; animation-duration: 1ms !important; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   GIMTADIENIŲ REZERVACIJOS PUSLAPIS (/gimtadieniai/rezervacija)
+   Naudoja bendrą BookingFlow komponentą, bet perdengia pabėgimo (bala)
+   dizaino spalvų tokenus šventine teal+amber palete.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Antraštės juosta */
+.gimt-res-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13, 43, 53, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--white-12);
+}
+.gimt-res-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.gimt-res-main {
+  padding: 40px 0 96px;
+}
+.gimt-res-eyebrow {
+  color: var(--amber);
+  font-family: var(--font-body);
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  margin-bottom: var(--space-3);
+}
+.gimt-res-title {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1.08;
+  color: var(--white);
+  margin-bottom: var(--space-3);
+}
+.gimt-res-title em { color: var(--amber); font-style: normal; }
+.gimt-res-lead {
+  color: var(--text-secondary);
+  font-size: var(--fs-body-lg);
+  max-width: 60ch;
+  margin-bottom: var(--space-8);
+}
+
+/* Perdengiam bala tokenus, kad BookingFlow atrodytų kaip gimtadienių puslapis.
+   Tailwind v4 utilitos remiasi var(--color-*), tad užtenka jas perdefinuoti. */
+.gimt-booking {
+  --color-ink: #0a222a;
+  --color-ink-soft: #0d2b35;
+  --color-ink-card: #123844;
+  --color-ink-card-2: #16495a;
+  --color-line: rgba(77, 184, 204, 0.22);
+  --color-line-strong: rgba(77, 184, 204, 0.42);
+  --color-white: #ffffff;
+  --color-smoke: rgba(255, 255, 255, 0.84);
+  --color-smoke-2: rgba(255, 255, 255, 0.60);
+  --color-volt: #f0a500;
+  --color-volt-deep: #d69400;
+  --color-volt-ink: #0d2b35;
+  --color-genre-green: #4db8cc;
+  --color-genre-blue: #4db8cc;
+  --color-genre-pink: #ff6b6b;
+}

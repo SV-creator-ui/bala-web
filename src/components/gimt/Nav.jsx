@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const BOOKING_URL = "/rezervacija?type=party";
+const BOOKING_URL = "/gimtadieniai/rezervacija";
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
