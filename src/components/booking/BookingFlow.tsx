@@ -196,7 +196,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
           title: "Žaidėjai",
           intro:
             type === "party"
-              ? `Galimas žaidėjų skaičius – ${pkg ? pkg.maxPlayers : BOOKING.maxPlayers}.`
+              ? "Minimalus žaidėjų amžius – 7 metai. Jaunesni svečiai VR žaisti negalės."
               : `2–${BOOKING.maxPlayers} žaidėjų. Nuo 7 asm. žaidžiama dviem komandomis vienu metu.`,
         }
       : step === 4
@@ -589,7 +589,7 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms 
               </p>
             )}
             {type === "party" && pkg && (
-              <p className="text-xs text-smoke-2 mt-1">Paketas {pkg.name} · iki {pkg.maxPlayers} žaid.</p>
+              <p className="text-xs text-smoke-2 mt-1">Paketas {pkg.name} · iki {pkg.maxPlayers} žaidėjų.</p>
             )}
           </div>
           <div className="flex items-center gap-4">
