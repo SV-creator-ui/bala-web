@@ -7,7 +7,7 @@
  */
 import { BOOKING } from "./config";
 
-export type PartyPackageId = "midi" | "maksi" | "vip" | "gold";
+export type PartyPackageId = "maksi" | "vip" | "gold";
 
 export type PartyPackage = {
   id: PartyPackageId;
@@ -28,24 +28,6 @@ export type PartyPackage = {
 };
 
 export const PARTY_PACKAGES: readonly PartyPackage[] = [
-  {
-    id: "midi",
-    name: "MIDI",
-    durationLabel: "1,5 val.",
-    durationMin: 90,
-    price: 189,
-    maxPlayers: 10,
-    vrHeadsets: 5,
-    tagline: "Trumpai, aktyviai šventei mažesnei grupei.",
-    features: [
-      "1,5 val. apsilankymas",
-      "Įtraukta ~ 30 min. vaišėms",
-      "Iki 10 žaidėjų, 5 VR akiniai",
-      "VR komandiniai žaidimai",
-      "Arkadiniai žaidimai",
-      "Instruktoriaus priežiūra",
-    ],
-  },
   {
     id: "maksi",
     name: "MAKSI",

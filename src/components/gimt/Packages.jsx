@@ -6,23 +6,6 @@ const bookingHref = (pkgId) => `/gimtadieniai/rezervacija?pkg=${pkgId}`;
 
 const packages = [
   {
-    name: "MIDI",
-    pkgId: "midi",
-    sub: "1.5 val.",
-    tagline: "Trumpai, aktyviai šventei mažesnei grupei.",
-    price: "€189",
-    features: [
-      "1,5 val. apsilankymas",
-      "Įtraukta ~ 30 min. vaišėms",
-      "Iki 10 žaidėjų, 5 VR akiniai",
-      "VR komandiniai žaidimai",
-      "Arkadiniai žaidimai",
-      "Instruktoriaus priežiūra",
-    ],
-    featured: false,
-    cta: "btn-secondary",
-  },
-  {
     name: "MAKSI",
     pkgId: "maksi",
     deco: "balloon",
