@@ -1116,9 +1116,12 @@ html { scroll-behavior: smooth; }
 
 .packages-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-5);
   align-items: stretch;
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .price-card {
   position: relative;
