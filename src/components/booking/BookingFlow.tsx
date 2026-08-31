@@ -39,6 +39,7 @@ export default function BookingFlow() {
   const [viewMonth, setViewMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
 
   const [type, setType] = useState<BookingType | null>(null);
+  const [typeLocked, setTypeLocked] = useState(false); // tipas parinktas iš URL (nerodom tipo kortelių)
   const [pkgId, setPkgId] = useState<PartyPackageId | null>(null);
   const [partyExtras, setPartyExtras] = useState<string[]>([]);
 
@@ -69,10 +70,12 @@ export default function BookingFlow() {
     const p = q.get("pkg");
     if (t === "party") {
       setType("party");
+      setTypeLocked(true);
       const valid = PARTY_PACKAGES.find((x) => x.id === p);
       if (valid) { setPkgId(valid.id); setStep(2); }
     } else if (t === "room") {
       setType("room");
+      setTypeLocked(true);
       setStep(2);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -175,6 +178,7 @@ export default function BookingFlow() {
         <div>
           {step === 1 && (
             <StepType
+              locked={typeLocked}
               type={type}
               setType={(t) => { setType(t); setTime(null); if (t === "room") setPkgId(null); }}
               pkgId={pkgId}
@@ -280,38 +284,52 @@ function Steps({ step }: { step: number }) {
 }
 
 /* ---------------- Step 1: Type + package ---------------- */
-function StepType({ type, setType, pkgId, setPkgId, partyExtras, setPartyExtras }: {
-  type: BookingType | null; setType: (t: BookingType) => void;
+function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPartyExtras }: {
+  locked: boolean; type: BookingType | null; setType: (t: BookingType) => void;
   pkgId: PartyPackageId | null; setPkgId: (id: PartyPackageId) => void;
   partyExtras: string[]; setPartyExtras: (a: string[]) => void;
 }) {
+  // Kai tipas parinktas iš URL (pvz. iš gimtadienių puslapio) — nerodom tipo
+  // kortelių, iškart tik paketo pasirinkimą.
+  const partyOnly = locked && type === "party";
+
   return (
     <div>
-      <StepHead n={1} title="Ką rezervuojate?" />
-      <p className="text-smoke text-sm mb-5 max-w-[60ch]">
-        Pasirinkite įprastą VR pabėgimo kambario apsilankymą arba gimtadienio / šventės paketą.
-      </p>
+      <StepHead n={1} title={partyOnly ? "Pasirinkite paketą" : "Ką rezervuojate?"} />
 
-      <div className="grid gap-3 sm:grid-cols-2 max-w-[620px]">
-        <TypeCard
-          active={type === "room"}
-          onClick={() => setType("room")}
-          emoji="🥽"
-          title="VR pabėgimo kambarys"
-          desc="Įprastas apsilankymas 2–10 žaidėjų. Scenarijų renkatės vietoje."
-        />
-        <TypeCard
-          active={type === "party"}
-          onClick={() => setType("party")}
-          emoji="🎂"
-          title="Gimtadienio / šventės paketas"
-          desc="Pilnas šventės paketas su vaišėms skirtu laiku ir instruktoriumi."
-        />
-      </div>
+      {!partyOnly && (
+        <>
+          <p className="text-smoke text-sm mb-5 max-w-[60ch]">
+            Pasirinkite įprastą VR pabėgimo kambario apsilankymą arba gimtadienio / šventės paketą.
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-2 max-w-[620px]">
+            <TypeCard
+              active={type === "room"}
+              onClick={() => setType("room")}
+              emoji="🥽"
+              title="VR pabėgimo kambarys"
+              desc="Įprastas apsilankymas 2–10 žaidėjų. Scenarijų renkatės vietoje."
+            />
+            <TypeCard
+              active={type === "party"}
+              onClick={() => setType("party")}
+              emoji="🎂"
+              title="Gimtadienio / šventės paketas"
+              desc="Pilnas šventės paketas su vaišėms skirtu laiku ir instruktoriumi."
+            />
+          </div>
+        </>
+      )}
 
       {type === "party" && (
         <>
-          <h3 className="font-display uppercase text-lg mt-8 mb-3">Pasirinkite paketą</h3>
+          {!partyOnly && <h3 className="font-display uppercase text-lg mt-8 mb-3">Pasirinkite paketą</h3>}
+          {partyOnly && (
+            <p className="text-smoke text-sm mb-5 max-w-[60ch]">
+              Pasirinkite gimtadienio / šventės paketą. Papildymus galite pridėti žemiau.
+            </p>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             {PARTY_PACKAGES.map((p) => {
               const on = pkgId === p.id;
