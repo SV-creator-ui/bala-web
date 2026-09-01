@@ -29,8 +29,8 @@ export function validEmail(raw: string): boolean {
 }
 
 /** Rezervacijos tipas */
-export function validBookingType(v: string): v is "room" | "party" {
-  return v === "room" || v === "party";
+export function validBookingType(v: string): v is "room" | "party" | "game" {
+  return v === "room" || v === "party" || v === "game";
 }
 
 /** Data formatu YYYY-MM-DD, ne praeityje (pagal serverio laiką) */

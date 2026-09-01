@@ -26,7 +26,7 @@ export function getSupabaseAdmin(): SupabaseClient {
 export type BookingRow = {
   id: string;
   created_at: string;
-  type: "room" | "party";
+  type: "room" | "party" | "game";
   package_id: string | null;
   date: string; // YYYY-MM-DD
   time: string; // "14:30" — klientui rodoma pradžia

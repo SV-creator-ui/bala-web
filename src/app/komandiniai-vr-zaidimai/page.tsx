@@ -9,7 +9,6 @@ export const metadata: Metadata = {
     "Komandiniai VR žaidimai be pabėgimo scenarijaus: 3 žaidimai (~45 min.) nuo €50 ir arkadiniai žaidimai nuo €8. BALA VR Klaipėdoje.",
 };
 
-const BOOKING_URL = "https://booking.moizmo.com/lt/booking/";
 const ACCENT = "#34d1e0";
 
 function Arrow() {
@@ -105,16 +104,14 @@ export default function LaisvasZaidimasPage() {
               ))}
             </ul>
 
-            <a
-              href={BOOKING_URL}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href="/komandiniai-vr-zaidimai/rezervacija"
               className="mt-7 inline-flex items-center justify-center gap-2 rounded-full font-bold text-[16px] px-7 py-4 text-[#04252b] transition-transform hover:-translate-y-0.5"
               style={{ background: "linear-gradient(180deg, #5be6dc 0%, #34d1e0 100%)" }}
             >
               Rezervuoti
               <Arrow />
-            </a>
+            </Link>
           </div>
 
           {/* Arkadiniai žaidimai */}

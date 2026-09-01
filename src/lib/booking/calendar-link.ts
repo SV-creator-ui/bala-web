@@ -13,6 +13,8 @@ export function googleCalendarRenderUrl(b: BookingRow): string {
   const pkg = isParty ? getPartyPackage(b.package_id ?? "") : undefined;
   const title = isParty
     ? `BALA VR gimtadienis${pkg ? " " + pkg.name : ""}`
+    : b.type === "game"
+    ? "BALA VR komandiniai žaidimai"
     : "BALA VR pabėgimo kambarys";
 
   // Klientui rodome tik pačios šventės/apsilankymo langą (be tvarkymosi buferio —

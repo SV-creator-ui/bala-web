@@ -7,7 +7,7 @@ import { getPartyPackage } from "@/lib/booking/packages";
 
 type Booking = {
   id: string;
-  type: "room" | "party";
+  type: "room" | "party" | "game";
   package_id: string | null;
   date: string;
   time: string;
@@ -29,6 +29,7 @@ function serviceLabel(b: Booking): string {
     const pkg = getPartyPackage(b.package_id ?? "");
     return pkg ? `Paketas ${pkg.name}` : "Šventės paketas";
   }
+  if (b.type === "game") return "Komandiniai VR žaidimai";
   return "Pabėgimo kambarys";
 }
 type Blackout = { id: string; date: string; time: string | null; reason: string | null };

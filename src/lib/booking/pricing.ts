@@ -12,6 +12,15 @@ export function roomsPrice(players: number): number {
   return 20 * players; // 4–10 asm. po 20 €/asm.
 }
 
+/**
+ * Kaina grupei už komandinius VR žaidimus pagal žaidėjų skaičių.
+ * 2 žaid. → 50 €, 3 žaid. → 60 €, kiekvienas papildomas (nuo 4) +20 €.
+ */
+export function gamesPrice(players: number): number {
+  if (players <= 2) return 50;
+  return 20 * players; // 3 → 60, 4 → 80 … 10 → 200
+}
+
 /** Pasirinktų priedų suma */
 export function addonsPrice(addonIds: string[]): number {
   return ADDONS.filter((a) => addonIds.includes(a.id)).reduce((s, a) => s + a.price, 0);

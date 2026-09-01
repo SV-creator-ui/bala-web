@@ -61,10 +61,10 @@ export function venueNow(now: Date = new Date()): { date: string; min: number } 
   };
 }
 
-/** Rezervacijos tipas */
-export type BookingType = "room" | "party";
+/** Rezervacijos tipas: pabėgimo kambarys / šventės paketas / komandiniai žaidimai */
+export type BookingType = "room" | "party" | "game";
 
-/** Avansas pagal rezervacijos tipą */
+/** Avansas pagal rezervacijos tipą (game ir room — vienodas) */
 export function depositFor(type: BookingType): number {
   return type === "party" ? BOOKING.depositPartyEur : BOOKING.depositEur;
 }

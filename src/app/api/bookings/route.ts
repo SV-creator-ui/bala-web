@@ -9,7 +9,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { isSlotAvailable } from "@/lib/booking/availability";
-import { grandTotal } from "@/lib/booking/pricing";
+import { grandTotal, gamesPrice } from "@/lib/booking/pricing";
 import { BOOKING, ADDONS, generateSlotsForDate, dayHours, depositFor, type BookingType } from "@/lib/booking/config";
 import { bookingWindowHHMM } from "@/lib/booking/window";
 import {
@@ -79,6 +79,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Netinkami laukai: " + errors.join(", ") }, { status: 400 });
     }
     total = partyTotal(pkg!, date, addons);
+  } else if (type === "game") {
+    // Komandiniai VR žaidimai — be priedų, 2–10 žaidėjų, sava kainodara.
+    addons = [];
+    if (!Number.isInteger(players) || players < BOOKING.minPlayers || players > BOOKING.maxPlayers) {
+      errors.push("žaidėjai");
+    }
+    if (errors.length) {
+      return NextResponse.json({ error: "Netinkami laukai: " + errors.join(", ") }, { status: 400 });
+    }
+    total = gamesPrice(players);
   } else {
     const validAddonIds = ADDONS.map((a) => a.id);
     addons = rawAddons.filter((id) => validAddonIds.includes(id));
@@ -144,6 +154,8 @@ export async function POST(req: Request) {
     // Gimtadienių paketai turi savo dizaino patvirtinimo puslapį.
     const confirmPath = type === "party"
       ? "/gimtadieniai/rezervacija/patvirtinta"
+      : type === "game"
+      ? "/komandiniai-vr-zaidimai/rezervacija/patvirtinta"
       : "/rezervacija/patvirtinta";
 
     // --- Testavimo režimas: praleidžiam mokėjimą (iškart „paid") ---
@@ -161,6 +173,8 @@ export async function POST(req: Request) {
     const base = siteUrl(req);
     const label = type === "party"
       ? `BALA VR gimtadienio paketo avansas — ${date} ${time}`
+      : type === "game"
+      ? `BALA VR komandinių žaidimų avansas — ${date} ${time}`
       : `BALA VR pabėgimo kambario avansas — ${date} ${time}`;
     const order = await createMontonioOrder({
       merchantReference,

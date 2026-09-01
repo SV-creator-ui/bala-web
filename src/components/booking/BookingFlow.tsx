@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { BOOKING, ADDONS, depositFor, toHHMM, type BookingType } from "@/lib/booking/config";
 import { activityEndMin } from "@/lib/booking/window";
-import { roomsPrice, grandTotal, formatEur } from "@/lib/booking/pricing";
+import { roomsPrice, gamesPrice, grandTotal, formatEur } from "@/lib/booking/pricing";
 import {
   PARTY_PACKAGES, PARTY_EXTRAS, getPartyPackage,
   partyTotal, partyDiscount, isDiscountDay,
@@ -57,8 +57,8 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const today = useMemo(() => startOfDay(new Date()), []);
   const [viewMonth, setViewMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
 
-  // Įprastam kambariui tipo/paketo fazės nėra — pirmas žingsnis yra laikas.
-  const roomOnly = initialType === "room";
+  // Kambariui ir komandiniams žaidimams tipo/paketo fazės nėra — pirmas žingsnis laikas.
+  const roomOnly = initialType === "room" || initialType === "game";
   const phases: Phase[] = roomOnly
     ? ["date", "players", "contact", "payment"]
     : ["type", "date", "players", "contact", "payment"];
@@ -102,7 +102,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   useEffect(() => {
     if (type === "party" && pkg) {
       setPlayers((p) => Math.min(Math.max(1, p), pkg.maxPlayers));
-    } else if (type === "room") {
+    } else if (type === "room" || type === "game") {
       setPlayers((p) => Math.min(Math.max(BOOKING.minPlayers, p), BOOKING.maxPlayers));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -135,18 +135,20 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     return () => { cancelled = true; };
   }, [date, type, pkgId, addonsKey]);
 
-  // Kainos
+  // Kainos. „rooms" — kaina už patį žaidimą (kambarys arba komandiniai žaidimai).
   const deposit = type ? depositFor(type) : 0;
-  const rooms = type === "room" ? roomsPrice(players) : 0;
+  const rooms = type === "room" ? roomsPrice(players) : type === "game" ? gamesPrice(players) : 0;
   const total = type === "party" && pkg && date
     ? partyTotal(pkg, date, partyExtras)
     : type === "room"
     ? grandTotal(players, addons)
+    : type === "game"
+    ? gamesPrice(players)
     : 0;
 
   function canProceed(): boolean {
     switch (phase) {
-      case "type": return type === "room" || (type === "party" && !!pkgId);
+      case "type": return type === "room" || type === "game" || (type === "party" && !!pkgId);
       case "date": return !!(date && time);
       case "players": return players >= 1;
       case "contact": return validName(name) && validPhone(phone) && validEmail(email);
@@ -202,6 +204,8 @@ export default function BookingFlow({ initialType, initialPkgId }: {
       intro:
         type === "party"
           ? ""
+          : type === "game"
+          ? "Rezervuok komandinių VR žaidimų laiką. 3 žaidimai, ~45 min."
           : "Rezervuok VR pabėgimo kambario laiką. Konkretų scenarijų pasirinksi atvykęs.",
     },
     players: {
@@ -209,6 +213,8 @@ export default function BookingFlow({ initialType, initialPkgId }: {
       intro:
         type === "party"
           ? "Minimalus žaidėjų amžius – 7 metai. Jaunesni svečiai VR žaisti negalės."
+          : type === "game"
+          ? `2–${BOOKING.maxPlayers} žaidėjų. 2 žaid. – 50 €, 3 žaid. – 60 €, kiekvienas papildomas +20 €.`
           : `2–${BOOKING.maxPlayers} žaidėjų. Nuo 7 asm. žaidžiama dviem komandomis vienu metu.`,
     },
     contact: {
@@ -306,7 +312,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
         <button
           onClick={next}
           disabled={!canProceed() || submitting}
-          className="rounded-xl bg-volt text-volt-ink font-bold px-7 py-3.5 shadow-[0_6px_18px_rgba(255,228,0,.35)] transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
+          className="rounded-xl bg-volt text-volt-ink font-bold px-7 py-3.5 shadow-[0_6px_18px_var(--btn-glow,rgba(255,228,0,.35))] transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
         >
           {submitting ? "Palaukite…" : step === lastStep ? `Sumokėti ${formatEur(deposit)} € ›` : "Toliau ›"}
         </button>
@@ -594,7 +600,7 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms 
         <div className="flex items-center justify-between rounded-2xl border border-line bg-ink-card px-6 py-5">
           <div>
             <h3 className="font-display uppercase text-lg">{type === "party" ? "Planuojamas žaidėjų skaičius" : "Žaidėjų skaičius"}</h3>
-            {type === "room" && (
+            {(type === "room" || type === "game") && (
               <p className="text-xs text-smoke-2 mt-1">
                 {formatEur(rooms)} € grupei ({formatEur(rooms / players)} €/asm.)
               </p>
@@ -768,7 +774,7 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
 }) {
   // Kambario kaina rodoma nuo tada, kai pasiekiama žaidėjų (ar vėlesnė) fazė.
   const reachedPlayers = phase === "players" || phase === "contact" || phase === "payment";
-  const priceReady = !!type && (type === "room" ? reachedPlayers : !!pkg && !!date);
+  const priceReady = !!type && (type === "room" || type === "game" ? reachedPlayers : !!pkg && !!date);
   const discount = type === "party" && date ? partyDiscount(date) : 0;
 
   return (
@@ -776,14 +782,14 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
       <h3 className="font-mono text-xs uppercase tracking-wider text-smoke-2 mb-4">Tavo rezervacija</h3>
       <div className="flex items-center gap-3 border-b border-line pb-4 mb-4">
         <div className="grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br from-neutral-700 to-black text-xl">
-          {type === "party" ? "🎂" : "🥽"}
+          {type === "party" ? "🎂" : type === "game" ? "🎮" : "🥽"}
         </div>
         <div>
           <h4 className="font-display uppercase text-[15px] leading-tight">
-            {type === "party" ? (pkg ? `Paketas ${pkg.name}` : "Šventės paketas") : "VR pabėgimo kambarys"}
+            {type === "party" ? (pkg ? `Paketas ${pkg.name}` : "Šventės paketas") : type === "game" ? "Komandiniai VR žaidimai" : "VR pabėgimo kambarys"}
           </h4>
           <span className="font-mono text-xs text-smoke-2">
-            {type === "party" ? (pkg ? pkg.durationLabel : "Pasirink paketą") : "Scenarijus — vietoje"}
+            {type === "party" ? (pkg ? pkg.durationLabel : "Pasirink paketą") : type === "game" ? "3 žaidimai · ~45 min." : "Scenarijus — vietoje"}
           </span>
         </div>
       </div>
@@ -791,7 +797,7 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
       <SumLine label={type === "party" ? "Pradžia" : "Laikas"} value={time || "—"} />
       {priceReady ? (
         <>
-          {type === "room" && <SumLine label={`Žaidėjai · ${players} asm.`} value={`${formatEur(rooms)} €`} />}
+          {(type === "room" || type === "game") && <SumLine label={`Žaidėjai · ${players} asm.`} value={`${formatEur(rooms)} €`} />}
           {type === "party" && pkg && (
             <>
               <SumLine label={`Paketas ${pkg.name}`} value={`${formatEur(pkg.price)} €`} />
