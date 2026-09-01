@@ -19,8 +19,18 @@ import { isClosedHoliday } from "@/lib/booking/holidays";
 import { validName, validPhone, validEmail } from "@/lib/booking/validation";
 
 type SlotStatus = { time: string; available: boolean };
-const STEP_LABELS = ["Tipas", "Laikas", "Žaidėjai", "Kontaktai", "Apmokėjimas"] as const;
-const LAST_STEP = STEP_LABELS.length;
+
+// Rezervacijos fazės. Įprastam VR pabėgimo kambariui (room) "type" fazės nėra —
+// pirmas žingsnis iškart yra laikas. Šventės paketams (party) pirmas žingsnis
+// išlieka paketo pasirinkimas.
+type Phase = "type" | "date" | "players" | "contact" | "payment";
+const PHASE_LABEL: Record<Phase, string> = {
+  type: "Tipas",
+  date: "Laikas",
+  players: "Žaidėjai",
+  contact: "Kontaktai",
+  payment: "Apmokėjimas",
+};
 
 const MONTHS = ["Sausis","Vasaris","Kovas","Balandis","Gegužė","Birželis","Liepa","Rugpjūtis","Rugsėjis","Spalis","Lapkritis","Gruodis"];
 const MONTHS_GEN = ["sausio","vasario","kovo","balandžio","gegužės","birželio","liepos","rugpjūčio","rugsėjo","spalio","lapkričio","gruodžio"];
@@ -47,13 +57,21 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const today = useMemo(() => startOfDay(new Date()), []);
   const [viewMonth, setViewMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
 
-  // Kai tipas ateina iš URL (iš gimtadienių puslapio), iškart peršokam į 2 žingsnį
-  // (party — jei paketas jau žinomas; room — visada). Kitaip pradedam nuo 1.
+  // Įprastam kambariui tipo/paketo fazės nėra — pirmas žingsnis yra laikas.
+  const roomOnly = initialType === "room";
+  const phases: Phase[] = roomOnly
+    ? ["date", "players", "contact", "payment"]
+    : ["type", "date", "players", "contact", "payment"];
+  const lastStep = phases.length;
+
+  // Pradinis žingsnis: room — iškart laikas (1). Party su jau žinomu paketu —
+  // peršokam paketo pasirinkimą (laikas = 2). Kitaip pradedam nuo pradžios.
   const [step, setStep] = useState(() => {
-    if (initialType === "room") return 2;
+    if (roomOnly) return 1;
     if (initialType === "party" && initialPkg) return 2;
     return 1;
   });
+  const phase: Phase = phases[step - 1];
 
   const [type, setType] = useState<BookingType | null>(initialType ?? null);
   const [typeLocked] = useState(!!initialType); // tipas parinktas iš URL (nerodom tipo kortelių)
@@ -127,12 +145,12 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     : 0;
 
   function canProceed(): boolean {
-    switch (step) {
-      case 1: return type === "room" || (type === "party" && !!pkgId);
-      case 2: return !!(date && time);
-      case 3: return players >= 1;
-      case 4: return validName(name) && validPhone(phone) && validEmail(email);
-      case 5: return agreed;
+    switch (phase) {
+      case "type": return type === "room" || (type === "party" && !!pkgId);
+      case "date": return !!(date && time);
+      case "players": return players >= 1;
+      case "contact": return validName(name) && validPhone(phone) && validEmail(email);
+      case "payment": return agreed;
       default: return false;
     }
   }
@@ -160,7 +178,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
 
   function next() {
     if (!canProceed()) return;
-    if (step < LAST_STEP) setStep(step + 1);
+    if (step < lastStep) setStep(step + 1);
     else submit();
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -172,57 +190,50 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   // Antraštė + įvadas — pilno pločio virš dviejų kolonų, kad suvestinė dešinėje
   // sulygiuotų su kairės pusės turinio blokais (paketais, kalendoriumi ir t. t.).
   const partyOnly = typeLocked && type === "party";
-  const head =
-    step === 1
-      ? {
-          n: 1,
-          title: partyOnly ? "Pasirinkite paketą" : "Ką rezervuojate?",
-          intro: partyOnly
-            ? "Pasirinkite gimtadienio / šventės paketą. Papildymus galite pridėti žemiau."
-            : "Pasirinkite įprastą VR pabėgimo kambario apsilankymą arba gimtadienio / šventės paketą.",
-        }
-      : step === 2
-      ? {
-          n: 2,
-          title: "Data ir laikas",
-          intro:
-            type === "party"
-              ? `Rodomas pradžios laikas. Prieš ir po šventės rezervuojame po 30 min. (${BOOKING.partyBufferBeforeMin} min. atvykti, ${BOOKING.partyBufferAfterMin} min. susitvarkyti).`
-              : "Rezervuok VR pabėgimo kambario laiką. Konkretų scenarijų pasirinksi atvykęs.",
-        }
-      : step === 3
-      ? {
-          n: 3,
-          title: "Žaidėjai",
-          intro:
-            type === "party"
-              ? "Minimalus žaidėjų amžius – 7 metai. Jaunesni svečiai VR žaisti negalės."
-              : `2–${BOOKING.maxPlayers} žaidėjų. Nuo 7 asm. žaidžiama dviem komandomis vienu metu.`,
-        }
-      : step === 4
-      ? {
-          n: 4,
-          title: "Tavo kontaktai",
-          intro: "Į šiuos duomenis atsiųsime patvirtinimą ir priminimą prieš vizitą.",
-        }
-      : {
-          n: 5,
-          title: "Apmokėjimas",
-          intro: `Vietai rezervuoti sumokamas ${formatEur(deposit)} € avansas. Likutį sumokėsi vietoje.`,
-        };
+  const headByPhase: Record<Phase, { title: string; intro: string }> = {
+    type: {
+      title: partyOnly ? "Pasirinkite paketą" : "Ką rezervuojate?",
+      intro: partyOnly
+        ? "Pasirinkite gimtadienio / šventės paketą. Papildymus galite pridėti žemiau."
+        : "Pasirinkite įprastą VR pabėgimo kambario apsilankymą arba gimtadienio / šventės paketą.",
+    },
+    date: {
+      title: "Data ir laikas",
+      intro:
+        type === "party"
+          ? `Rodomas pradžios laikas. Prieš ir po šventės rezervuojame po 30 min. (${BOOKING.partyBufferBeforeMin} min. atvykti, ${BOOKING.partyBufferAfterMin} min. susitvarkyti).`
+          : "Rezervuok VR pabėgimo kambario laiką. Konkretų scenarijų pasirinksi atvykęs.",
+    },
+    players: {
+      title: "Žaidėjai",
+      intro:
+        type === "party"
+          ? "Minimalus žaidėjų amžius – 7 metai. Jaunesni svečiai VR žaisti negalės."
+          : `2–${BOOKING.maxPlayers} žaidėjų. Nuo 7 asm. žaidžiama dviem komandomis vienu metu.`,
+    },
+    contact: {
+      title: "Tavo kontaktai",
+      intro: "Į šiuos duomenis atsiųsime patvirtinimą ir priminimą prieš vizitą.",
+    },
+    payment: {
+      title: "Apmokėjimas",
+      intro: `Vietai rezervuoti sumokamas ${formatEur(deposit)} € avansas. Likutį sumokėsi vietoje.`,
+    },
+  };
+  const head = { n: step, ...headByPhase[phase] };
 
   return (
     <div>
-      <Steps step={step} />
+      <Steps phases={phases} step={step} />
 
       <div className="mt-8">
-        <StepHead n={head.n} title={head.title} />
+        <StepHead n={head.n} last={lastStep} title={head.title} />
         <p className="mt-2 max-w-[64ch] text-sm text-smoke">{head.intro}</p>
       </div>
 
       <div className="mt-6 grid gap-7 lg:grid-cols-[1fr_320px] items-start">
         <div>
-          {step === 1 && (
+          {phase === "type" && (
             <StepType
               locked={typeLocked}
               type={type}
@@ -233,7 +244,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               setPartyExtras={(a) => { setPartyExtras(a); setTime(null); }}
             />
           )}
-          {step === 2 && (
+          {phase === "date" && (
             <StepDate
               today={today}
               viewMonth={viewMonth}
@@ -251,14 +262,14 @@ export default function BookingFlow({ initialType, initialPkgId }: {
                 : null}
             />
           )}
-          {step === 3 && (
+          {phase === "players" && (
             <StepPlayers
               type={type!} pkg={pkg}
               players={players} setPlayers={setPlayers}
               addons={addons} setAddons={setAddons} rooms={rooms}
             />
           )}
-          {step === 4 && (
+          {phase === "contact" && (
             <StepContact
               name={name} setName={setName}
               phone={phone} setPhone={setPhone}
@@ -267,11 +278,11 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               touched={touched} setTouched={setTouched}
             />
           )}
-          {step === 5 && <StepPayment deposit={deposit} rest={total - deposit} error={error} agreed={agreed} setAgreed={setAgreed} />}
+          {phase === "payment" && <StepPayment deposit={deposit} rest={total - deposit} error={error} agreed={agreed} setAgreed={setAgreed} />}
         </div>
 
         <Summary
-          step={step}
+          phase={phase}
           type={type}
           pkg={pkg}
           date={date}
@@ -297,7 +308,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
           disabled={!canProceed() || submitting}
           className="rounded-xl bg-volt text-volt-ink font-bold px-7 py-3.5 shadow-[0_6px_18px_rgba(255,228,0,.35)] transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
         >
-          {submitting ? "Palaukite…" : step === LAST_STEP ? `Sumokėti ${formatEur(deposit)} € ›` : "Toliau ›"}
+          {submitting ? "Palaukite…" : step === lastStep ? `Sumokėti ${formatEur(deposit)} € ›` : "Toliau ›"}
         </button>
       </div>
     </div>
@@ -305,15 +316,15 @@ export default function BookingFlow({ initialType, initialPkgId }: {
 }
 
 /* ---------------- Progress ---------------- */
-function Steps({ step }: { step: number }) {
+function Steps({ phases, step }: { phases: Phase[]; step: number }) {
   return (
     <div className="flex flex-wrap items-center">
-      {STEP_LABELS.map((label, i) => {
+      {phases.map((p, i) => {
         const n = i + 1;
         const active = step === n;
         const done = step > n;
         return (
-          <div key={label} className="flex items-center">
+          <div key={p} className="flex items-center">
             <div className={`flex items-center gap-2 ${active || done ? "opacity-100" : "opacity-40"}`}>
               <span
                 className={`grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-bold ${
@@ -322,9 +333,9 @@ function Steps({ step }: { step: number }) {
               >
                 {done ? "✓" : n}
               </span>
-              <span className="hidden sm:inline text-[12.5px] font-semibold">{label}</span>
+              <span className="hidden sm:inline text-[12.5px] font-semibold">{PHASE_LABEL[p]}</span>
             </div>
-            {n < STEP_LABELS.length && <span className="mx-2 h-0.5 w-5 bg-line" />}
+            {n < phases.length && <span className="mx-2 h-0.5 w-5 bg-line" />}
           </div>
         );
       })}
@@ -750,12 +761,14 @@ function StepPayment({ deposit, rest, error, agreed, setAgreed }: {
 }
 
 /* ---------------- Summary ---------------- */
-function Summary({ step, type, pkg, date, time, players, addons, partyExtras, rooms, total, deposit }: {
-  step: number; type: BookingType | null; pkg: ReturnType<typeof getPartyPackage>;
+function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, rooms, total, deposit }: {
+  phase: Phase; type: BookingType | null; pkg: ReturnType<typeof getPartyPackage>;
   date: string | null; time: string | null; players: number;
   addons: string[]; partyExtras: string[]; rooms: number; total: number; deposit: number;
 }) {
-  const priceReady = !!type && (type === "room" ? step >= 3 : !!pkg && !!date);
+  // Kambario kaina rodoma nuo tada, kai pasiekiama žaidėjų (ar vėlesnė) fazė.
+  const reachedPlayers = phase === "players" || phase === "contact" || phase === "payment";
+  const priceReady = !!type && (type === "room" ? reachedPlayers : !!pkg && !!date);
   const discount = type === "party" && date ? partyDiscount(date) : 0;
 
   return (
@@ -819,10 +832,10 @@ function SumLine({ label, value, muted = false }: { label: string; value: string
 }
 
 /* ---------------- Shared ---------------- */
-function StepHead({ n, title }: { n: number; title: string }) {
+function StepHead({ n, last, title }: { n: number; last: number; title: string }) {
   return (
     <div className="flex items-baseline gap-3.5 mb-1">
-      <span className="font-mono text-xs text-volt">{String(n).padStart(2, "0")} / 0{LAST_STEP}</span>
+      <span className="font-mono text-xs text-volt">{String(n).padStart(2, "0")} / {String(last).padStart(2, "0")}</span>
       <h2 className="font-display text-3xl md:text-4xl uppercase">{title}</h2>
     </div>
   );

@@ -9,15 +9,7 @@ export const metadata: Metadata = {
     "Rezervuok VR pabėgimo kambario laiką BALA VR Klaipėdoje. Pasirink laiką, žaidėjų skaičių ir sumokėk avansą internetu.",
 };
 
-export default async function Page({ searchParams }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const sp = await searchParams;
-  const t = typeof sp.type === "string" ? sp.type : undefined;
-  const p = typeof sp.pkg === "string" ? sp.pkg : undefined;
-  const initialType = t === "party" || t === "room" ? t : undefined;
-  const initialPkgId = initialType === "party" ? p : undefined;
-
+export default async function Page() {
   return (
     <>
       <Nav />
@@ -30,7 +22,7 @@ export default async function Page({ searchParams }: {
             Rezervuok VR pabėgimo kambarį
           </h1>
         </header>
-        <BookingFlow initialType={initialType} initialPkgId={initialPkgId} />
+        <BookingFlow initialType="room" />
       </main>
       <Footer />
     </>
