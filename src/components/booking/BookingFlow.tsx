@@ -201,7 +201,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
       title: "Data ir laikas",
       intro:
         type === "party"
-          ? `Rodomas pradžios laikas. Prieš ir po šventės rezervuojame po 30 min. (${BOOKING.partyBufferBeforeMin} min. atvykti, ${BOOKING.partyBufferAfterMin} min. susitvarkyti).`
+          ? ""
           : "Rezervuok VR pabėgimo kambario laiką. Konkretų scenarijų pasirinksi atvykęs.",
     },
     players: {
@@ -228,7 +228,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
 
       <div className="mt-8">
         <StepHead n={head.n} last={lastStep} title={head.title} />
-        <p className="mt-2 max-w-[64ch] text-sm text-smoke">{head.intro}</p>
+        {head.intro && <p className="mt-2 max-w-[64ch] text-sm text-smoke">{head.intro}</p>}
       </div>
 
       <div className="mt-6 grid gap-7 lg:grid-cols-[1fr_320px] items-start">
