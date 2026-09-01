@@ -15,11 +15,8 @@ export default async function Page() {
       <Nav />
       <main className="mx-auto max-w-[1100px] px-5 py-12 md:py-16">
         <header className="mb-8">
-          <span className="font-mono text-xs uppercase tracking-[0.2em] text-volt">
-            Rezervacija · Klaipėda
-          </span>
-          <h1 className="font-display text-4xl md:text-5xl uppercase mt-2">
-            Rezervuok VR pabėgimo kambarį
+          <h1 className="font-display text-4xl md:text-5xl uppercase">
+            Rezervacija
           </h1>
         </header>
         <BookingFlow initialType="room" />
