@@ -13,7 +13,7 @@ export default async function Page() {
   return (
     <>
       <Nav />
-      <main className="mx-auto max-w-[1100px] px-5 py-12 md:py-16">
+      <main className="mx-auto max-w-[1100px] px-5 pt-28 md:pt-36 pb-12 md:pb-16">
         <header className="mb-8">
           <h1 className="font-display text-4xl md:text-5xl uppercase">
             Rezervacija
