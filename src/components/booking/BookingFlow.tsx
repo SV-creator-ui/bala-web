@@ -7,8 +7,8 @@
  * Kaina ir avansas rodomi iš @/lib/booking (tas pats šaltinis kaip serveryje).
  */
 import { useEffect, useMemo, useState } from "react";
-import { BOOKING, ADDONS, depositFor, dayHours, type BookingType } from "@/lib/booking/config";
-import { bookingWindowHHMM } from "@/lib/booking/window";
+import { BOOKING, ADDONS, depositFor, toHHMM, type BookingType } from "@/lib/booking/config";
+import { activityEndMin } from "@/lib/booking/window";
 import { roomsPrice, grandTotal, formatEur } from "@/lib/booking/pricing";
 import {
   PARTY_PACKAGES, PARTY_EXTRAS, getPartyPackage,
@@ -257,8 +257,8 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               slotsLoading={slotsLoading}
               type={type!}
               pkg={pkg}
-              block={type === "party" && pkg && date && time
-                ? bookingWindowHHMM("party", time, pkgId, partyExtras, dayHours(date).openMin)
+              block={type === "party" && pkg && time
+                ? { start: time, end: toHHMM(activityEndMin("party", time, pkgId, partyExtras)) }
                 : null}
             />
           )}
@@ -463,7 +463,7 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
   time: string | null; setTime: (t: string) => void;
   slots: SlotStatus[] | null; slotsLoading: boolean;
   type: BookingType; pkg: ReturnType<typeof getPartyPackage>;
-  block: { blockStart: string; blockEnd: string } | null;
+  block: { start: string; end: string } | null;
 }) {
   const y = viewMonth.getFullYear();
   const m = viewMonth.getMonth();
@@ -569,8 +569,8 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
           )}
           {type === "party" && pkg && time && block && (
             <p className="mt-3 text-[12.5px] text-smoke-2">
-              Šventė {time}. Salė rezervuojama nuo {block.blockStart} iki {block.blockEnd}.{" "}
-              Išeiti būtina iki {addMin(block.blockEnd, 5)}.
+              Šventė {time}. Ateiti galima 15 min. anksčiau. Salė rezervuojama nuo {block.start} iki {block.end}.{" "}
+              Išeiti būtina iki {addMin(block.end, 5)}.
             </p>
           )}
         </div>

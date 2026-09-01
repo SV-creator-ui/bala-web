@@ -4,7 +4,9 @@
  * savo rezervaciją į savo kalendorių.
  */
 import type { BookingRow } from "@/lib/supabase/server";
+import { toHHMM } from "@/lib/booking/config";
 import { getPartyPackage } from "./packages";
+import { activityEndMin } from "./window";
 
 export function googleCalendarRenderUrl(b: BookingRow): string {
   const isParty = b.type === "party";
@@ -13,8 +15,11 @@ export function googleCalendarRenderUrl(b: BookingRow): string {
     ? `BALA VR gimtadienis${pkg ? " " + pkg.name : ""}`
     : "BALA VR pabėgimo kambarys";
 
+  // Klientui rodome tik pačios šventės/apsilankymo langą (be tvarkymosi buferio —
+  // tvarkosi žaidimų kambarys, ne klientas).
+  const addons = Array.isArray(b.addons) ? (b.addons as unknown[]).map(String) : [];
   const start = b.time;
-  const end = b.block_end ?? b.time;
+  const end = toHHMM(activityEndMin(b.type, b.time, b.package_id, addons));
   const fmt = (hhmm: string) => `${b.date.replace(/-/g, "")}T${hhmm.replace(":", "")}00`;
   const dates = `${fmt(start)}/${fmt(end)}`;
 
