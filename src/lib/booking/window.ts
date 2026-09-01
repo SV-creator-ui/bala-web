@@ -35,6 +35,27 @@ export function bookingWindow(
   return { startMin: start, endMin: start + BOOKING.roomDurationMin };
 }
 
+/**
+ * Aktyvios veiklos pabaiga minutėmis — BE po-buferio (tvarkymuisi).
+ * Naudojama darbo laiko pabaigos patikrai: paskutinės dienos rezervacijos
+ * tvarkymasis vyksta jau po uždarymo, todėl į darbo valandas jo neįskaičiuojame.
+ * Kambariui po-buferio nėra, tad sutampa su bookingWindow pabaiga.
+ */
+export function activityEndMin(
+  type: BookingType,
+  time: string,
+  packageId?: string | null,
+  addons: string[] = [],
+): number {
+  const start = toMin(time);
+  if (type === "party") {
+    const pkg = getPartyPackage(packageId || "");
+    const dur = pkg ? partyDurationMin(pkg, addons) : 0;
+    return start + dur;
+  }
+  return start + BOOKING.roomDurationMin;
+}
+
 /** Tas pats langas, bet "HH:MM" formatu (saugojimui DB: block_start / block_end). */
 export function bookingWindowHHMM(
   type: BookingType,

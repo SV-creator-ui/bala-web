@@ -10,7 +10,7 @@ import {
   BOOKING, generateSlotsForDate, dayHours, toMin,
   EARLY_OPEN_MIN, PARTY_BLOCKED_STARTS_EARLY, venueNow, type BookingType,
 } from "./config";
-import { bookingWindow, overlaps, type Interval } from "./window";
+import { bookingWindow, activityEndMin, overlaps, type Interval } from "./window";
 import { isClosedHoliday } from "./holidays";
 
 export type SlotStatus = { time: string; available: boolean };
@@ -99,8 +99,12 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
 
     const w = bookingWindow(query.type, time, query.packageId ?? null, query.addons ?? [], openMin);
 
-    // 1) Ar langas telpa į darbo laiką?
-    if (w.startMin < openMin || w.endMin > closeEndMin) return { time, available: false };
+    // 1) Ar telpa į darbo laiką? Pradžia (su prieš-buferiu) turi būti ne anksčiau
+    //    nei atidarymas, o AKTYVI veikla baigtis iki uždarymo. Po-buferis
+    //    (tvarkymasis) gali tęstis po uždarymo — todėl į patikrą jo neįtraukiame.
+    //    Taip I–IV (uždaro 20:30) galima pradėti 2,5 val. paketą 18:00.
+    const actEnd = activityEndMin(query.type, time, query.packageId ?? null, query.addons ?? []);
+    if (w.startMin < openMin || actEnd > closeEndMin) return { time, available: false };
 
     // 2) Ar neužkliudo užblokuotų laikų?
     if (blackoutIntervals.some((bo) => overlaps(w, bo))) return { time, available: false };
