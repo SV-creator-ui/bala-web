@@ -8,7 +8,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import {
   BOOKING, generateSlotsForDate, dayHours, toMin,
-  EARLY_OPEN_MIN, PARTY_BLOCKED_STARTS_EARLY, type BookingType,
+  EARLY_OPEN_MIN, PARTY_BLOCKED_STARTS_EARLY, venueNow, type BookingType,
 } from "./config";
 import { bookingWindow, overlaps, type Interval } from "./window";
 import { isClosedHoliday } from "./holidays";
@@ -53,6 +53,11 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
   const supabase = getSupabaseAdmin();
   const { openMin, closeEndMin } = dayHours(date);
 
+  // Išankstinio laiko riba: šiandienai neberodome jau prasidėjusių ar per arti
+  // esančių laikų (mažiau nei „dabar + bookingLeadMin"). Kitoms dienoms — 0.
+  const nowV = venueNow();
+  const leadCutoffMin = date === nowV.date ? nowV.min + BOOKING.bookingLeadMin : -1;
+
   const holdCutoff = new Date(Date.now() - BOOKING.pendingHoldMin * 60_000).toISOString();
 
   const [{ data: bookings }, { data: blackouts }] = await Promise.all([
@@ -81,7 +86,10 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
     busy.push(existingInterval(b));
   }
 
-  return slots.map((time) => {
+  // Šiandienai visiškai nerodome praėjusių / per arti esančių laikų.
+  const visible = leadCutoffMin >= 0 ? slots.filter((t) => toMin(t) >= leadCutoffMin) : slots;
+
+  return visible.map((time) => {
     if (wholeDayBlocked) return { time, available: false };
 
     // Rytinė apsauga: 10 val. dienomis šventės pradžia negalima 11:30/12:00/12:30.

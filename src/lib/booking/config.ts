@@ -30,9 +30,36 @@ export const BOOKING = {
   slotCapacity: 1,
   /** Kiek minučių laikoma "pending" rezervacija, kol nesumokėtas avansas */
   pendingHoldMin: 30,
+  /**
+   * Mažiausias išankstinis laikas iki seanso pradžios (minutėmis). Šiandienos
+   * dienai laikai, prasidedantys anksčiau nei „dabar + tiek", neberodomi.
+   */
+  bookingLeadMin: 60,
   currency: "EUR" as const,
   locale: "lt" as const,
 } as const;
+
+/** Įstaigos laiko juosta (serveris Vercel'e veikia UTC, todėl skaičiuojame aiškiai). */
+export const TIMEZONE = "Europe/Vilnius";
+
+/**
+ * Dabartinė data ir laikas įstaigos laiko juostoje.
+ * Grąžina { date: "YYYY-MM-DD", min: minutės nuo paros pradžios }.
+ */
+export function venueNow(now: Date = new Date()): { date: string; min: number } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIMEZONE,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(now);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
+  // hour12:false kartais grąžina "24" vidurnaktį — normalizuojame į 0.
+  const hh = Number(get("hour")) % 24;
+  return {
+    date: `${get("year")}-${get("month")}-${get("day")}`,
+    min: hh * 60 + Number(get("minute")),
+  };
+}
 
 /** Rezervacijos tipas */
 export type BookingType = "room" | "party";
