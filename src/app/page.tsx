@@ -65,7 +65,7 @@ export default function ChooserPage() {
           {/* VR pabėgimo kambariai */}
           <Link
             href="/pabegimo-kambariai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.3)] hover:border-volt transition-colors md:min-h-0"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.5)] hover:border-volt transition-colors md:min-h-0"
           >
             <div className="absolute inset-0 animate-ken-a will-change-transform motion-reduce:animate-none">
               <Image
