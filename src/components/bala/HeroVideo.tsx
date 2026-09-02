@@ -34,7 +34,7 @@ export default function HeroVideo() {
   };
 
   return (
-    <div className="relative w-full max-w-[420px] mx-auto aspect-[4/5] overflow-hidden rounded-2xl border border-line-strong bg-ink-card shadow-[0_30px_90px_-24px_rgba(0,0,0,.75)]">
+    <div className="relative w-full max-w-[420px] mx-auto aspect-[4/5] overflow-hidden rounded-2xl border border-line-strong bg-ink-card shadow-[0_30px_90px_-24px_rgba(0,0,0,.75)] transform-gpu [contain:paint] [will-change:transform]">
       <video
         ref={ref}
         className="absolute inset-0 w-full h-full object-cover"
@@ -55,7 +55,7 @@ export default function HeroVideo() {
       />
 
       {/* Plūduriuojanti atsiliepimo kortelė – social proof ant video */}
-      <figure className="absolute top-3 left-3 z-2 max-w-[220px] rounded-xl border border-white/15 bg-ink/70 backdrop-blur-md px-3.5 py-3 shadow-[0_12px_30px_-10px_rgba(0,0,0,.7)]">
+      <figure className="absolute top-3 left-3 z-2 max-w-[220px] rounded-xl border border-white/15 bg-ink/88 px-3.5 py-3 shadow-[0_12px_30px_-10px_rgba(0,0,0,.7)]">
         <div className="flex items-center gap-1.5">
           <span className="text-volt text-[13px] leading-none tracking-[2px]" aria-hidden>★★★★★</span>
           <span className="sr-only">5 iš 5 žvaigždučių</span>
@@ -74,7 +74,7 @@ export default function HeroVideo() {
         onClick={toggleSound}
         aria-label={muted ? "Įjungti garsą" : "Išjungti garsą"}
         aria-pressed={!muted}
-        className="absolute bottom-3 right-3 z-2 inline-flex items-center gap-2 rounded-full border border-white/25 bg-ink/60 px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-white backdrop-blur-sm transition-[background,border-color,transform] hover:-translate-y-0.5 hover:border-volt hover:text-volt"
+        className="absolute bottom-3 right-3 z-2 inline-flex items-center gap-2 rounded-full border border-white/25 bg-ink/80 px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-white transition-[background,border-color,transform] hover:-translate-y-0.5 hover:border-volt hover:text-volt"
       >
         {muted ? (
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">

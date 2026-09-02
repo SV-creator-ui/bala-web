@@ -197,8 +197,8 @@ export default function HeroFX() {
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden [--m-on:0] [--mx:50%] [--my:38%]"
     >
       {/* Švytintys rutuliai – lėtas gylio judesys */}
-      <div className="animate-fx-orb-a absolute -top-[20%] -left-[12%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(255,228,0,.9),transparent_65%)] opacity-[.26] blur-[110px]" />
-      <div className="animate-fx-orb-b absolute top-[26%] -right-[14%] h-[560px] w-[560px] rounded-full bg-[radial-gradient(circle,rgba(46,190,240,.85),transparent_65%)] opacity-[.18] blur-[120px]" />
+      <div className="animate-fx-orb-a absolute -top-[20%] -left-[12%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(255,228,0,.9),transparent_65%)] opacity-[.26] blur-[64px]" />
+      <div className="animate-fx-orb-b absolute top-[26%] -right-[14%] h-[560px] w-[560px] rounded-full bg-[radial-gradient(circle,rgba(46,190,240,.85),transparent_65%)] opacity-[.18] blur-[72px]" />
 
       {/* Perspektyvinis tinklas – VR portalo pojūtis */}
       <div className="absolute inset-x-0 bottom-0 h-[48%] [mask-image:linear-gradient(to_top,#000_0%,transparent_92%)] [perspective:520px]">
