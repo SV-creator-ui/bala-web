@@ -43,6 +43,7 @@ export default function HeroVideo() {
         loop
         playsInline
         preload="metadata"
+        poster="/assets/vr-cave-trailer-poster.jpg"
       >
         <source src="/assets/vr-cave-trailer.mp4" type="video/mp4" />
       </video>
