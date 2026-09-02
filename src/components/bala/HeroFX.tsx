@@ -102,13 +102,14 @@ export default function HeroFX() {
       w = Math.round(rect.width);
       h = Math.round(rect.height);
       if (w === 0 || h === 0) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // DPR=1 daleliems – jos minkštos, retina nereikia; canvas kaina kritiškai mažesnė.
+      const dpr = 1;
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const count = Math.round(Math.min(80, Math.max(24, (w * h) / 17000)));
+      const count = Math.round(Math.min(36, Math.max(14, (w * h) / 30000)));
       parts = Array.from({ length: count }, () => spawn(true));
     };
 
@@ -196,13 +197,13 @@ export default function HeroFX() {
       aria-hidden
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden [--m-on:0] [--mx:50%] [--my:38%]"
     >
-      {/* Švytintys rutuliai – lėtas gylio judesys */}
-      <div className="animate-fx-orb-a absolute -top-[20%] -left-[12%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(255,228,0,.9),transparent_65%)] opacity-[.26] blur-[64px]" />
-      <div className="animate-fx-orb-b absolute top-[26%] -right-[14%] h-[560px] w-[560px] rounded-full bg-[radial-gradient(circle,rgba(46,190,240,.85),transparent_65%)] opacity-[.18] blur-[72px]" />
+      {/* Švytintys rutuliai – statiškas švytėjimas (be animacijos = be per-frame blur re-raster) */}
+      <div className="absolute -top-[20%] -left-[12%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(255,228,0,.9),transparent_65%)] opacity-[.24] blur-[64px]" />
+      <div className="absolute top-[26%] -right-[14%] h-[560px] w-[560px] rounded-full bg-[radial-gradient(circle,rgba(46,190,240,.85),transparent_65%)] opacity-[.16] blur-[72px]" />
 
-      {/* Perspektyvinis tinklas – VR portalo pojūtis */}
+      {/* Perspektyvinis tinklas – VR portalo pojūtis (statiškas, be background-position animacijos) */}
       <div className="absolute inset-x-0 bottom-0 h-[48%] [mask-image:linear-gradient(to_top,#000_0%,transparent_92%)] [perspective:520px]">
-        <div className="fx-grid animate-fx-grid absolute inset-x-[-50%] bottom-0 h-[240%] origin-bottom [transform:rotateX(75deg)]" />
+        <div className="fx-grid absolute inset-x-[-50%] bottom-0 h-[240%] origin-bottom [transform:rotateX(75deg)]" />
       </div>
 
       {/* Plaukiančios dulkės */}
