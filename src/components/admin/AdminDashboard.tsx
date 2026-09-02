@@ -250,11 +250,154 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
         </table>
       </div>
 
+      {/* Dovanų kuponai */}
+      <div className="mt-10">
+        <h2 className="font-display text-2xl uppercase mb-3">Dovanų kuponai</h2>
+        <p className="text-smoke text-sm mb-4">Parduoti dovanų kuponai. „Panaudota" — nurašo rankiniu būdu; „Siųsti PDF" — persiunčia kuponą pirkėjui.</p>
+        <VoucherManager demo={demo} />
+      </div>
+
       {/* Blackouts */}
       <div className="mt-10">
         <h2 className="font-display text-2xl uppercase mb-3">Užblokuoti laikai</h2>
         <p className="text-smoke text-sm mb-4">Užblokuoti seansai nerodomi klientams (remontas, privatūs renginiai).</p>
         <BlackoutManager blackouts={blackouts} onChange={load} />
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Dovanų kuponai ---------------- */
+type Voucher = {
+  id: string;
+  code: string | null;
+  amount_eur: number;
+  status: "pending" | "active" | "redeemed" | "cancelled" | "expired";
+  buyer_name: string;
+  buyer_email: string;
+  recipient_name: string | null;
+  valid_until: string | null;
+  merchant_reference: string;
+  redeemed_booking_ref: string | null;
+  created_at: string;
+};
+const V_STATUS_LABEL: Record<Voucher["status"], string> = {
+  active: "Aktyvus", redeemed: "Panaudotas", pending: "Laukiama", cancelled: "Atšauktas", expired: "Pasibaigęs",
+};
+const V_STATUS_CLS: Record<Voucher["status"], string> = {
+  active: "bg-genre-green/15 text-genre-green border-genre-green/40",
+  redeemed: "bg-white/10 text-smoke-2 border-line",
+  pending: "bg-volt/15 text-volt border-volt/40",
+  cancelled: "bg-genre-pink/15 text-genre-pink border-genre-pink/40",
+  expired: "bg-white/10 text-smoke-2 border-line",
+};
+
+function VoucherManager({ demo }: { demo: boolean }) {
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [status, setStatus] = useState("all");
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    const d = await fetch(`/api/admin/vouchers?${params}`).then((r) => r.json()).catch(() => ({ vouchers: [] }));
+    setVouchers(d.vouchers ?? []);
+    setLoading(false);
+  }, [status]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function act(id: string, action: string) {
+    setBusy(id);
+    setNote(null);
+    const res = await fetch(`/api/admin/vouchers/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) setNote(d.error || "Nepavyko");
+    else if (action === "resend") setNote("PDF išsiųstas pirkėjui.");
+    await load();
+    setBusy(null);
+  }
+
+  if (demo) {
+    return <p className="rounded-xl border border-line bg-ink-card px-4 py-3 text-sm text-smoke-2">Kuponai matomi tik su sukonfigūruota Supabase (ne DEMO režime).</p>;
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <Filter label="Būsena">
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-lg border border-line bg-ink-card px-3 py-2 text-white [color-scheme:dark]">
+            <option value="all">Visi</option>
+            <option value="active">Aktyvūs</option>
+            <option value="redeemed">Panaudoti</option>
+            <option value="pending">Laukiantys</option>
+            <option value="cancelled">Atšaukti</option>
+          </select>
+        </Filter>
+        <button onClick={load} className="rounded-lg border border-line-strong px-4 py-2 text-sm font-semibold hover:border-volt hover:text-volt">Atnaujinti</button>
+        {note && <span className="text-sm text-smoke">{note}</span>}
+      </div>
+
+      <div className="overflow-x-auto rounded-2xl border border-line">
+        <table className="w-full min-w-[760px] text-sm">
+          <thead>
+            <tr className="bg-ink-card text-left font-mono text-[11px] uppercase tracking-wider text-smoke-2">
+              <th className="px-4 py-3">Kodas</th>
+              <th className="px-4 py-3">Vertė</th>
+              <th className="px-4 py-3">Pirkėjas</th>
+              <th className="px-4 py-3">Galioja iki</th>
+              <th className="px-4 py-3">Būsena</th>
+              <th className="px-4 py-3 text-right">Veiksmai</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={6} className="px-4 py-10 text-center text-smoke-2">Kraunama…</td></tr>
+            ) : vouchers.length === 0 ? (
+              <tr><td colSpan={6} className="px-4 py-10 text-center text-smoke-2">Kuponų nėra.</td></tr>
+            ) : (
+              vouchers.map((v) => (
+                <tr key={v.id} className="border-t border-line align-top">
+                  <td className="px-4 py-3 font-mono whitespace-nowrap">
+                    {v.code ?? "—"}
+                    {v.redeemed_booking_ref && <div className="text-[11px] text-smoke-2">→ {v.redeemed_booking_ref}</div>}
+                  </td>
+                  <td className="px-4 py-3 font-mono whitespace-nowrap">{formatEur(Number(v.amount_eur))} €</td>
+                  <td className="px-4 py-3">
+                    <div className="font-semibold">{v.buyer_name}</div>
+                    <div className="text-smoke-2 text-[13px]">{v.buyer_email}</div>
+                    {v.recipient_name && <div className="text-[12.5px] italic text-smoke-2">Kam: {v.recipient_name}</div>}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap font-mono">{v.valid_until ? fmtDate(v.valid_until) : "—"}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block rounded-full border px-2.5 py-1 text-[11px] font-bold ${V_STATUS_CLS[v.status]}`}>{V_STATUS_LABEL[v.status]}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap justify-end gap-1.5">
+                      {v.status === "active" && (
+                        <>
+                          <ActionBtn onClick={() => act(v.id, "redeem")} disabled={busy === v.id} kind="ghost">Panaudota</ActionBtn>
+                          <ActionBtn onClick={() => act(v.id, "resend")} disabled={busy === v.id} kind="ghost">Siųsti PDF</ActionBtn>
+                          <ActionBtn onClick={() => act(v.id, "cancel")} disabled={busy === v.id} kind="danger">Atšaukti</ActionBtn>
+                        </>
+                      )}
+                      {(v.status === "redeemed" || v.status === "cancelled" || v.status === "expired") && (
+                        <ActionBtn onClick={() => act(v.id, "reactivate")} disabled={busy === v.id} kind="ok">Atkurti</ActionBtn>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

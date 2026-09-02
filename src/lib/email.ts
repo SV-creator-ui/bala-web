@@ -44,6 +44,18 @@ function transporter(): nodemailer.Transporter {
   return cachedTransporter;
 }
 
+/* Bendri pagalbininkai kitiems laiškų moduliams (pvz. dovanų kuponams). */
+/** Bendras (cache'intas) nodemailer transporteris. */
+export function getTransporter(): nodemailer.Transporter {
+  return transporter();
+}
+/** Siuntėjo antraštė, pvz. "BALA VR" <...>. */
+export function senderAddress(): string {
+  return `"BALA VR" <${gmailUser()}>`;
+}
+/** Adreso pagalbininkai. */
+export { adminEmail as adminNotifyAddress };
+
 const MONTHS = ["sausio","vasario","kovo","balandžio","gegužės","birželio","liepos","rugpjūčio","rugsėjo","spalio","lapkričio","gruodžio"];
 function fmtDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
@@ -83,6 +95,8 @@ function shell(title: string, inner: string): string {
 function customerHtml(b: BookingRow): string {
   const isParty = b.type === "party";
   const total = Number(b.total_eur), dep = Number(b.deposit_eur);
+  const voucher = Number(b.voucher_discount_eur || 0);
+  const onSite = Math.max(0, total - voucher - dep);
   const inner = `
     <p style="margin:0 0 16px;color:#374151">Ačiū! Jūsų rezervacija patvirtinta. Iki pasimatymo BALA VR${isParty ? " šventėje" : ""}!</p>
     <table style="width:100%;border-collapse:collapse">
@@ -90,8 +104,9 @@ function customerHtml(b: BookingRow): string {
       ${row("Data", fmtDate(b.date))}
       ${row(isParty ? "Pradžia" : "Laikas", b.time)}
       ${row(isParty ? "Dalyviai" : "Žaidėjai", `${b.players} asm.`)}
-      ${row("Sumokėtas avansas", `${formatEur(dep)} €`)}
-      ${row("Likutis vietoje", `${formatEur(total - dep)} €`)}
+      ${voucher > 0 ? row("Dovanų kuponas", `−${formatEur(voucher)} €`) : ""}
+      ${row(dep > 0 ? "Sumokėtas avansas" : "Apmokėta", dep > 0 ? `${formatEur(dep)} €` : "dovanų kuponu")}
+      ${row("Likutis vietoje", `${formatEur(onSite)} €`)}
       ${row("Rezervacijos nr.", b.merchant_reference)}
     </table>
     <p style="margin:16px 0 0;color:#374151;font-size:14px">📍 Pajūrio g. 5B, Klaipėda${isParty ? " · atvykite ~15 min. anksčiau" : " · scenarijų pasirinksite atvykę"} · likutį sumokėsite vietoje.</p>
@@ -114,6 +129,7 @@ function adminHtml(b: BookingRow): string {
       ${row("Telefonas", b.customer_phone)}
       ${row("El. paštas", b.customer_email)}
       ${b.note ? row("Pastaba", b.note) : ""}
+      ${Number(b.voucher_discount_eur || 0) > 0 ? row("Dovanų kuponas", `−${formatEur(Number(b.voucher_discount_eur))} € (${b.voucher_code ?? ""})`) : ""}
       ${row("Suma / avansas", `${formatEur(total)} € / ${formatEur(dep)} €`)}
       ${row("Nr.", b.merchant_reference)}
     </table>`;
