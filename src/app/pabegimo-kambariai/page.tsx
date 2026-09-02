@@ -1,6 +1,7 @@
 import Nav from "@/components/bala/Nav";
 import Hero from "@/components/bala/Hero";
 import Footer from "@/components/bala/Footer";
+import HashScroll from "@/components/bala/HashScroll";
 import LocalBusinessJsonLd from "@/components/bala/LocalBusinessJsonLd";
 import {
   AtsiliepimaiSection,
@@ -20,6 +21,7 @@ export default function Home() {
   return (
     <>
       <LocalBusinessJsonLd />
+      <HashScroll />
       <Nav />
       <main>
         <Hero />

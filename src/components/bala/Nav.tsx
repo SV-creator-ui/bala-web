@@ -6,15 +6,17 @@ import Link from "next/link";
 
 type NavLink = { href: string; label: string };
 
+// Anchor'ai nurodyti su pilnu keliu, kad veiktų ir iš subpuslapių
+// (kambariai, blogas, kuponas), ne tik iš pagrindinio puslapio.
 const LINKS: NavLink[] = [
   { href: "/pabegimo-kambariai/kambariai", label: "Pabėgimo kambariai" },
-  { href: "#kaip-vyksta", label: "Kaip vyksta" },
-  { href: "#kainos", label: "Kainos" },
-  { href: "#atsiliepimai", label: "Atsiliepimai" },
-  { href: "#duk", label: "D.U.K." },
+  { href: "/pabegimo-kambariai#kaip-vyksta", label: "Kaip vyksta" },
+  { href: "/pabegimo-kambariai#kainos", label: "Kainos" },
+  { href: "/pabegimo-kambariai#atsiliepimai", label: "Atsiliepimai" },
+  { href: "/pabegimo-kambariai#duk", label: "D.U.K." },
   { href: "/pabegimo-kambariai/blog", label: "Blogas" },
   { href: "/pabegimo-kambariai/dovanu-kuponas", label: "Dovanų kuponas" },
-  { href: "#kontaktai", label: "Kontaktai" },
+  { href: "/pabegimo-kambariai#kontaktai", label: "Kontaktai" },
 ];
 
 export default function Nav() {
