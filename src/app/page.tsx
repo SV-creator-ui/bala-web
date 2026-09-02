@@ -41,7 +41,7 @@ export default function ChooserPage() {
   return (
     <main className="min-h-[100svh] flex flex-col bg-ink text-white">
       {/* Header */}
-      <header className="flex flex-col items-center text-center px-6 pt-8 pb-5 md:pt-10 md:pb-6">
+      <header className="flex flex-col items-center text-center px-6 pt-8 pb-3 md:pt-10 md:pb-6">
         <Image
           src="/assets/logo-bala-vr-wordmark.png"
           alt="BALA VR"
@@ -56,7 +56,7 @@ export default function ChooserPage() {
         <h1 className="mt-9 md:mt-5 font-display uppercase leading-[1.02] tracking-[-.01em] text-[clamp(26px,4.4vw,44px)]">
           Pasirinkite savo <span className="text-volt">pramogą</span>
         </h1>
-        <div className="mt-3 h-[47px] md:h-[50px]" aria-hidden />
+        <div className="mt-2 h-2 md:mt-3 md:h-[50px]" aria-hidden />
       </header>
 
       {/* Three choices */}
@@ -65,7 +65,7 @@ export default function ChooserPage() {
           {/* VR pabėgimo kambariai */}
           <Link
             href="/pabegimo-kambariai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-line hover:border-volt transition-colors min-h-[380px] md:min-h-0"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-line hover:border-volt transition-colors md:min-h-0"
           >
             <div className="absolute inset-0 animate-ken-a will-change-transform motion-reduce:animate-none">
               <Image
@@ -98,7 +98,7 @@ export default function ChooserPage() {
                   "Be vaišių zonos",
                 ]}
               />
-              <span className="mt-auto inline-flex items-center gap-2 rounded-full bg-volt text-volt-ink font-bold text-[15px] px-6 py-3.5 self-start transition-transform group-hover:-translate-y-0.5 [text-shadow:none]">
+              <span className="mt-6 md:mt-auto inline-flex items-center gap-2 rounded-full bg-volt text-volt-ink font-bold text-[15px] px-6 py-3.5 self-start transition-transform group-hover:-translate-y-0.5 [text-shadow:none]">
                 Rinktis
                 <Arrow />
               </span>
@@ -108,7 +108,7 @@ export default function ChooserPage() {
           {/* Gimtadienių paketai */}
           <Link
             href="/gimtadieniai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(77,184,204,0.3)] hover:border-[#f0a500] transition-colors min-h-[380px] md:min-h-0 bg-[#0d2b35]"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(77,184,204,0.3)] hover:border-[#f0a500] transition-colors md:min-h-0 bg-[#0d2b35]"
           >
             <div className="absolute inset-0 animate-ken-c will-change-transform motion-reduce:animate-none">
               <Image
@@ -153,7 +153,7 @@ export default function ChooserPage() {
           {/* VR veiksmo žaidimai */}
           <Link
             href="/komandiniai-vr-zaidimai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-colors min-h-[380px] md:min-h-0 bg-[#07242a]"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-colors md:min-h-0 bg-[#07242a]"
           >
             <div className="absolute inset-0 animate-ken-b will-change-transform motion-reduce:animate-none">
               <Image
