@@ -318,6 +318,50 @@ export function CtaBandSection() {
   );
 }
 
+export function DovanuKuponasSection() {
+  return (
+    <section id="dovanu-kuponas" className="py-14 md:py-20">
+      <div className="mx-auto max-w-[1280px] px-6 md:px-10 min-[1200px]:px-14">
+        <RevealOnScroll>
+          <div className="relative overflow-hidden rounded-3xl border border-volt/30 bg-gradient-to-br from-ink-card to-ink p-8 md:p-12">
+            {/* dekoratyvus švytėjimas */}
+            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-volt/15 blur-3xl" />
+            <div className="relative grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="text-3xl">🎁</span>
+                  <span className="font-mono text-xs uppercase tracking-[0.18em] text-volt">Dovanų kuponas</span>
+                </div>
+                <h2 className="font-display uppercase text-white leading-[1.05] text-[clamp(28px,4.6vw,52px)]">
+                  Padovanok nuotykį
+                </h2>
+                <p className="mt-3 max-w-[52ch] text-smoke">
+                  Nežinai ką padovanoti? BALA VR dovanų kuponas — puiki dovana gimtadienio ar švenčių proga.
+                  Vertė nuo <b className="text-white">30 €</b>, galioja <b className="text-white">6 mėnesius</b> ir tinka bet kuriam pabėgimo kambariui.
+                  Apmokėjus atsiųsime gražų PDF kuponą į el. paštą.
+                </p>
+                <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-smoke-2">
+                  <li className="flex items-center gap-2"><span className="text-volt">✓</span> Pasirenkama vertė</li>
+                  <li className="flex items-center gap-2"><span className="text-volt">✓</span> Iškart el. paštu</li>
+                  <li className="flex items-center gap-2"><span className="text-volt">✓</span> Galima personalizuoti</li>
+                </ul>
+              </div>
+              <div className="flex md:flex-col gap-3.5">
+                <a
+                  href="/pabegimo-kambariai/dovanu-kuponas"
+                  className="inline-flex items-center justify-center rounded-full bg-volt text-volt-ink px-8 py-4 text-[15px] font-bold transition-transform hover:-translate-y-0.5 hover:bg-volt-deep whitespace-nowrap"
+                >
+                  Užsisakyti kuponą
+                </a>
+              </div>
+            </div>
+          </div>
+        </RevealOnScroll>
+      </div>
+    </section>
+  );
+}
+
 export function KontaktaiSection() {
   return (
     <section id="kontaktai" className="py-14 md:py-20">

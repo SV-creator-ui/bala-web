@@ -6,6 +6,7 @@ import {
   AtsiliepimaiSection,
   ComparisonSection,
   CtaBandSection,
+  DovanuKuponasSection,
   DukSection,
   FirstTimeSection,
   KainosSection,
@@ -29,6 +30,7 @@ export default function Home() {
         <AtsiliepimaiSection />
         <KamTinkaSection />
         <KainosSection />
+        <DovanuKuponasSection />
         <DukSection />
         <CtaBandSection />
         <KontaktaiSection />
