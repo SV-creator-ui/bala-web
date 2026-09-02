@@ -28,7 +28,7 @@ function Features({ items, color }: { items: string[]; color: string }) {
   return (
     <ul className="mt-4 flex flex-col gap-2">
       {items.map((f) => (
-        <li key={f} className="flex items-start gap-2.5 text-[13.5px] md:text-[14.5px] leading-[1.35] text-white/90">
+        <li key={f} className="flex items-start gap-2.5 text-[13.5px] md:text-[14.5px] leading-[1.35] text-white font-medium">
           <Check className={color} />
           {f}
         </li>
@@ -65,7 +65,7 @@ export default function ChooserPage() {
           {/* VR pabėgimo kambariai */}
           <Link
             href="/pabegimo-kambariai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-line hover:border-volt transition-colors md:min-h-0"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.3)] hover:border-volt transition-colors md:min-h-0"
           >
             <div className="absolute inset-0 animate-ken-a will-change-transform motion-reduce:animate-none">
               <Image
@@ -79,14 +79,14 @@ export default function ChooserPage() {
             </div>
             <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/50 md:via-ink/72 md:to-ink/42" />
             <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-ink/55 to-transparent md:from-ink/25" />
-            <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_1px_12px_rgba(0,0,0,0.65)]">
+            <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_2px_10px_rgba(0,0,0,0.92)]">
               <h2 className="font-display uppercase text-white text-[clamp(24px,3.1vw,32px)] leading-[1.06]">
                 Pabėgimo kambarys
               </h2>
               <p className="mt-1.5 text-[13px] md:text-[14px] font-semibold uppercase tracking-wide text-volt">
                 Draugams, šeimoms ir kolektyvams
               </p>
-              <p className="mt-3 text-[13.5px] md:text-[14.5px] leading-[1.55] text-white/85">
+              <p className="mt-3 text-[14px] md:text-[15px] leading-[1.5] text-white">
                 Vienas iki 50 min. pabėgimo kambarys, kuriame laukia galvosūkiai,
                 azartas ir ribotas laikas išgelbėti save ir draugus. Puikus
                 pasirinkimas žaidėjams nuo 14 metų.
@@ -121,14 +121,14 @@ export default function ChooserPage() {
             </div>
             <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/50 md:via-ink/72 md:to-ink/42" />
             <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-ink/55 to-transparent md:from-ink/25" />
-            <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_1px_12px_rgba(0,0,0,0.65)]">
+            <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_2px_10px_rgba(0,0,0,0.92)]">
               <h2 className="font-display uppercase text-white whitespace-nowrap text-[clamp(22px,2.5vw,30px)] leading-[1.06]">
                 Gimtadienių paketai
               </h2>
               <p className="mt-1.5 text-[13px] md:text-[14px] font-semibold uppercase tracking-wide text-[#f0a500]">
                 Privati šventė tik jūsų kompanijai
               </p>
-              <p className="mt-3 text-[13.5px] md:text-[14.5px] leading-[1.55] text-white/85">
+              <p className="mt-3 text-[14px] md:text-[15px] leading-[1.5] text-white">
                 Ilgesnė šventė su VR žaidimais, arkadinėmis pramogomis ir atskira vieta
                 vaišėms. Visa 220 m² erdvė skirta tik jūsų grupei.
               </p>
@@ -166,14 +166,14 @@ export default function ChooserPage() {
             </div>
             <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/50 md:via-ink/72 md:to-ink/42" />
             <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-ink/55 to-transparent md:from-ink/25" />
-            <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_1px_12px_rgba(0,0,0,0.65)]">
+            <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_2px_10px_rgba(0,0,0,0.92)]">
               <h2 className="font-display uppercase text-white text-[clamp(24px,3.1vw,32px)] leading-[1.06]">
                 VR veiksmo žaidimai
               </h2>
               <p className="mt-1.5 text-[13px] md:text-[14px] font-semibold uppercase tracking-wide text-[#34d1e0]">
                 Žaidėjams nuo 7 metų ir suaugusiems
               </p>
-              <p className="mt-3 text-[13.5px] md:text-[14.5px] leading-[1.55] text-white/85">
+              <p className="mt-3 text-[14px] md:text-[15px] leading-[1.5] text-white">
                 Trys komandiniai žaidimai per maždaug 45 minutes. Zombiai, kovos 3x3,
                 burgerių kepimas, magijos žaidimai ir kiti linksmi nuotykiai. Nuo 7 m.
               </p>
