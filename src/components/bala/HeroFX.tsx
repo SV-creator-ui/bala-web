@@ -1,6 +1,32 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+/**
+ * Ar naršyklė renderina programiškai (be GPU spartinimo). Tokiu atveju video
+ * ir animacijos eina per procesorių ir lagina — todėl išjungiam sunkius efektus.
+ * Rezultatas cache'inamas (viena WebGL konteksto užklausa).
+ */
+let _softwareCache: boolean | null = null;
+function gpuIsSoftware(): boolean {
+  if (_softwareCache !== null) return _softwareCache;
+  if (typeof document === "undefined") return false;
+  try {
+    const c = document.createElement("canvas");
+    const gl = (c.getContext("webgl") || c.getContext("experimental-webgl")) as WebGLRenderingContext | null;
+    if (!gl) {
+      _softwareCache = true; // nėra WebGL → GPU tikriausiai atjungtas
+      return true;
+    }
+    const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+    const r = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    _softwareCache = /swiftshader|software|basic render|llvmpipe|microsoft basic/i.test(String(r || ""));
+    return _softwareCache;
+  } catch {
+    _softwareCache = false;
+    return false;
+  }
+}
 
 type Particle = {
   x: number;
@@ -20,6 +46,13 @@ type Particle = {
 export default function HeroFX() {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // „lite" režimas – be sunkių animacijų (programinis renderinimas ar reduced-motion)
+  const [lite, setLite] = useState(false);
+
+  useEffect(() => {
+    const rm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (rm || gpuIsSoftware()) setLite(true);
+  }, []);
 
   // Pelės prožektorius – sklandžiai seka žymeklį
   useEffect(() => {
@@ -27,6 +60,7 @@ export default function HeroFX() {
     if (!root) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (window.matchMedia("(hover: none)").matches) return;
+    if (gpuIsSoftware()) return; // programinis renderinimas – be prožektoriaus
 
     let raf = 0;
     let tx = 0;
@@ -76,6 +110,7 @@ export default function HeroFX() {
     const canvas = canvasRef.current;
     if (!root || !canvas) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (gpuIsSoftware()) return; // programinis renderinimas – be dalelių canvas
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -206,17 +241,22 @@ export default function HeroFX() {
         <div className="fx-grid absolute inset-x-[-50%] bottom-0 h-[240%] origin-bottom [transform:rotateX(75deg)]" />
       </div>
 
-      {/* Plaukiančios dulkės */}
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+      {/* Sunkūs animuoti sluoksniai – tik kai yra GPU spartinimas (ne „lite") */}
+      {!lite && (
+        <>
+          {/* Plaukiančios dulkės */}
+          <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-      {/* Skenerio brūkštelėjimas */}
-      <div className="animate-fx-sweep absolute inset-0 bg-[linear-gradient(100deg,transparent_38%,rgba(255,228,0,.06)_47%,rgba(255,255,255,.03)_53%,transparent_62%)]" />
+          {/* Skenerio brūkštelėjimas */}
+          <div className="animate-fx-sweep absolute inset-0 bg-[linear-gradient(100deg,transparent_38%,rgba(255,228,0,.06)_47%,rgba(255,255,255,.03)_53%,transparent_62%)]" />
 
-      {/* Pelės prožektorius */}
-      <div
-        className="absolute inset-0 bg-[radial-gradient(360px_circle_at_var(--mx)_var(--my),rgba(255,228,0,.10),transparent_70%)] transition-opacity duration-500"
-        style={{ opacity: "var(--m-on)" }}
-      />
+          {/* Pelės prožektorius */}
+          <div
+            className="absolute inset-0 bg-[radial-gradient(360px_circle_at_var(--mx)_var(--my),rgba(255,228,0,.10),transparent_70%)] transition-opacity duration-500"
+            style={{ opacity: "var(--m-on)" }}
+          />
+        </>
+      )}
 
       {/* Vinjetė – kad tekstas liktų skaitomas */}
       <div className="absolute inset-0 bg-[radial-gradient(125%_90%_at_50%_32%,transparent_38%,rgba(11,11,11,.6)_100%)]" />
