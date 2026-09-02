@@ -5,6 +5,7 @@
  */
 import type { VoucherRow } from "@/lib/supabase/server";
 import { emailConfigured } from "@/lib/email";
+import { payseraConfigured, getPayseraOrderStatus, isPaidStatus } from "@/lib/paysera";
 import {
   getVoucherByRef,
   getVoucherById,
@@ -71,7 +72,18 @@ export async function resolveVoucher(_token: string | undefined): Promise<Vouche
 /** Paieška pagal merchant_reference (patvirtinimo puslapiui). */
 export async function resolveVoucherByRef(ref: string | undefined): Promise<VoucherResolve> {
   if (!ref) return { status: "error" };
-  const v = await getVoucherByRef(ref);
+  let v = await getVoucherByRef(ref);
   if (!v) return { status: "error" };
+
+  // Atsarginis patvirtinimas: jei dar „pending", pasitikrinam Paysera būseną
+  // (webhook'as gali vėluoti). montonio_uuid saugo Paysera order id.
+  if (v.status === "pending" && v.montonio_uuid && payseraConfigured()) {
+    const st = await getPayseraOrderStatus(v.montonio_uuid);
+    if (isPaidStatus(st)) {
+      await fulfillVoucherByRef(ref); // aktyvuoja + siunčia PDF
+      v = (await getVoucherByRef(ref)) ?? v;
+    }
+  }
+
   return { status: v.status === "active" ? "active" : "pending", voucher: v };
 }

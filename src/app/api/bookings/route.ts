@@ -24,7 +24,7 @@ import {
   validFutureDate,
   validBookingType,
 } from "@/lib/booking/validation";
-import { createPayseraPaymentUrl, payseraConfigured, bookingTestMode } from "@/lib/paysera";
+import { createPayseraPayment, payseraConfigured, bookingTestMode } from "@/lib/paysera";
 import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 import { notifyBookingPaid } from "@/lib/booking/notify";
 import { applyVoucherToBooking } from "@/lib/voucher/redeem";
@@ -203,7 +203,7 @@ export async function POST(req: Request) {
       : type === "game"
       ? `BALA VR komandinių žaidimų avansas — ${date} ${time}`
       : `BALA VR pabėgimo kambario avansas — ${date} ${time}`;
-    const paymentUrl = createPayseraPaymentUrl({
+    const pay = await createPayseraPayment({
       merchantReference,
       amount: onlineDue,
       acceptUrl: `${base}${confirmPath}?ref=${encodeURIComponent(merchantReference)}`,
@@ -212,8 +212,10 @@ export async function POST(req: Request) {
       description: label,
       email: email.trim(),
     });
+    // Paysera order id saugom montonio_uuid stulpelyje (perpanaudotas).
+    await supabase.from("bookings").update({ montonio_uuid: pay.orderId }).eq("id", inserted.id);
 
-    return NextResponse.json({ paymentUrl, merchantReference });
+    return NextResponse.json({ paymentUrl: pay.paymentUrl, merchantReference });
   } catch (e) {
     console.error("booking error:", e);
     return NextResponse.json(

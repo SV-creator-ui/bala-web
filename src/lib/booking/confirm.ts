@@ -8,6 +8,8 @@
  * ieškome pagal merchant_reference ir rodome esamą būseną.
  */
 import { getSupabaseAdmin, type BookingRow } from "@/lib/supabase/server";
+import { payseraConfigured, getPayseraOrderStatus, isPaidStatus } from "@/lib/paysera";
+import { markPaidByRef } from "./settle";
 
 export type ResolveResult = { status: "paid" | "pending" | "error"; booking?: BookingRow };
 
@@ -25,8 +27,20 @@ export async function resolveByRef(ref: string | undefined): Promise<ResolveResu
   try {
     const supabase = getSupabaseAdmin();
     const { data } = await supabase.from("bookings").select("*").eq("merchant_reference", ref).single();
-    const booking = data as BookingRow | null;
+    let booking = data as BookingRow | null;
     if (!booking) return { status: "error" };
+
+    // Atsarginis patvirtinimas: jei dar „pending", pasitikrinam Paysera būseną
+    // (webhook'as gali vėluoti). montonio_uuid saugo Paysera order id.
+    if (booking.status === "pending" && booking.montonio_uuid && payseraConfigured()) {
+      const st = await getPayseraOrderStatus(booking.montonio_uuid);
+      if (isPaidStatus(st)) {
+        await markPaidByRef(ref);
+        const { data: fresh } = await supabase.from("bookings").select("*").eq("merchant_reference", ref).single();
+        booking = (fresh as BookingRow) ?? booking;
+      }
+    }
+
     return { status: booking.status === "paid" ? "paid" : "pending", booking };
   } catch {
     return { status: "error" };

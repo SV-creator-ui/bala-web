@@ -9,9 +9,9 @@
 import { NextResponse } from "next/server";
 import { validName, validEmail } from "@/lib/booking/validation";
 import { validVoucherAmount } from "@/lib/voucher/config";
-import { createVoucher } from "@/lib/voucher/store";
+import { createVoucher, setMontonioUuid } from "@/lib/voucher/store";
 import { fulfillVoucherByRef } from "@/lib/voucher/fulfill";
-import { createPayseraPaymentUrl, payseraConfigured, bookingTestMode } from "@/lib/paysera";
+import { createPayseraPayment, payseraConfigured, bookingTestMode } from "@/lib/paysera";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   try {
     const merchantReference = `GIFT-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-    await createVoucher({
+    const voucher = await createVoucher({
       amount,
       buyerName: buyerName.trim(),
       buyerEmail: buyerEmail.trim(),
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
 
     // --- Paysera mokėjimas (visa kupono suma) ---
     const base = siteUrl(req);
-    const paymentUrl = createPayseraPaymentUrl({
+    const pay = await createPayseraPayment({
       merchantReference,
       amount,
       acceptUrl: `${base}${CONFIRM_PATH}?ref=${encodeURIComponent(merchantReference)}`,
@@ -90,8 +90,9 @@ export async function POST(req: Request) {
       description: `BALA VR dovanų kuponas — ${amount} €`,
       email: buyerEmail.trim(),
     });
+    await setMontonioUuid(voucher.id, pay.orderId); // Paysera order id
 
-    return NextResponse.json({ paymentUrl, merchantReference });
+    return NextResponse.json({ paymentUrl: pay.paymentUrl, merchantReference });
   } catch (e) {
     console.error("voucher purchase error:", e);
     return NextResponse.json(
