@@ -24,9 +24,11 @@ import {
   validFutureDate,
   validBookingType,
 } from "@/lib/booking/validation";
-import { createMontonioOrder, montonioConfigured, bookingTestMode } from "@/lib/montonio";
+import { createPayseraPayment, payseraConfigured, bookingTestMode } from "@/lib/paysera";
 import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 import { notifyBookingPaid } from "@/lib/booking/notify";
+import { applyVoucherToBooking } from "@/lib/voucher/redeem";
+import { settleVoucherForBooking } from "@/lib/voucher/store";
 
 export const dynamic = "force-dynamic";
 
@@ -103,10 +105,27 @@ export async function POST(req: Request) {
 
   const deposit = depositFor(type);
 
+  // --- Dovanų kuponas (neprivalomas) ---
+  // Kuponas taikomas VISAI sumai; jei padengia avansą — online mokėjimas
+  // praleidžiamas. Vienkartinis (likutis nesaugomas). Serveris perskaičiuoja.
+  const voucherCodeRaw = body.voucherCode ? String(body.voucherCode) : "";
+  let voucherCode: string | null = null;
+  let voucherDiscount = 0;
+  let onlineDue = deposit;
+  if (voucherCodeRaw.trim()) {
+    const app = await applyVoucherToBooking(voucherCodeRaw, total, deposit);
+    if (!app) {
+      return NextResponse.json({ error: "Dovanų kuponas negalioja arba jau panaudotas." }, { status: 400 });
+    }
+    voucherCode = app.voucher.code;
+    voucherDiscount = app.discount;
+    onlineDue = app.onlineDue;
+  }
+
   // --- Ar galime priimti rezervaciją? ---
-  const montonioReady = montonioConfigured();
+  const paymentReady = payseraConfigured();
   const testMode = bookingTestMode();
-  if (!montonioReady && !testMode) {
+  if (!paymentReady && !testMode) {
     return NextResponse.json(
       { error: "Mokėjimai laikinai nesukonfigūruoti. Susisiekite su mumis telefonu." },
       { status: 503 },
@@ -126,6 +145,10 @@ export async function POST(req: Request) {
     const merchantReference = `BALA-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const supabase = getSupabaseAdmin();
 
+    // Iškart „paid" be mokėjimo: testavimo režimu ARBA kai kuponas padengia
+    // visą online mokėtiną dalį (onlineDue <= 0).
+    const immediatePaid = !paymentReady || onlineDue <= 0;
+
     const { data: inserted, error: insErr } = await supabase
       .from("bookings")
       .insert({
@@ -142,9 +165,11 @@ export async function POST(req: Request) {
         customer_email: email.trim(),
         note: testMode ? `[TEST] ${note ?? ""}`.trim() : note,
         total_eur: total,
-        deposit_eur: deposit,
-        status: montonioReady ? "pending" : "paid",
+        deposit_eur: onlineDue, // realiai internetu mokama suma (po kupono)
+        status: immediatePaid ? "paid" : "pending",
         merchant_reference: merchantReference,
+        voucher_code: voucherCode,
+        voucher_discount_eur: voucherDiscount,
       })
       .select("id")
       .single();
@@ -158,35 +183,39 @@ export async function POST(req: Request) {
       ? "/komandiniai-vr-zaidimai/rezervacija/patvirtinta"
       : "/rezervacija/patvirtinta";
 
-    // --- Testavimo režimas: praleidžiam mokėjimą (iškart „paid") ---
-    if (!montonioReady) {
+    // --- Iškart apmokėta (test režimas arba kuponas padengė avansą) ---
+    if (immediatePaid) {
+      if (voucherCode) await settleVoucherForBooking(voucherCode, merchantReference); // nurašom kuponą
       await syncBookingCalendar(inserted.id); // į Google Calendar (jei sukonfigūruota)
       await notifyBookingPaid(inserted.id); // patvirtinimo laiškai (jei sukonfigūruota)
+      const testSuffix = !paymentReady ? "&test=1" : "";
       return NextResponse.json({
-        paymentUrl: `${confirmPath}?ref=${encodeURIComponent(merchantReference)}&test=1`,
+        paymentUrl: `${confirmPath}?ref=${encodeURIComponent(merchantReference)}${testSuffix}`,
         merchantReference,
-        test: true,
+        ...(!paymentReady ? { test: true } : {}),
       });
     }
 
-    // --- Montonio mokėjimas (avansas) ---
+    // --- Paysera mokėjimas (avansas, po kupono jei buvo) ---
     const base = siteUrl(req);
     const label = type === "party"
       ? `BALA VR gimtadienio paketo avansas — ${date} ${time}`
       : type === "game"
       ? `BALA VR komandinių žaidimų avansas — ${date} ${time}`
       : `BALA VR pabėgimo kambario avansas — ${date} ${time}`;
-    const order = await createMontonioOrder({
+    const pay = await createPayseraPayment({
       merchantReference,
-      amount: deposit,
-      returnUrl: `${base}${confirmPath}`,
-      notificationUrl: `${base}/api/montonio/webhook`,
+      amount: onlineDue,
+      acceptUrl: `${base}${confirmPath}?ref=${encodeURIComponent(merchantReference)}`,
+      cancelUrl: `${base}${confirmPath}?ref=${encodeURIComponent(merchantReference)}&cancel=1`,
+      callbackUrl: `${base}/api/paysera/callback`,
       description: label,
+      email: email.trim(),
     });
+    // Paysera order id saugom montonio_uuid stulpelyje (perpanaudotas).
+    await supabase.from("bookings").update({ montonio_uuid: pay.orderId }).eq("id", inserted.id);
 
-    await supabase.from("bookings").update({ montonio_uuid: order.uuid }).eq("id", inserted.id);
-
-    return NextResponse.json({ paymentUrl: order.paymentUrl, merchantReference });
+    return NextResponse.json({ paymentUrl: pay.paymentUrl, merchantReference });
   } catch (e) {
     console.error("booking error:", e);
     return NextResponse.json(

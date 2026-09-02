@@ -1,51 +1,53 @@
 /**
- * Rezervacijos patvirtinimo „resolve" logika — bendra pabėgimo kambarių ir
- * gimtadienių patvirtinimo puslapiams. Tik serveriui (Supabase + Montonio).
+ * Rezervacijos patvirtinimo „resolve" logika — bendra visiems patvirtinimo
+ * puslapiams. Tik serveriui (Supabase).
+ *
+ * Paysera po apmokėjimo grąžina klientą į accepturl su mūsų `?ref=` parametru;
+ * o apmokėjimą autoritetingai patvirtina serverio-serveriui callback'as
+ * (/api/paysera/callback), kuris pažymi rezervaciją „paid". Todėl čia tiesiog
+ * ieškome pagal merchant_reference ir rodome esamą būseną.
  */
 import { getSupabaseAdmin, type BookingRow } from "@/lib/supabase/server";
-import { verifyMontonioToken, bookingTestMode } from "@/lib/montonio";
+import { payseraConfigured, getPayseraOrderStatus, isPaidStatus } from "@/lib/paysera";
+import { markPaidByRef } from "./settle";
 
 export type ResolveResult = { status: "paid" | "pending" | "error"; booking?: BookingRow };
 
-/** Iš Montonio grįžimo/webhook order-token'o. */
-export async function resolveBooking(token: string | undefined): Promise<ResolveResult> {
-  if (!token) return { status: "error" };
+/**
+ * Palikta suderinamumui — Paysera nenaudoja „order-token", tad šis kelias
+ * praktiškai nebenaudojamas (puslapiai kviečia resolveByRef).
+ */
+export async function resolveBooking(_token: string | undefined): Promise<ResolveResult> {
+  return { status: "error" };
+}
+
+/** Paieška pagal merchant_reference. */
+export async function resolveByRef(ref: string | undefined): Promise<ResolveResult> {
+  if (!ref) return { status: "error" };
   try {
-    const payload = await verifyMontonioToken(token);
-    const ref = payload.merchantReference;
-    if (!ref) return { status: "error" };
-
     const supabase = getSupabaseAdmin();
+    const { data } = await supabase.from("bookings").select("*").eq("merchant_reference", ref).single();
+    let booking = data as BookingRow | null;
+    if (!booking) return { status: "error" };
 
-    // Jei apmokėta — pažymime paid (idempotentiškai; webhook gali dar nespėti)
-    if (payload.paymentStatus === "PAID") {
-      await supabase.from("bookings").update({ status: "paid" }).eq("merchant_reference", ref).eq("status", "pending");
+    // Atsarginis patvirtinimas: jei dar „pending", pasitikrinam Paysera būseną
+    // (webhook'as gali vėluoti). montonio_uuid saugo Paysera order id.
+    if (booking.status === "pending" && booking.montonio_uuid && payseraConfigured()) {
+      const st = await getPayseraOrderStatus(booking.montonio_uuid);
+      if (isPaidStatus(st)) {
+        await markPaidByRef(ref);
+        const { data: fresh } = await supabase.from("bookings").select("*").eq("merchant_reference", ref).single();
+        booking = (fresh as BookingRow) ?? booking;
+      }
     }
 
-    const { data } = await supabase.from("bookings").select("*").eq("merchant_reference", ref).single();
-    const booking = data as BookingRow | null;
-    if (!booking) return { status: "error" };
     return { status: booking.status === "paid" ? "paid" : "pending", booking };
   } catch {
     return { status: "error" };
   }
 }
 
-/** Testavimo režimas — paieška pagal merchant_reference (be Montonio). */
-export async function resolveByRef(ref: string | undefined): Promise<ResolveResult> {
-  if (!ref || !bookingTestMode()) return { status: "error" };
-  try {
-    const supabase = getSupabaseAdmin();
-    const { data } = await supabase.from("bookings").select("*").eq("merchant_reference", ref).single();
-    const booking = data as BookingRow | null;
-    if (!booking) return { status: "error" };
-    return { status: booking.status === "paid" ? "paid" : "pending", booking };
-  } catch {
-    return { status: "error" };
-  }
-}
-
-/** searchParams -> { token, ref } */
+/** searchParams -> { token, ref }. `token` lieka suderinamumui (Paysera nenaudoja). */
 export function readConfirmParams(sp: Record<string, string | string[] | undefined>): { token?: string; ref?: string } {
   const tokenRaw = sp["order-token"] ?? sp["order_token"];
   const token = Array.isArray(tokenRaw) ? tokenRaw[0] : tokenRaw;

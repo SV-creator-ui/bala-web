@@ -96,6 +96,13 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Dovanų kuponas (neprivalomas)
+  const [voucherInput, setVoucherInput] = useState("");
+  const [voucherCode, setVoucherCode] = useState<string | null>(null); // pritaikytas kodas
+  const [voucherAmount, setVoucherAmount] = useState(0);
+  const [voucherMsg, setVoucherMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [voucherChecking, setVoucherChecking] = useState(false);
+
   const pkg = type === "party" && pkgId ? getPartyPackage(pkgId) : undefined;
 
   // Kai keičiasi paketas — dalyvių skaičių laikom paketo ribose
@@ -146,6 +153,46 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     ? gamesPrice(players)
     : 0;
 
+  // Kupono pritaikymas: taikomas visai sumai; jei padengia avansą — online 0 €.
+  const voucherDiscount = voucherCode ? Math.min(voucherAmount, total) : 0;
+  const effectiveTotal = Math.max(0, total - voucherDiscount);
+  const onlineDue = Math.min(deposit, effectiveTotal);
+  const onSite = effectiveTotal - onlineDue;
+
+  async function applyVoucher() {
+    const code = voucherInput.trim();
+    if (!code) return;
+    setVoucherChecking(true);
+    setVoucherMsg(null);
+    try {
+      const res = await fetch("/api/vouchers/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const d = await res.json();
+      if (d.valid) {
+        setVoucherCode(code);
+        setVoucherAmount(Number(d.amount) || 0);
+        setVoucherMsg({ ok: true, text: `Kuponas pritaikytas: −${formatEur(Math.min(Number(d.amount) || 0, total))} €` });
+      } else {
+        setVoucherCode(null);
+        setVoucherAmount(0);
+        setVoucherMsg({ ok: false, text: d.error || "Kuponas negalioja" });
+      }
+    } catch {
+      setVoucherMsg({ ok: false, text: "Nepavyko patikrinti kodo" });
+    } finally {
+      setVoucherChecking(false);
+    }
+  }
+  function clearVoucher() {
+    setVoucherCode(null);
+    setVoucherAmount(0);
+    setVoucherMsg(null);
+    setVoucherInput("");
+  }
+
   function canProceed(): boolean {
     switch (phase) {
       case "type": return type === "room" || type === "game" || (type === "party" && !!pkgId);
@@ -167,6 +214,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
         body: JSON.stringify({
           type, packageId: pkgId, date, time, players,
           addons: activeAddons, name, phone, email, note,
+          voucherCode: voucherCode || undefined,
         }),
       });
       const data = await res.json();
@@ -284,7 +332,26 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               touched={touched} setTouched={setTouched}
             />
           )}
-          {phase === "payment" && <StepPayment deposit={deposit} rest={total - deposit} error={error} agreed={agreed} setAgreed={setAgreed} />}
+          {phase === "payment" && (
+            <StepPayment
+              deposit={deposit}
+              onlineDue={onlineDue}
+              onSite={onSite}
+              voucherDiscount={voucherDiscount}
+              error={error}
+              agreed={agreed}
+              setAgreed={setAgreed}
+              voucher={{
+                input: voucherInput,
+                setInput: setVoucherInput,
+                applied: voucherCode,
+                checking: voucherChecking,
+                msg: voucherMsg,
+                apply: applyVoucher,
+                clear: clearVoucher,
+              }}
+            />
+          )}
         </div>
 
         <Summary
@@ -314,7 +381,13 @@ export default function BookingFlow({ initialType, initialPkgId }: {
           disabled={!canProceed() || submitting}
           className="rounded-xl bg-volt text-volt-ink font-bold px-7 py-3.5 shadow-[0_6px_18px_var(--btn-glow,rgba(255,228,0,.35))] transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
         >
-          {submitting ? "Palaukite…" : step === lastStep ? `Sumokėti ${formatEur(deposit)} € ›` : "Toliau ›"}
+          {submitting
+            ? "Palaukite…"
+            : step === lastStep
+            ? onlineDue > 0
+              ? `Sumokėti ${formatEur(onlineDue)} € ›`
+              : "Patvirtinti rezervaciją ›"
+            : "Toliau ›"}
         </button>
       </div>
     </div>
@@ -715,28 +788,79 @@ function Field({ label, value, onChange, onBlur, error, ok, placeholder, inputMo
 }
 
 /* ---------------- Step 5: Payment ---------------- */
-function StepPayment({ deposit, rest, error, agreed, setAgreed }: {
-  deposit: number; rest: number; error: string | null;
-  agreed: boolean; setAgreed: (v: boolean) => void;
+type VoucherUI = {
+  input: string; setInput: (v: string) => void; applied: string | null;
+  checking: boolean; msg: { ok: boolean; text: string } | null;
+  apply: () => void; clear: () => void;
+};
+function StepPayment({ deposit, onlineDue, onSite, voucherDiscount, error, agreed, setAgreed, voucher }: {
+  deposit: number; onlineDue: number; onSite: number; voucherDiscount: number;
+  error: string | null; agreed: boolean; setAgreed: (v: boolean) => void; voucher: VoucherUI;
 }) {
+  const reduced = voucherDiscount > 0 && onlineDue < deposit;
   return (
     <div>
       <div className="max-w-[560px]">
-        <div className="flex items-center gap-3.5 rounded-xl border border-volt bg-ink-card px-4.5 py-4 mb-6">
+        <div className="flex items-center gap-3.5 rounded-xl border border-volt bg-ink-card px-4.5 py-4 mb-5">
           <span className="grid h-5 w-5 place-items-center rounded-full border-2 border-volt"><span className="h-2.5 w-2.5 rounded-full bg-volt" /></span>
           <span>
             <span className="block font-bold text-[15px]">Bankinė nuoroda</span>
             <span className="block text-xs text-smoke-2">Swedbank, SEB, Luminor, Revolut</span>
           </span>
-          <span className="ml-auto font-mono text-[11px] text-smoke-2">Montonio</span>
+          <span className="ml-auto font-mono text-[11px] text-smoke-2">Paysera</span>
+        </div>
+
+        {/* Dovanų kuponas */}
+        <div className="mb-6">
+          <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Dovanų kuponas (nebūtina)</label>
+          {voucher.applied ? (
+            <div className="flex items-center gap-3 rounded-xl border border-genre-green/55 bg-genre-green/10 px-4 py-3">
+              <span className="text-genre-green">✓</span>
+              <span className="flex-1 text-sm">
+                <b className="font-mono">{voucher.applied}</b>
+                <span className="block text-xs text-smoke-2">Kuponas pritaikytas: −{formatEur(voucherDiscount)} €</span>
+              </span>
+              <button type="button" onClick={voucher.clear} className="text-[12.5px] font-semibold text-smoke hover:text-genre-pink">Pašalinti</button>
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <input
+                  value={voucher.input}
+                  onChange={(e) => voucher.setInput(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); voucher.apply(); } }}
+                  placeholder="BALA-XXXX-XXXX"
+                  autoComplete="off"
+                  className="flex-1 rounded-xl border border-line bg-ink-card px-3.5 py-3 font-mono text-white focus:outline-none focus:border-volt"
+                />
+                <button
+                  type="button"
+                  onClick={voucher.apply}
+                  disabled={voucher.checking || !voucher.input.trim()}
+                  className="rounded-xl border border-line-strong px-4 py-3 text-sm font-bold hover:border-volt hover:text-volt disabled:opacity-40"
+                >
+                  {voucher.checking ? "…" : "Taikyti"}
+                </button>
+              </div>
+              {voucher.msg && !voucher.msg.ok && (
+                <p className="mt-1.5 text-[12.5px] font-semibold text-genre-pink">{voucher.msg.text}</p>
+              )}
+            </>
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-4 rounded-xl border border-volt/40 bg-volt/10 px-5 py-4.5">
           <div>
-            <h4 className="font-display uppercase text-[15px]">Avansas dabar</h4>
-            <p className="text-sm text-smoke mt-1">Likutis {formatEur(rest)} € — vietoje</p>
+            <h4 className="font-display uppercase text-[15px]">{onlineDue > 0 ? "Mokėti dabar" : "Apmokėta kuponu"}</h4>
+            <p className="text-sm text-smoke mt-1">
+              {voucherDiscount > 0 && <>Kuponas −{formatEur(voucherDiscount)} € · </>}
+              Likutis {formatEur(onSite)} € — vietoje
+            </p>
           </div>
-          <div className="font-display text-3xl whitespace-nowrap">{formatEur(deposit)} €</div>
+          <div className="text-right whitespace-nowrap">
+            {reduced && <div className="font-mono text-sm text-smoke-2 line-through">{formatEur(deposit)} €</div>}
+            <div className="font-display text-3xl">{formatEur(onlineDue)} €</div>
+          </div>
         </div>
 
         <label className="mt-6 flex cursor-pointer items-start gap-3 text-sm">

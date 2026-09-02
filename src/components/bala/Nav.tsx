@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import Script from "next/script";
 
-// Moizmo „Dovanų kuponas" (gift card) srauto ID
-const VOUCHER_FLOW_ID = "12590839-3489-44dd-a137-95bacc1baa10";
-
-type NavLink = { href: string; label: string; voucher?: boolean };
+type NavLink = { href: string; label: string };
 
 const LINKS: NavLink[] = [
   { href: "/pabegimo-kambariai/kambariai", label: "Pabėgimo kambariai" },
@@ -17,7 +13,7 @@ const LINKS: NavLink[] = [
   { href: "#atsiliepimai", label: "Atsiliepimai" },
   { href: "#duk", label: "D.U.K." },
   { href: "/pabegimo-kambariai/blog", label: "Blogas" },
-  { href: "#dovanu-kuponas", label: "Dovanų kuponas", voucher: true },
+  { href: "/pabegimo-kambariai/dovanu-kuponas", label: "Dovanų kuponas" },
   { href: "#kontaktai", label: "Kontaktai" },
 ];
 
@@ -36,46 +32,8 @@ export default function Nav() {
     document.body.style.overflow = open ? "hidden" : "";
   }, [open]);
 
-  const openVoucher = (e: MouseEvent<HTMLButtonElement>) => {
-    setOpen(false);
-    const w = window as unknown as {
-      moizmo?: { show?: (id: string, btn?: EventTarget | null) => void };
-    };
-    if (w.moizmo && typeof w.moizmo.show === "function") {
-      w.moizmo.show(VOUCHER_FLOW_ID, e.currentTarget);
-    } else {
-      window.open(
-        `https://booking.moizmo.com/lt/booking/${VOUCHER_FLOW_ID}`,
-        "_blank",
-        "noopener,noreferrer"
-      );
-    }
-  };
-
   return (
     <>
-      {/* Moizmo booking skriptas — rankinis paleidimas (init(false)) */}
-      <Script
-        src="https://booking.moizmo.com/scripts/booking/v0/latest.js"
-        strategy="afterInteractive"
-        onLoad={() => {
-          try {
-            (
-              window as unknown as { moizmo?: { init: (a: boolean) => void } }
-            ).moizmo?.init(false);
-          } catch {
-            /* tyliai */
-          }
-        }}
-      />
-      {/* Moizmo dovanų kupono įterpimo elementas (gift card srautas) */}
-      <div
-        data-language="lt"
-        data-moizmoFlowId={VOUCHER_FLOW_ID}
-        data-moizmoGiftCard="1"
-        aria-hidden="true"
-      />
-
       <header
         className={`fixed inset-x-0 top-0 z-100 py-[18px] transition-[background,padding,border-color] duration-300 border-b border-transparent ${
           scrolled
@@ -104,26 +62,15 @@ export default function Nav() {
             </span>
           </Link>
           <nav aria-label="Pagrindinė navigacija" className="hidden min-[960px]:flex items-center gap-[30px]">
-            {LINKS.map((l) =>
-              l.voucher ? (
-                <button
-                  key={l.href}
-                  type="button"
-                  onClick={openVoucher}
-                  className="relative cursor-pointer py-1.5 text-sm font-semibold text-white hover:text-white transition-colors after:content-[''] after:absolute after:left-0 after:right-full after:bottom-0 after:h-[2px] after:bg-volt after:transition-[right] after:duration-200 hover:after:right-0"
-                >
-                  {l.label}
-                </button>
-              ) : (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  className="relative py-1.5 text-sm font-semibold text-white hover:text-white transition-colors after:content-[''] after:absolute after:left-0 after:right-full after:bottom-0 after:h-[2px] after:bg-volt after:transition-[right] after:duration-200 hover:after:right-0"
-                >
-                  {l.label}
-                </a>
-              )
-            )}
+            {LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                className="relative py-1.5 text-sm font-semibold text-white hover:text-white transition-colors after:content-[''] after:absolute after:left-0 after:right-full after:bottom-0 after:h-[2px] after:bg-volt after:transition-[right] after:duration-200 hover:after:right-0"
+              >
+                {l.label}
+              </a>
+            ))}
           </nav>
           <a
             href="/rezervacija"
@@ -150,27 +97,16 @@ export default function Nav() {
           open ? "translate-y-0" : "-translate-y-full"
         }`}
       >
-        {LINKS.map((l) =>
-          l.voucher ? (
-            <button
-              key={l.href}
-              type="button"
-              onClick={openVoucher}
-              className="border-b border-line py-3 px-1 text-left font-display text-[clamp(28px,9vw,44px)] uppercase text-white"
-            >
-              {l.label}
-            </button>
-          ) : (
-            <a
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="border-b border-line py-3 px-1 font-display text-[clamp(28px,9vw,44px)] uppercase text-white"
-            >
-              {l.label}
-            </a>
-          )
-        )}
+        {LINKS.map((l) => (
+          <a
+            key={l.href}
+            href={l.href}
+            onClick={() => setOpen(false)}
+            className="border-b border-line py-3 px-1 font-display text-[clamp(28px,9vw,44px)] uppercase text-white"
+          >
+            {l.label}
+          </a>
+        ))}
         <a
           href="/rezervacija"
           onClick={() => setOpen(false)}

@@ -45,4 +45,27 @@ export type BookingRow = {
   merchant_reference: string;
   gcal_event_id: string | null; // Google Calendar įvykio id (jei sukurtas)
   emails_sent_at: string | null; // kada išsiųsti patvirtinimo laiškai (null = dar ne)
+  voucher_code: string | null; // panaudoto dovanų kupono kodas (jei buvo)
+  voucher_discount_eur: number; // kiek kuponas padengė šioje rezervacijoje (EUR)
+};
+
+/** Dovanų kupono įrašo tipas (atitinka lentelę `vouchers`) */
+export type VoucherRow = {
+  id: string;
+  created_at: string;
+  code: string | null; // NULL kol neapmokėta
+  amount_eur: number;
+  status: "pending" | "active" | "redeemed" | "cancelled" | "expired";
+  buyer_name: string;
+  buyer_email: string;
+  recipient_name: string | null;
+  from_name: string | null;
+  message: string | null;
+  valid_until: string | null; // YYYY-MM-DD
+  montonio_uuid: string | null;
+  merchant_reference: string; // "GIFT-..."
+  issued_at: string | null;
+  redeemed_at: string | null;
+  redeemed_booking_ref: string | null;
+  emails_sent_at: string | null;
 };
