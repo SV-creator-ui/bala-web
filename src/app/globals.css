@@ -82,6 +82,36 @@
     50% { transform: translate3d(30%, 0, 0); opacity: 1; }
     72% { opacity: 0; }
   }
+
+  /* Žvakučių liepsnos mirgėjimas – netolygus opacity (gimtadienio kortelė) */
+  --animate-flame-a: flameA 2.1s ease-in-out infinite;
+  --animate-flame-b: flameB 1.7s ease-in-out infinite;
+  --animate-flame-c: flameC 2.6s ease-in-out infinite;
+
+  @keyframes flameA {
+    0%, 100% { opacity: .85; }
+    15% { opacity: 1; }
+    28% { opacity: .55; }
+    42% { opacity: .95; }
+    58% { opacity: .7; }
+    71% { opacity: 1; }
+    86% { opacity: .78; }
+  }
+  @keyframes flameB {
+    0%, 100% { opacity: .9; }
+    20% { opacity: .58; }
+    33% { opacity: 1; }
+    50% { opacity: .72; }
+    66% { opacity: .96; }
+    82% { opacity: .64; }
+  }
+  @keyframes flameC {
+    0%, 100% { opacity: .8; }
+    25% { opacity: 1; }
+    45% { opacity: .6; }
+    63% { opacity: .92; }
+    80% { opacity: .68; }
+  }
 }
 
 @layer base {

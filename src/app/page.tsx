@@ -24,6 +24,44 @@ function Check({ className }: { className?: string }) {
   );
 }
 
+// Žvakučių liepsnų mirgėjimas ant gimtadienio torto nuotraukos (tik desktop).
+// mix-blend: screen — švytėjimas prisideda tik ties liepsnomis, nekeičia foto.
+const FLAMES = [
+  { l: 30, t: 47, s: 40, a: "animate-flame-a", d: "0s" },
+  { l: 38, t: 44, s: 38, a: "animate-flame-b", d: ".45s" },
+  { l: 46, t: 43, s: 42, a: "animate-flame-c", d: ".2s" },
+  { l: 54, t: 44, s: 40, a: "animate-flame-a", d: ".8s" },
+  { l: 62, t: 46, s: 40, a: "animate-flame-b", d: ".3s" },
+  { l: 70, t: 49, s: 38, a: "animate-flame-c", d: "1.1s" },
+  { l: 42, t: 52, s: 36, a: "animate-flame-a", d: ".6s" },
+  { l: 58, t: 53, s: 38, a: "animate-flame-b", d: "1.35s" },
+  { l: 50, t: 49, s: 40, a: "animate-flame-c", d: ".95s" },
+] as const;
+
+function CandleFlames() {
+  return (
+    <div className="pointer-events-none absolute inset-0 hidden min-[900px]:block" aria-hidden>
+      {FLAMES.map((f, i) => (
+        <span
+          key={i}
+          className={`absolute rounded-full mix-blend-screen ${f.a} motion-reduce:hidden`}
+          style={{
+            left: `${f.l}%`,
+            top: `${f.t}%`,
+            width: f.s,
+            height: f.s,
+            transform: "translate(-50%,-50%)",
+            filter: "blur(3px)",
+            animationDelay: f.d,
+            background:
+              "radial-gradient(circle, rgba(255,196,110,0.9) 0%, rgba(255,150,45,0.45) 38%, rgba(255,120,20,0) 72%)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function Features({ items, color }: { items: string[]; color: string }) {
   return (
     <ul className="mt-4 flex flex-col gap-2">
@@ -121,6 +159,7 @@ export default function ChooserPage() {
             </div>
             <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/50 md:via-ink/72 md:to-ink/42" />
             <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-ink/55 to-transparent md:from-ink/25" />
+            <CandleFlames />
             <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_2px_10px_rgba(0,0,0,0.92)]">
               <h2 className="font-display uppercase text-white whitespace-nowrap text-[clamp(22px,2.5vw,30px)] leading-[1.06]">
                 Gimtadienių paketai
