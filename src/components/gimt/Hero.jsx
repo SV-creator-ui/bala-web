@@ -3,10 +3,10 @@ import HeroVideo from "./HeroVideo";
 const BOOKING_URL = "/gimtadieniai/rezervacija";
 
 const stats = [
-  { num: "500+", label: "Gimtadienių" },
+  { num: "650+", label: "Gimtadienių" },
   { num: "4.9★", label: "Google" },
   { num: "220 m²", label: "Erdvė" },
-  { num: "Nuo 2022", label: "Veikiame" },
+  { num: "Nuo 2022", label: "Patirtis" },
 ];
 
 export default function Hero() {
