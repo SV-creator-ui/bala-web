@@ -48,6 +48,16 @@ const SECTIONS: Section[] = [
   },
   {
     n: 4,
+    emoji: "🧑‍🏫",
+    title: "Instruktoriaus nurodymai",
+    items: [
+      "Laikykitės instruktoriaus nurodymų ir žaidimo instrukcijų.",
+      "Su VR akiniais iš žaidimų kambario išeiti negalima.",
+      "Instruktorius turi teisę sustabdyti paslaugą lankytojams, **nesilaikantiems nurodymų ar keliantiems pavojų**.",
+    ],
+  },
+  {
+    n: 5,
     emoji: "🕹️",
     title: "Arkadiniai ir stalo žaidimai",
     items: [
@@ -57,22 +67,12 @@ const SECTIONS: Section[] = [
     ],
   },
   {
-    n: 5,
-    emoji: "🥽",
-    title: "Įranga",
-    items: [
-      "Laikykitės instruktoriaus nurodymų ir žaidimo instrukcijų.",
-      "Su VR akiniais iš žaidimų kambario išeiti negalima.",
-    ],
-  },
-  {
     n: 6,
     emoji: "🍽️",
     title: "Maistas, gėrimai, alkoholis",
     items: [
       "**Maistą ir gėrimus vartokite tik prie stalo** — ne prie žaidimų automatų, ne vairavimo (lenktynių) kėdėje ir ne VR zonoje. Prieš žaidimą po valgio nusiplaukite rankas.",
       "Į žaidimų erdvę neįleidžiami apsvaigę asmenys ar tie, kurių elgesys kelia pavojų sau ar kitiems.",
-      "Instruktorius turi teisę sustabdyti paslaugą lankytojams, nesilaikantiems nurodymų ar keliantiems pavojų.",
     ],
   },
   {
@@ -96,7 +96,7 @@ const SECTIONS: Section[] = [
   },
   {
     n: 9,
-    emoji: "💬",
+    emoji: "⚖️",
     title: "Atsakomybė už įrangą ir daiktus",
     items: [
       "Už dėl neatsargumo sugadintą VR įrangą, žaidimų aparatus ar patalpas atsako užsakovas (užsakymą pateikęs asmuo).",
