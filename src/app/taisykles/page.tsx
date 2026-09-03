@@ -51,26 +51,26 @@ const SECTIONS: Section[] = [
     emoji: "🕹️",
     title: "Arkadiniai ir stalo žaidimai",
     items: [
-      "Arkadinių ir stalo žaidimų zonoje aparatų **negalima stumdyti, kilnoti ar ant jų lipti**.",
+      "Žaidimų aparatų **negalima stumdyti, kilnoti ar ant jų lipti**.",
       "Prie kiekvieno žaidimo žaidžiama **po du** (išskyrus stalo futbolą).",
-      "**Žaidžiant nenaudokite perteklinės jėgos** — mygtukus spauskite, o ne daužykite.",
+      "**Žaidžiant nenaudokite perteklinės jėgos** — mygtukus reikia spausti, ne daužyti.",
     ],
   },
   {
     n: 5,
     emoji: "🥽",
-    title: "Įranga, maistas ir gėrimai",
+    title: "Įranga",
     items: [
       "Laikykitės instruktoriaus nurodymų ir žaidimo instrukcijų.",
-      "**Maistą ir gėrimus vartokite tik prie stalo** — ne prie žaidimų automatų, ne vairavimo (lenktynių) kėdėje ir ne VR zonoje. Prieš žaidimą po valgio nusiplaukite rankas.",
       "Su VR akiniais iš žaidimų kambario išeiti negalima.",
     ],
   },
   {
     n: 6,
-    emoji: "🚫",
-    title: "Alkoholis ir apsvaigimas",
+    emoji: "🍽️",
+    title: "Maistas, gėrimai, alkoholis",
     items: [
+      "**Maistą ir gėrimus vartokite tik prie stalo** — ne prie žaidimų automatų, ne vairavimo (lenktynių) kėdėje ir ne VR zonoje. Prieš žaidimą po valgio nusiplaukite rankas.",
       "Į žaidimų erdvę neįleidžiami apsvaigę asmenys ar tie, kurių elgesys kelia pavojų sau ar kitiems.",
       "Instruktorius turi teisę sustabdyti paslaugą lankytojams, nesilaikantiems nurodymų ar keliantiems pavojų.",
     ],

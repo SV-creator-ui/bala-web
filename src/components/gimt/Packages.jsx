@@ -285,7 +285,7 @@ export default function Packages() {
               <div className="extra-desc">
                 Trumpiname pertraukas ir skiriame maksimaliai laiką VR žaidimams.
               </div>
-              <div className="extra-price">+€20</div>
+              <div className="extra-price">nuo €19</div>
             </div>
 
             {/* 3. Papildomas laikas */}

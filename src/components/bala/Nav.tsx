@@ -47,7 +47,7 @@ export default function Nav() {
           <Link
             href="/pabegimo-kambariai"
             aria-label="Bala VR — pradžia"
-            className="flex flex-col items-start justify-center"
+            className="flex flex-col items-center justify-center"
             onClick={(e) => {
               // Pradiniame puslapyje – nuslinkti į viršų ir išvalyti #hash iš URL
               if (window.location.pathname === "/pabegimo-kambariai") {

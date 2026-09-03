@@ -10,7 +10,10 @@ import {
   BOOKING, generateSlotsForDate, dayHours, toMin,
   EARLY_OPEN_MIN, PARTY_BLOCKED_STARTS_EARLY, venueNow, type BookingType,
 } from "./config";
-import { bookingWindow, activityEndMin, overlaps, type Interval } from "./window";
+import {
+  activeInterval, activityEndMin, overlaps, conflictsWithGap,
+  type Interval, type TypedInterval,
+} from "./window";
 import { isClosedHoliday } from "./holidays";
 
 export type SlotStatus = { time: string; available: boolean };
@@ -23,23 +26,21 @@ export type AvailabilityQuery = {
   excludeId?: string | null;
 };
 
-/** Kokį langą DB įraše užima esama rezervacija. */
-function existingInterval(b: {
+/**
+ * GRYNAS (aktyvus) langas + tipas, kurį grafike užima esama rezervacija.
+ * Tarpai tarp užsakymų pridedami atskirai (žr. `conflictsWithGap`), todėl čia
+ * NENAUDOJAME saugotų block_start/block_end (jie su buferiais — verslo kalendoriui).
+ */
+function existingActive(b: {
   time: string;
   type?: string | null;
   package_id?: string | null;
-  block_start?: string | null;
-  block_end?: string | null;
   addons?: unknown;
-}): Interval {
-  // Naujuose įrašuose saugomas tikslus langas — naudojame jį.
-  if (b.block_start && b.block_end) {
-    return { startMin: toMin(b.block_start), endMin: toMin(b.block_end) };
-  }
-  // Atgalinis suderinamumas su senais įrašais (be block_* stulpelių).
+}): TypedInterval {
   const addons = Array.isArray(b.addons) ? (b.addons as unknown[]).map(String) : [];
-  const type: BookingType = b.type === "party" ? "party" : "room";
-  return bookingWindow(type, b.time, b.package_id ?? null, addons);
+  const type: BookingType =
+    b.type === "party" ? "party" : b.type === "game" ? "game" : "room";
+  return { ...activeInterval(type, b.time, b.package_id ?? null, addons), type };
 }
 
 export async function getAvailability(date: string, query: AvailabilityQuery): Promise<SlotStatus[]> {
@@ -78,12 +79,12 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
       return { startMin: s, endMin: s + BOOKING.slotStepMin };
     });
 
-  // Galiojantys užimti intervalai.
-  const busy: Interval[] = [];
+  // Galiojantys užimti intervalai (grynas veiklos langas + tipas).
+  const busy: TypedInterval[] = [];
   for (const b of bookings || []) {
     if (query.excludeId && b.id === query.excludeId) continue; // ji pati (perkeliama)
     if (b.status === "pending" && b.created_at < holdCutoff) continue; // nustojęs galioti holdas
-    busy.push(existingInterval(b));
+    busy.push(existingActive(b));
   }
 
   // Šiandienai visiškai nerodome praėjusių / per arti esančių laikų.
@@ -97,20 +98,26 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
       return { time, available: false };
     }
 
-    const w = bookingWindow(query.type, time, query.packageId ?? null, query.addons ?? [], openMin);
+    // Kandidato GRYNAS veiklos langas (be buferių) + tipas.
+    const cand: TypedInterval = {
+      startMin: toMin(time),
+      endMin: activityEndMin(query.type, time, query.packageId ?? null, query.addons ?? []),
+      type: query.type,
+    };
 
-    // 1) Ar telpa į darbo laiką? Pradžia (su prieš-buferiu) turi būti ne anksčiau
-    //    nei atidarymas, o AKTYVI veikla baigtis iki uždarymo. Po-buferis
-    //    (tvarkymasis) gali tęstis po uždarymo — todėl į patikrą jo neįtraukiame.
-    //    Taip I–IV (uždaro 20:30) galima pradėti 2,5 val. paketą 18:00.
-    const actEnd = activityEndMin(query.type, time, query.packageId ?? null, query.addons ?? []);
-    if (w.startMin < openMin || actEnd > closeEndMin) return { time, available: false };
+    // 1) Ar telpa į darbo laiką? Pradžia ne anksčiau nei atidarymas, o AKTYVI
+    //    veikla turi baigtis iki uždarymo. Susitvarkymo laikas (po-buferis) gali
+    //    tęstis po uždarymo — todėl į patikrą jo neįtraukiame. Taip I–IV
+    //    (uždaro 20:30) galima pradėti 2,5 val. paketą 18:00.
+    if (cand.startMin < openMin || cand.endMin > closeEndMin) return { time, available: false };
 
-    // 2) Ar neužkliudo užblokuotų laikų?
-    if (blackoutIntervals.some((bo) => overlaps(w, bo))) return { time, available: false };
+    // 2) Ar neužkliudo užblokuotų laikų? (užblokuotas = grynas 30 min. langas)
+    if (blackoutIntervals.some((bo) => overlaps(cand, bo))) return { time, available: false };
 
-    // 3) Ar telpa į talpą (persidengimų skaičius < slotCapacity)?
-    const clashes = busy.reduce((n, iv) => (overlaps(w, iv) ? n + 1 : n), 0);
+    // 3) Ar telpa į talpą? Konfliktas įskaito būtiną TARPĄ tarp užsakymų, kuris
+    //    priklauso nuo gretimų tipų (žr. requiredGapMin): →šventė 30 min,
+    //    šventė→kambarys/žaidimai 15 min, kambarys/žaidimai tarpusavyje 0.
+    const clashes = busy.reduce((n, iv) => (conflictsWithGap(cand, iv) ? n + 1 : n), 0);
     return { time, available: clashes < BOOKING.slotCapacity };
   });
 }

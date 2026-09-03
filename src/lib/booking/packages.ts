@@ -102,9 +102,11 @@ export type PartyExtra = {
 export const PARTY_EXTRAS: readonly PartyExtra[] = [
   {
     id: "vrmax",
+    // Kaina PRIKLAUSO NUO PAKETO — žr. VR_MAX_PRICE_BY_PACKAGE. `price` čia tik
+    // atsarginė reikšmė (naudojama, jei paketas dar nepasirinktas).
     name: "VR MAX",
     desc: "Trumpiname pertraukas ir skiriame maksimaliai laiką VR žaidimams.",
-    price: 20,
+    price: 19,
     durationDeltaMin: 0,
   },
   {
@@ -150,9 +152,28 @@ export function partyDiscount(dateStr: string): number {
   return isDiscountDay(dateStr) ? PARTY_WEEKDAY_DISCOUNT_EUR : 0;
 }
 
-/** Pasirinktų paketo papildymų suma. */
-export function partyExtrasPrice(extraIds: string[]): number {
-  return PARTY_EXTRAS.filter((e) => extraIds.includes(e.id)).reduce((s, e) => s + e.price, 0);
+/**
+ * VR MAX priedo kaina pagal paketą (eurais). Kiti priedai — vienoda kaina
+ * visiems paketams (žr. PARTY_EXTRAS.price).
+ */
+export const VR_MAX_PRICE_BY_PACKAGE: Record<PartyPackageId, number> = {
+  maksi: 19,
+  vip: 29,
+  gold: 39,
+};
+
+/** Konkretaus priedo kaina pasirinktam paketui (VR MAX — priklauso nuo paketo). */
+export function extraPrice(extra: PartyExtra, pkgId?: string | null): number {
+  if (extra.id === "vrmax" && pkgId && pkgId in VR_MAX_PRICE_BY_PACKAGE) {
+    return VR_MAX_PRICE_BY_PACKAGE[pkgId as PartyPackageId];
+  }
+  return extra.price;
+}
+
+/** Pasirinktų paketo papildymų suma (atsižvelgia į paketą — VR MAX kaina kinta). */
+export function partyExtrasPrice(extraIds: string[], pkgId?: string | null): number {
+  return PARTY_EXTRAS.filter((e) => extraIds.includes(e.id))
+    .reduce((s, e) => s + extraPrice(e, pkgId), 0);
 }
 
 /** Papildymų pridedama trukmė minutėmis (pvz. „Papildomas laikas"). */
@@ -166,9 +187,9 @@ export function partyDurationMin(pkg: PartyPackage, extraIds: string[] = []): nu
 }
 
 /**
- * Pilnas užimamo laiko langas grafike minutėmis nuo šventės PRADŽIOS laiko:
- * 30 min. prieš (svečiams atvykti) + šventė + 30 min. po (susitvarkyti).
- * Grąžina bendrą span'ą minutėmis.
+ * @deprecated Grafiko laisvumui NEBENAUDOJAMA — tarpai tarp užsakymų dabar
+ * skaičiuojami pagal gretimų tipus (žr. window.ts → requiredGapMin). Palikta
+ * tik informaciniam „viso užimto lango" (prieš + šventė + po) rodymui.
  */
 export function partyBlockSpanMin(pkg: PartyPackage, extraIds: string[] = []): number {
   return BOOKING.partyBufferBeforeMin + partyDurationMin(pkg, extraIds) + BOOKING.partyBufferAfterMin;
@@ -176,5 +197,5 @@ export function partyBlockSpanMin(pkg: PartyPackage, extraIds: string[] = []): n
 
 /** Pilna paketo kaina: bazinė − I–IV nuolaida + papildymai. */
 export function partyTotal(pkg: PartyPackage, dateStr: string, extraIds: string[] = []): number {
-  return pkg.price - partyDiscount(dateStr) + partyExtrasPrice(extraIds);
+  return pkg.price - partyDiscount(dateStr) + partyExtrasPrice(extraIds, pkg.id);
 }

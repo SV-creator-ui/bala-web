@@ -4,10 +4,12 @@ export default function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div>
-            <div className="footer-brand-name">
-              BALA<span>VR</span>
+            <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center" }}>
+              <div className="footer-brand-name">
+                BALA<span>VR</span>
+              </div>
+              <div className="footer-tagline">Virtualios realybės erdvė</div>
             </div>
-            <div className="footer-tagline">Virtualios realybės erdvė</div>
             <p className="footer-desc">
               220 m² VR žaidimų salė Klaipėdoje. Gimtadieniai, grupiniai žaidimai,
               ir nepamirštamos patirtys nuo 2021 m.

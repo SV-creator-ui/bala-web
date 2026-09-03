@@ -32,7 +32,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   return (
     <div className="min-h-[100svh] flex flex-col bg-ink text-white" style={CYAN_THEME}>
       <header className="mx-auto w-full max-w-[1100px] px-6 md:px-10 pt-7 pb-2 flex items-center justify-between gap-4">
-        <Link href="/" aria-label="BALA VR — pasirinkti pramogą" className="flex flex-col items-start justify-center">
+        <Link href="/" aria-label="BALA VR — pasirinkti pramogą" className="flex flex-col items-center justify-center">
           <Image src="/assets/logo-bala-vr-wordmark.png" alt="BALA VR" width={220} height={40} className="h-[24px] w-auto" priority />
           <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] leading-none text-white">
             Virtualios realybės erdvė

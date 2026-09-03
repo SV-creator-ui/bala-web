@@ -82,9 +82,10 @@ export async function POST(req: Request) {
     }
     total = partyTotal(pkg!, date, addons);
   } else if (type === "game") {
-    // Komandiniai VR žaidimai — be priedų, 2–10 žaidėjų, sava kainodara.
+    // Komandiniai VR žaidimai — be priedų, sava kainodara.
+    // Internetu rezervuojama 2–maxOnlinePlayers; didesnės grupės tik telefonu.
     addons = [];
-    if (!Number.isInteger(players) || players < BOOKING.minPlayers || players > BOOKING.maxPlayers) {
+    if (!Number.isInteger(players) || players < BOOKING.minPlayers || players > BOOKING.maxOnlinePlayers) {
       errors.push("žaidėjai");
     }
     if (errors.length) {
@@ -94,7 +95,8 @@ export async function POST(req: Request) {
   } else {
     const validAddonIds = ADDONS.map((a) => a.id);
     addons = rawAddons.filter((id) => validAddonIds.includes(id));
-    if (!Number.isInteger(players) || players < BOOKING.minPlayers || players > BOOKING.maxPlayers) {
+    // Internetu rezervuojama 2–maxOnlinePlayers; didesnės grupės tik telefonu.
+    if (!Number.isInteger(players) || players < BOOKING.minPlayers || players > BOOKING.maxOnlinePlayers) {
       errors.push("žaidėjai");
     }
     if (errors.length) {

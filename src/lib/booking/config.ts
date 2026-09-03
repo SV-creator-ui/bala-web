@@ -11,15 +11,25 @@ export const BOOKING = {
   /** Kiek minučių grafike užima ĮPRASTAS VR pabėgimo kambario apsilankymas */
   roomDurationMin: 60,
 
-  /** Gimtadienio/šventės paketas: buferis PRIEŠ (svečiams atvykti), minutėmis */
+  /** Gimtadienio/šventės paketas: buferis PRIEŠ (svečiams atvykti / pasiruošti), minutėmis.
+   *  Naudojamas ir kaip BŪTINAS tarpas prieš bet kokią šventę grafike. */
   partyBufferBeforeMin: 30,
-  /** Gimtadienio/šventės paketas: buferis PO (susitvarkyti), minutėmis */
+  /** Gimtadienio/šventės paketas: buferis PO (susitvarkyti), minutėmis.
+   *  DĖMESIO: grafike nebenaudojamas — tarpą po šventės nustato kitas užsakymas
+   *  (žr. partyToNormalGapMin ir window.ts → requiredGapMin). Paliktas informacijai. */
   partyBufferAfterMin: 30,
+  /** Būtinas tarpas grafike PO šventės, kai po jos eina ĮPRASTAS užsakymas
+   *  (pabėgimo kambarys / komandiniai žaidimai) — kambariui susitvarkyti. Minutėmis. */
+  partyToNormalGapMin: 15,
 
   /** Mažiausias žaidėjų skaičius įprastam apsilankymui */
   minPlayers: 2,
-  /** Didžiausias žaidėjų skaičius įprastam apsilankymui */
+  /** Didžiausias žaidėjų skaičius įprastam apsilankymui (fizinė talpa) */
   maxPlayers: 10,
+  /** Didžiausias žaidėjų skaičius, kurį galima rezervuoti INTERNETU.
+   *  Didesnėms grupėms (nuo maxOnlinePlayers+1 iki maxPlayers) rezervacija
+   *  vyksta telefonu — žr. BookingFlow (StepPlayers) ir API validaciją. */
+  maxOnlinePlayers: 6,
 
   /** Įprasto apsilankymo avansas eurais */
   depositEur: 30,

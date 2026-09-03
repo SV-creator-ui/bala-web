@@ -12,11 +12,12 @@ import { activityEndMin } from "@/lib/booking/window";
 import { roomsPrice, gamesPrice, grandTotal, formatEur } from "@/lib/booking/pricing";
 import {
   PARTY_PACKAGES, PARTY_EXTRAS, getPartyPackage,
-  partyTotal, partyDiscount, isDiscountDay,
+  partyTotal, partyDiscount, isDiscountDay, extraPrice, VR_MAX_PRICE_BY_PACKAGE,
   type PartyPackageId,
 } from "@/lib/booking/packages";
 import { isClosedHoliday } from "@/lib/booking/holidays";
 import { validName, validPhone, validEmail } from "@/lib/booking/validation";
+import { BUSINESS } from "@/lib/bala-data";
 
 type SlotStatus = { time: string; available: boolean };
 
@@ -110,7 +111,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     if (type === "party" && pkg) {
       setPlayers((p) => Math.min(Math.max(1, p), pkg.maxPlayers));
     } else if (type === "room" || type === "game") {
-      setPlayers((p) => Math.min(Math.max(BOOKING.minPlayers, p), BOOKING.maxPlayers));
+      setPlayers((p) => Math.min(Math.max(BOOKING.minPlayers, p), BOOKING.maxOnlinePlayers));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, pkgId]);
@@ -262,8 +263,8 @@ export default function BookingFlow({ initialType, initialPkgId }: {
         type === "party"
           ? "Minimalus žaidėjų amžius – 7 metai. Jaunesni svečiai VR žaisti negalės."
           : type === "game"
-          ? `2–${BOOKING.maxPlayers} žaidėjų. 2 žaid. – 50 €, 3 žaid. – 60 €, kiekvienas papildomas +20 €.`
-          : `2–${BOOKING.maxPlayers} žaidėjų. Nuo 7 asm. žaidžiama dviem komandomis vienu metu.`,
+          ? `2–${BOOKING.maxOnlinePlayers} žaidėjų. 2 žaid. – 50 €, 3 žaid. – 60 €, kiekvienas papildomas +20 €.`
+          : `2–${BOOKING.maxOnlinePlayers} žaidėjų. Didesnei grupei (${BOOKING.maxOnlinePlayers + 1}–${BOOKING.maxPlayers}) susisiekite telefonu.`,
     },
     contact: {
       title: "Tavo kontaktai",
@@ -369,7 +370,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
         />
       </div>
 
-      <div className="mt-8 flex items-center justify-between gap-3 border-t border-line pt-6">
+      <div className="sticky bottom-0 z-20 -mx-5 mt-6 flex items-center justify-between gap-3 border-t border-line bg-ink px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:static lg:mx-0 lg:mt-8 lg:bg-transparent lg:px-0 lg:pt-6 lg:pb-0">
         <button
           onClick={back}
           className={`text-smoke hover:text-white font-bold ${step === 1 ? "invisible" : ""}`}
@@ -496,6 +497,11 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
           <div className="flex flex-col gap-2.5 max-w-[560px]">
             {PARTY_EXTRAS.map((e) => {
               const on = partyExtras.includes(e.id);
+              // VR MAX kaina priklauso nuo paketo; kol paketas nepasirinktas — „nuo N €".
+              const vrMin = Math.min(...Object.values(VR_MAX_PRICE_BY_PACKAGE));
+              const priceText = e.id === "vrmax" && !pkgId
+                ? `nuo ${vrMin} €`
+                : `+${extraPrice(e, pkgId)} €`;
               return (
                 <button
                   key={e.id}
@@ -507,7 +513,7 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
                     <b className="text-[15px]">{e.name}</b>
                     <span className="block text-xs text-smoke-2">{e.desc}</span>
                   </span>
-                  <span className="font-mono font-semibold whitespace-nowrap">+{e.price} €</span>
+                  <span className="font-mono font-semibold whitespace-nowrap">{priceText}</span>
                 </button>
               );
             })}
@@ -665,7 +671,8 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms 
   addons: string[]; setAddons: (a: string[]) => void; rooms: number;
 }) {
   const min = type === "party" ? 1 : BOOKING.minPlayers;
-  const max = type === "party" && pkg ? pkg.maxPlayers : BOOKING.maxPlayers;
+  const max = type === "party" && pkg ? pkg.maxPlayers : BOOKING.maxOnlinePlayers;
+  const bigGroup = (type === "room" || type === "game") && players >= BOOKING.maxOnlinePlayers;
 
   return (
     <div>
@@ -696,6 +703,20 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms 
             >+</button>
           </div>
         </div>
+
+        {bigGroup && (
+          <div className="rounded-xl border border-volt/40 bg-volt/10 px-4 py-3.5">
+            <p className="text-sm text-white font-semibold">
+              {BOOKING.maxOnlinePlayers + 1}–{BOOKING.maxPlayers} žaidėjų grupei
+            </p>
+            <p className="text-sm text-smoke mt-0.5">
+              Susisiekite dėl rezervacijos telefonu{" "}
+              <a href={BUSINESS.phoneHref} className="font-bold text-volt whitespace-nowrap hover:underline">
+                {BUSINESS.phoneDisplay}
+              </a>
+            </p>
+          </div>
+        )}
 
         {type === "room" && ADDONS.length > 0 && (
           <div>
@@ -927,7 +948,7 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
               <SumLine label={`Paketas ${pkg.name}`} value={`${formatEur(pkg.price)} €`} />
               {discount > 0 && <SumLine label="I–IV nuolaida" value={`−${formatEur(discount)} €`} muted />}
               {PARTY_EXTRAS.filter((e) => partyExtras.includes(e.id)).map((e) => (
-                <SumLine key={e.id} label={`+ ${e.name}`} value={`${e.price} €`} muted />
+                <SumLine key={e.id} label={`+ ${e.name}`} value={`${extraPrice(e, pkg.id)} €`} muted />
               ))}
               <SumLine label="Įskaičiuota" value={`iki ${pkg.maxPlayers} žaidėjų`} muted />
             </>
