@@ -82,6 +82,7 @@ const SECTIONS: Section[] = [
     items: [
       "Pasibaigus užsakytam laikui reikia **išeiti laiku** arba **prasitęsti laiką** papildomai pagal galiojančius įkainius.",
       "Jei pratęsti laiko negalima, pasibaigus laikui pridedame **5 minutes susiruošimui**.",
+      "Vėluojant išeiti, papildomas laikas yra apmokestinamas.",
     ],
   },
   {
