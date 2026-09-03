@@ -22,7 +22,7 @@ const SECTIONS: Section[] = [
     title: "Amžius",
     items: [
       "**VR pabėgimo kambariai** (reikia mąstyti ir spręsti užduotis): žaisti vieniems — **nuo 14 metų**; su lydinčiu suaugusiuoju — **nuo 8 metų**.",
-      "**Komandiniai VR žaidimai** (linksmi ir aktyvūs): žaisti vaikams vieniems — **nuo 7 metų**.",
+      "**VR veiksmo žaidimai** (linksmi ir aktyvūs): žaisti vaikams vieniems — **nuo 7 metų**.",
       "Jaunesni nei 7 m. gali žaisti kitus (ne VR) žaidimus, prižiūrimi suaugusiųjų.",
     ],
   },
