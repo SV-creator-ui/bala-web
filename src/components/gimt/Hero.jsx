@@ -6,7 +6,7 @@ const stats = [
   { num: "500+", label: "Gimtadienių" },
   { num: "4.9★", label: "Google" },
   { num: "220 m²", label: "Erdvė" },
-  { num: "7+ m.", label: "Amžius" },
+  { num: "Nuo 2021", label: "Veikiame" },
 ];
 
 export default function Hero() {
