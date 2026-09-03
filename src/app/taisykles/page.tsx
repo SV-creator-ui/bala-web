@@ -53,7 +53,7 @@ const SECTIONS: Section[] = [
     items: [
       "Laikykitės instruktoriaus nurodymų ir žaidimo instrukcijų.",
       "Su VR akiniais iš žaidimų kambario išeiti negalima.",
-      "Instruktorius turi teisę sustabdyti paslaugą lankytojams, **nesilaikantiems nurodymų ar keliantiems pavojų**.",
+      "Instruktorius turi teisę sustabdyti paslaugą lankytojams, **nesilaikantiems taisyklių, nurodymų ar keliantiems pavojų kitiems**.",
     ],
   },
   {
