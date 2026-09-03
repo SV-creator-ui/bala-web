@@ -84,11 +84,11 @@ function eventBody(b: BookingRow) {
   const summary = isParty
     ? `🎂 Gimtadienis${pkg ? " " + pkg.name : ""} — ${b.customer_name} (${b.players} asm.)`
     : isGame
-    ? `🎮 Komandiniai VR žaidimai — ${b.customer_name} (${b.players} asm.)`
+    ? `🎮 VR veiksmo žaidimai — ${b.customer_name} (${b.players} asm.)`
     : `🥽 VR kambarys — ${b.customer_name} (${b.players} asm.)`;
 
   const lines = [
-    isParty ? `Paketas: ${pkg ? pkg.name : "šventė"}` : isGame ? "Komandiniai VR žaidimai" : "VR pabėgimo kambarys",
+    isParty ? `Paketas: ${pkg ? pkg.name : "šventė"}` : isGame ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys",
     `Klientas: ${b.customer_name}`,
     `Tel.: ${b.customer_phone}`,
     `El. paštas: ${b.customer_email}`,

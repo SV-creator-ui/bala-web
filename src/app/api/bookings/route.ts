@@ -203,7 +203,7 @@ export async function POST(req: Request) {
     const label = type === "party"
       ? `BALA VR gimtadienio paketo avansas — ${date} ${time}`
       : type === "game"
-      ? `BALA VR komandinių žaidimų avansas — ${date} ${time}`
+      ? `BALA VR veiksmo žaidimų avansas — ${date} ${time}`
       : `BALA VR pabėgimo kambario avansas — ${date} ${time}`;
     const pay = await createPayseraPayment({
       merchantReference,

@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     q: "Ar tėvai taip pat gali žaisti VR?",
-    a: "Tėvai gali išbandyti VR komandinius žaidimus, jei lieka laisva vieta. Jei norima žaisti be pertraukų - reikia užsakyti VR MAX papildymą.",
+    a: "Tėvai gali išbandyti VR veiksmo žaidimus, jei lieka laisva vieta. Jei norima žaisti be pertraukų - reikia užsakyti VR MAX papildymą.",
   },
   {
     q: "Ar galime atsivežti tortą ir dekoracijas?",

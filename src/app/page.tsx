@@ -5,7 +5,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "BALA VR Klaipėda — pasirinkite savo pramogą",
   description:
-    "BALA VR Klaipėdoje: azartiški VR pabėgimo kambariai, aktyvūs komandiniai žaidimai arba privati gimtadienio šventė su vaišėmis.",
+    "BALA VR Klaipėdoje: azartiški VR pabėgimo kambariai, aktyvūs VR veiksmo žaidimai arba privati gimtadienio šventė su vaišėmis.",
 };
 
 function Arrow() {
@@ -174,7 +174,7 @@ export default function ChooserPage() {
                 Žaidėjams nuo 7 metų ir suaugusiems
               </p>
               <p className="mt-3 text-[14px] md:text-[15px] leading-[1.5] text-white">
-                Trys komandiniai žaidimai per maždaug 45 minutes. Zombiai, kovos 3x3,
+                Trys skirtingi žaidimai per maždaug 45 minutes. Zombiai, kovos 3x3,
                 burgerių kepimas, magijos žaidimai ir kiti linksmi nuotykiai. Nuo 7 m.
               </p>
               <Features

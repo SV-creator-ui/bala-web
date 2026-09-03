@@ -67,7 +67,7 @@ function serviceName(b: BookingRow): string {
     const pkg = getPartyPackage(b.package_id ?? "");
     return pkg ? `Gimtadienio paketas ${pkg.name}` : "Gimtadienio šventė";
   }
-  if (b.type === "game") return "Komandiniai VR žaidimai";
+  if (b.type === "game") return "VR veiksmo žaidimai";
   return "VR pabėgimo kambarys";
 }
 

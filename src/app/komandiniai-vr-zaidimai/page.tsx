@@ -4,9 +4,9 @@ import Link from "next/link";
 import { BUSINESS } from "@/lib/bala-data";
 
 export const metadata: Metadata = {
-  title: "Komandiniai VR žaidimai Klaipėdoje — BALA VR",
+  title: "VR veiksmo žaidimai Klaipėdoje — BALA VR",
   description:
-    "Komandiniai VR žaidimai be pabėgimo scenarijaus: 3 žaidimai (~45 min.) nuo €50 ir arkadiniai žaidimai nuo €8. BALA VR Klaipėdoje.",
+    "VR veiksmo žaidimai be pabėgimo scenarijaus: 3 žaidimai (~45 min.) nuo €50 ir arkadiniai žaidimai nuo €8. BALA VR Klaipėdoje.",
 };
 
 const ACCENT = "#34d1e0";
@@ -72,21 +72,21 @@ export default function LaisvasZaidimasPage() {
       {/* Hero */}
       <section className="mx-auto w-full max-w-[1080px] px-6 md:px-10 pt-8 md:pt-12 pb-4 text-center">
         <h1 className="font-display uppercase leading-[1.03] tracking-[-.01em] text-[clamp(30px,6vw,58px)]">
-          Komandiniai VR <span style={{ color: ACCENT }}>žaidimai</span>
+          VR veiksmo <span style={{ color: ACCENT }}>žaidimai</span>
         </h1>
         <p className="mt-4 mx-auto max-w-[640px] text-[17px] md:text-[19px] leading-[1.6] text-white">
           Ateik tiesiog pažaisti. Rinkis linksmus ir aktyvius, 3 skirtingus
-          komandinius VR žaidimus. Jokių galvosūkių! Tik veiksmas!
+          VR veiksmo žaidimus. Jokių galvosūkių! Tik veiksmas!
         </p>
       </section>
 
       {/* Kainos */}
       <section className="mx-auto w-full max-w-[1080px] px-6 md:px-10 py-8 md:py-12">
         <div className="grid gap-5 md:gap-6 md:grid-cols-2">
-          {/* VR komandiniai žaidimai */}
+          {/* VR veiksmo žaidimai */}
           <div className="rounded-3xl border-[1.5px] border-line bg-ink-card p-7 md:p-9 flex flex-col">
             <h2 className="font-display uppercase text-white text-[clamp(22px,3.4vw,30px)] leading-[1.1]">
-              VR komandiniai žaidimai
+              VR veiksmo žaidimai
             </h2>
             <p className="mt-2 text-[16px] md:text-[18px] leading-[1.6] text-white">
               3 skirtingi VR žaidimai, apie 45 min. bendro žaidimo laiko.

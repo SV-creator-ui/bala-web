@@ -31,7 +31,7 @@ export default function Hero() {
               <em>— BALA VR erdvėje</em>
             </h1>
             <p className="hero-sub fade-up fade-up-2">
-              Privati 220 m² BALA VR erdvė tik jūsų šventei: VR komandiniai
+              Privati 220 m² BALA VR erdvė tik jūsų šventei: VR veiksmo
               žaidimai, interaktyvi siena, arkadiniai žaidimai, instruktoriaus
               priežiūra ir poilsio zona tėvams.
             </p>

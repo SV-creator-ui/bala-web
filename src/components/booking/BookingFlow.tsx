@@ -254,7 +254,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
         type === "party"
           ? ""
           : type === "game"
-          ? "Rezervuok komandinių VR žaidimų laiką. 3 žaidimai, ~45 min."
+          ? "Rezervuok VR veiksmo žaidimų laiką. 3 žaidimai, ~45 min."
           : "Rezervuok VR pabėgimo kambario laiką. Konkretų scenarijų pasirinksi atvykęs.",
     },
     players: {
@@ -931,7 +931,7 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
         </div>
         <div>
           <h4 className="font-display uppercase text-[15px] leading-tight">
-            {type === "party" ? (pkg ? `Paketas ${pkg.name}` : "Šventės paketas") : type === "game" ? "Komandiniai VR žaidimai" : "VR pabėgimo kambarys"}
+            {type === "party" ? (pkg ? `Paketas ${pkg.name}` : "Šventės paketas") : type === "game" ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys"}
           </h4>
           <span className="font-mono text-xs text-smoke-2">
             {type === "party" ? (pkg ? pkg.durationLabel : "Pasirink paketą") : type === "game" ? "3 žaidimai · ~45 min." : "Scenarijus — vietoje"}

@@ -1,7 +1,7 @@
 const features = [
   {
     emoji: "🥽",
-    title: "Unikalūs komandiniai VR žaidimai",
+    title: "Unikalūs VR veiksmo žaidimai",
     desc: "Azartas ir juokas, kurį žaidėjai patirs kartu.",
   },
   {

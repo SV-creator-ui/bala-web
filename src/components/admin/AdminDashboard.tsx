@@ -29,7 +29,7 @@ function serviceLabel(b: Booking): string {
     const pkg = getPartyPackage(b.package_id ?? "");
     return pkg ? `Paketas ${pkg.name}` : "Šventės paketas";
   }
-  if (b.type === "game") return "Komandiniai VR žaidimai";
+  if (b.type === "game") return "VR veiksmo žaidimai";
   return "Pabėgimo kambarys";
 }
 type Blackout = { id: string; date: string; time: string | null; reason: string | null };
