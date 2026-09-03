@@ -12,7 +12,7 @@ export default function Footer() {
             </div>
             <p className="footer-desc">
               220 m² VR žaidimų salė Klaipėdoje. Gimtadieniai, grupiniai žaidimai,
-              ir nepamirštamos patirtys nuo 2021 m.
+              ir nepamirštamos patirtys nuo 2022 m.
             </p>
           </div>
           <div>
