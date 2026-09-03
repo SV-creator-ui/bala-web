@@ -62,8 +62,9 @@ const SECTIONS: Section[] = [
     title: "Arkadiniai ir stalo žaidimai",
     items: [
       "Žaidimų aparatų **negalima stumdyti, kilnoti ar ant jų lipti**.",
-      "Prie kiekvieno žaidimo žaidžiama **po du** (išskyrus stalo futbolą).",
+      "Prie kiekvieno žaidimo galima žaisti **dviese** (stalo futbolą — **keturiese**).",
       "**Žaidžiant nenaudokite perteklinės jėgos** — mygtukus reikia spausti, ne daužyti.",
+      "Žaidimų įrangos (kamuoliukų, mušukų ir pan.) **negalima mėtyti** po kambarį ar trukdyti žaisti kitiems.",
     ],
   },
   {
