@@ -78,10 +78,11 @@ const SECTIONS: Section[] = [
   {
     n: 7,
     emoji: "⏰",
-    title: "Laiko laikymasis",
+    title: "Laikas ir pratęsimas",
     items: [
-      "Rezervacijos vyksta viena po kitos, todėl pasibaigus jūsų laikui prašome laiku išeiti iš patalpos.",
-      "Vėlavimas daugiau nei 5 minutės po užsakyto laiko pabaigos apmokestinamas papildomai pagal galiojančius įkainius.",
+      "Visas užsakytas laikas skirtas **tik jums** — rezervacijos vyksta viena po kitos.",
+      "Norisi pažaisti ilgiau? Laiką galima pratęsti net **+15 min** — jei tvarkaraštis leidžia, tiesiog pasakykite instruktoriui, ir jis pridės laiko pagal galiojančius įkainius.",
+      "Jei pratęsti nepavyksta, pasibaigus laikui prašome išeiti iš patalpos — taip kita komanda galės pradėti laiku.",
     ],
   },
   {
