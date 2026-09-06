@@ -11,6 +11,7 @@ const PAGE_LINKS = [
   { href: "/pabegimo-kambariai#atsiliepimai", label: "Atsiliepimai" },
   { href: "/pabegimo-kambariai#duk", label: "D.U.K." },
   { href: "/pabegimo-kambariai/blog", label: "Blogas" },
+  { href: "/", label: "Kitos pramogos" },
 ];
 
 export default function Footer() {
@@ -127,9 +128,13 @@ export default function Footer() {
             <a href="/taisykles" className="font-semibold text-smoke transition-colors hover:text-white">
               Taisyklės
             </a>
+            <a href="/privatumo-politika" className="font-semibold text-smoke transition-colors hover:text-white">
+              Privatumo politika
+            </a>
             <span>Sukurta su meile virtualiai realybei.</span>
           </div>
         </div>
+        <p className="mt-4 text-[11px] leading-[1.5] text-smoke-2">{BUSINESS.legalNote}</p>
       </div>
     </footer>
   );

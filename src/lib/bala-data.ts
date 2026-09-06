@@ -415,6 +415,7 @@ export const AUDIENCES = [
 export const BUSINESS = {
   name: "Bala VR",
   legalName: "Bala VR",
+  legalNote: "Šarūnas Valius, Individualios veiklos vykdymo pažyma Nr. 1379347",
   url: "https://bala-vr-nextjs.vercel.app",
   phoneDisplay: "+370 684 26686",
   phoneHref: "tel:+37068426686",

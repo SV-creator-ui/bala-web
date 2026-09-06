@@ -20,7 +20,6 @@ export default function Footer() {
             <div className="footer-col-links">
               <a href="tel:+37068426686">+370 684 26686</a>
               <a href="mailto:bala.pramogos@gmail.com">bala.pramogos@gmail.com</a>
-              <a href="https://m.me/balavr">Facebook Messenger</a>
             </div>
           </div>
           <div>
@@ -62,7 +61,14 @@ export default function Footer() {
             <a href="/taisykles" style={{ color: "inherit", textDecoration: "underline" }}>
               Taisyklės
             </a>{" "}
+            ·{" "}
+            <a href="/privatumo-politika" style={{ color: "inherit", textDecoration: "underline" }}>
+              Privatumo politika
+            </a>{" "}
             · Klaipėda · Lietuva
+          </p>
+          <p className="footer-copy" style={{ fontSize: "11px", opacity: 0.7, marginTop: "8px" }}>
+            Šarūnas Valius, Individualios veiklos vykdymo pažyma Nr. 1379347
           </p>
         </div>
       </div>
