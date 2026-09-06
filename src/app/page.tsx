@@ -50,10 +50,10 @@ export default function ChooserPage() {
           className="h-[26px] md:h-[32px] w-auto"
           priority
         />
-        <span className="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] leading-none text-white">
+        <span className="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] leading-none text-white animate-hero-in">
           Virtualios realybės erdvė
         </span>
-        <h1 className="mt-9 md:mt-5 font-display uppercase leading-[1.02] tracking-[-.01em] text-[clamp(26px,4.4vw,44px)]">
+        <h1 className="mt-9 md:mt-5 font-display uppercase leading-[1.02] tracking-[-.01em] text-[clamp(26px,4.4vw,44px)] animate-hero-in [animation-delay:80ms]">
           Pasirinkite savo <span className="text-volt">pramogą</span>
         </h1>
         <div className="mt-2 h-2 md:mt-3 md:h-[50px]" aria-hidden />
@@ -65,7 +65,7 @@ export default function ChooserPage() {
           {/* VR pabėgimo kambariai */}
           <Link
             href="/pabegimo-kambariai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.5)] hover:border-volt transition-colors md:min-h-0"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.5)] hover:border-volt transition-[border-color,transform] duration-150 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 animate-hero-in-scale [animation-fill-mode:backwards]"
           >
             <div className="absolute inset-0 animate-ken-a will-change-transform motion-reduce:animate-none">
               <Image
@@ -108,7 +108,7 @@ export default function ChooserPage() {
           {/* Gimtadienių paketai */}
           <Link
             href="/gimtadieniai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(77,184,204,0.3)] hover:border-[#f0a500] transition-colors md:min-h-0 bg-[#0d2b35]"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(77,184,204,0.3)] hover:border-[#f0a500] transition-[border-color,transform] duration-150 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#0d2b35] animate-hero-in-scale [animation-delay:70ms] [animation-fill-mode:backwards]"
           >
             <div className="absolute inset-0 animate-ken-c will-change-transform motion-reduce:animate-none">
               <Image
@@ -153,7 +153,7 @@ export default function ChooserPage() {
           {/* VR veiksmo žaidimai */}
           <Link
             href="/komandiniai-vr-zaidimai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-colors md:min-h-0 bg-[#07242a]"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-[border-color,transform] duration-150 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#07242a] animate-hero-in-scale [animation-delay:140ms] [animation-fill-mode:backwards]"
           >
             <div className="absolute inset-0 animate-ken-b will-change-transform motion-reduce:animate-none">
               <Image

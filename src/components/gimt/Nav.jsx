@@ -16,6 +16,12 @@ export default function Nav() {
 
   return (
     <nav className={`nav${scrolled ? " scrolled" : ""}`}>
+      <div className="nav-inner">
+      <a href="/" className="nav-back" aria-label="Grįžti į pramogų pasirinkimą" title="Kitos pramogos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M19 12H5M11 18l-6-6 6-6" />
+        </svg>
+      </a>
       <a href="#pradzia" className="nav-brand" aria-label="BALA VR — į pradžią">
         <span className="nav-brand-text">
           <span className="brand-bala">BALA</span>
@@ -45,6 +51,7 @@ export default function Nav() {
       <a href={BOOKING_URL} className="btn btn-primary nav-cta">
         REZERVUOTI
       </a>
+      </div>
     </nav>
   );
 }

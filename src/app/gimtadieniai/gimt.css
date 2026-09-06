@@ -176,14 +176,21 @@ html { scroll-behavior: smooth; }
 /* ── NAV ── */
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between; gap: 32px;
-  padding: 20px 40px;
+  padding: 20px 0;
   background: rgba(13,43,53,0.72);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--white-12);
   transition: padding var(--dur-base) var(--ease-out),
     background var(--dur-base) ease, box-shadow var(--dur-base) ease;
+}
+/* Vidinis turinys sulygiuotas su puslapio konteineriu (kaip hero) —
+   taip logotipas atsistoja tiksliai virš kairiojo hero video. */
+.nav-inner {
+  display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
 }
 /* Susitraukia ir gauna šešėlį nuleidus puslapį */
 .nav.scrolled {
@@ -260,6 +267,18 @@ html { scroll-behavior: smooth; }
   padding: 13px 28px;
   font-size: 14px;
 }
+/* Rodyklė grįžti į pramogų pasirinkimą (/) — apvalus ikonos mygtukas */
+.nav-back {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; flex: none;
+  border-radius: 999px;
+  border: 1px solid var(--white-12);
+  color: var(--white-68);
+  text-decoration: none;
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+.nav-back:hover { color: var(--amber); border-color: var(--amber); }
+.nav-back svg { width: 18px; height: 18px; flex: none; }
 
 /* ── HERO ── */
 .hero {
@@ -1752,7 +1771,8 @@ html { scroll-behavior: smooth; }
 }
 @media (max-width: 768px) {
   .gimt { --pad-section: 64px; }
-  .nav { padding: 14px 20px; gap: 16px; }
+  .nav { padding: 14px 0; }
+  .nav-inner { gap: 16px; }
   .nav.scrolled { padding-top: 10px; padding-bottom: 10px; }
   .nav-brand { font-size: 22px; }
   .nav-cta { padding: 11px 20px; margin-left: 0; }

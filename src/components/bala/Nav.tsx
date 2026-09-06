@@ -44,25 +44,37 @@ export default function Nav() {
         }`}
       >
         <div className="mx-auto max-w-[1280px] px-6 md:px-10 min-[1200px]:px-14 flex items-center justify-between gap-5">
-          <Link
-            href="/pabegimo-kambariai"
-            aria-label="Bala VR — pradžia"
-            className="flex flex-col items-center justify-center"
-            onClick={(e) => {
-              // Pradiniame puslapyje – nuslinkti į viršų ir išvalyti #hash iš URL
-              if (window.location.pathname === "/pabegimo-kambariai") {
-                e.preventDefault();
-                setOpen(false);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-                window.history.replaceState(null, "", "/pabegimo-kambariai");
-              }
-            }}
-          >
-            <Image src="/assets/logo-bala-vr-wordmark.png" alt="Bala VR" width={264} height={48} className="h-[26px] w-auto" priority />
-            <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] leading-none text-white">
-              Virtualios realybės erdvė
-            </span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              aria-label="Grįžti į pramogų pasirinkimą"
+              title="Kitos pramogos"
+              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full border border-line-strong text-smoke transition-colors hover:border-volt hover:text-white"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M19 12H5M11 18l-6-6 6-6" />
+              </svg>
+            </Link>
+            <Link
+              href="/pabegimo-kambariai"
+              aria-label="Bala VR — pradžia"
+              className="flex flex-col items-center justify-center"
+              onClick={(e) => {
+                // Pradiniame puslapyje – nuslinkti į viršų ir išvalyti #hash iš URL
+                if (window.location.pathname === "/pabegimo-kambariai") {
+                  e.preventDefault();
+                  setOpen(false);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  window.history.replaceState(null, "", "/pabegimo-kambariai");
+                }
+              }}
+            >
+              <Image src="/assets/logo-bala-vr-wordmark.png" alt="Bala VR" width={264} height={48} className="h-[26px] w-auto" priority />
+              <span className="mt-1 whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.18em] leading-none text-white">
+                Virtualios realybės erdvė
+              </span>
+            </Link>
+          </div>
           <nav aria-label="Pagrindinė navigacija" className="hidden min-[960px]:flex items-center gap-[30px]">
             {LINKS.map((l) => (
               <a
@@ -99,6 +111,16 @@ export default function Nav() {
           open ? "translate-y-0" : "-translate-y-full"
         }`}
       >
+        <Link
+          href="/"
+          onClick={() => setOpen(false)}
+          className="mb-1 inline-flex items-center gap-2 self-start text-[15px] font-semibold text-smoke transition-colors hover:text-white"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M19 12H5M11 18l-6-6 6-6" />
+          </svg>
+          Kitos pramogos
+        </Link>
         {LINKS.map((l) => (
           <a
             key={l.href}

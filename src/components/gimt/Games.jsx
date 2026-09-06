@@ -1,6 +1,6 @@
 const games = [
   { video: "/games/g-cookdup.mp4", tag: "Nuotykis" },
-  { img: "/games/g-veiksmas-1.webp", tag: "Veiksmas" },
+  { video: "/games/g-party-ship.mp4", tag: "Veiksmas" },
   { img: "/games/g-nuotykis-2.webp", tag: "Nuotykis" },
   { video: "/games/g-cops-robbers.mp4", tag: "Veiksmas" },
   { video: "/games/g-nuotykis-5.mp4", tag: "Nuotykis" },
