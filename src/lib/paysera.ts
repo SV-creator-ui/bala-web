@@ -115,14 +115,16 @@ export async function createPayseraPayment(p: CreateOrderParams): Promise<Create
     const t = await orderRes.text().catch(() => "");
     throw new Error(`Paysera order klaida (${orderRes.status}): ${t}`);
   }
-  const order = (await orderRes.json()) as { id: string };
-  if (!order.id) throw new Error("Paysera order be id");
+  // DĖMESIO: order CREATE atsakymas grąžina `order_id` (ne `id`).
+  const order = (await orderRes.json()) as { order_id?: string; id?: string };
+  const orderId = order.order_id || order.id;
+  if (!orderId) throw new Error("Paysera order be id");
 
   // 2) Mokėjimo nuoroda
   const linkRes = await authedFetch(LINKS_URL, {
     method: "POST",
     body: JSON.stringify({
-      order_id: order.id,
+      order_id: orderId,
       name: p.description || `BALA VR ${p.merchantReference}`,
       lifetime: 3600,
       experience: { language: "lt", payment_flow: "paysera_checkout" },
@@ -138,15 +140,29 @@ export async function createPayseraPayment(p: CreateOrderParams): Promise<Create
   const paymentUrl = link.payment_URL || link.payment_url || link.url || link.link;
   if (!paymentUrl) throw new Error("Paysera payment-link be URL");
 
-  return { paymentUrl, orderId: order.id };
+  return { paymentUrl, orderId };
 }
 
-/** Užklausia užsakymo būsenos (atsarginis patvirtinimo kelias be webhook'o). */
+/**
+ * Užklausia užsakymo būsenos (atsarginis patvirtinimo kelias be webhook'o).
+ * GET /orders/{id} grąžina `status` ("pending_payment" | "paid" | ...) bei
+ * `amount`/`amount_paid`/`balance_due`. Kad būtų atsparu tiksliai „paid"
+ * reikšmei, pilnai apmokėtą (balance_due === 0) normalizuojame į "paid".
+ */
 export async function getPayseraOrderStatus(orderId: string): Promise<string | null> {
   try {
     const res = await authedFetch(`${ORDERS_URL}/${encodeURIComponent(orderId)}`, { method: "GET" });
     if (!res.ok) return null;
-    const data = (await res.json()) as { status?: string };
+    const data = (await res.json()) as {
+      status?: string;
+      amount?: number;
+      amount_paid?: number;
+      balance_due?: number;
+    };
+    const fullyPaid =
+      (typeof data.balance_due === "number" && data.balance_due <= 0 && (data.amount_paid ?? 0) > 0) ||
+      (typeof data.amount_paid === "number" && typeof data.amount === "number" && data.amount > 0 && data.amount_paid >= data.amount);
+    if (fullyPaid) return "paid";
     return data.status ?? null;
   } catch {
     return null;
@@ -180,11 +196,19 @@ export function parsePayseraWebhook(rawBody: string): PayseraWebhook | null {
     const body = JSON.parse(rawBody) as Record<string, unknown>;
     // Įvykio duomenys gali būti body.order arba body.data (gynybinis skaitymas).
     const order = (body.order ?? body.data ?? body) as Record<string, unknown>;
-    const reference = String(order.reference ?? "");
+    const purchase = (order.purchase ?? {}) as Record<string, unknown>;
+    // reference gali būti top-level (GET formatas) arba purchase.reference (CREATE formatas).
+    const reference = String(order.reference ?? purchase.reference ?? "");
     const status = String(order.status ?? "");
-    const orderId = order.id ? String(order.id) : null;
+    // id gali būti `id` (GET) arba `order_id` (CREATE/link).
+    const orderId = order.id ? String(order.id) : order.order_id ? String(order.order_id) : null;
+    const balanceDue = typeof order.balance_due === "number" ? (order.balance_due as number) : null;
+    const amountPaid = typeof order.amount_paid === "number" ? (order.amount_paid as number) : null;
+    const paid =
+      status === "paid" ||
+      (balanceDue !== null && balanceDue <= 0 && (amountPaid ?? 0) > 0);
     if (!reference) return null;
-    return { merchantReference: reference, paid: status === "paid", orderId };
+    return { merchantReference: reference, paid, orderId };
   } catch {
     return null;
   }
