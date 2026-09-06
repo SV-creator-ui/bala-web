@@ -6,7 +6,7 @@
  *   Tipas → Laikas → Dalyviai → Kontaktai → Apmokėjimas.
  * Kaina ir avansas rodomi iš @/lib/booking (tas pats šaltinis kaip serveryje).
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BOOKING, ADDONS, depositFor, toHHMM, type BookingType } from "@/lib/booking/config";
 import { activityEndMin } from "@/lib/booking/window";
 import { roomsPrice, gamesPrice, grandTotal, formatEur } from "@/lib/booking/pricing";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/booking/packages";
 import { isClosedHoliday } from "@/lib/booking/holidays";
 import { validName, validPhone, validEmail } from "@/lib/booking/validation";
+import { validCelebrantAge, ALL_INVITATION_LANGS } from "@/lib/booking/invitation";
 import { BUSINESS } from "@/lib/bala-data";
 
 type SlotStatus = { time: string; available: boolean };
@@ -84,6 +85,34 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const [slots, setSlots] = useState<SlotStatus[] | null>(null);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
+  // Client-side slot cache: raktas „date|type|pkg|addons" → paruošti seansai.
+  // Grįžtant prie tos pačios dienos — atsakymas iš atminties, be network round-trip.
+  // TTL 30s, kad nesikirstų su realiu užimtumu (backend'as siunčia SWR headerį).
+  const slotCacheRef = useRef<Map<string, { slots: SlotStatus[]; ts: number }>>(new Map());
+  const abortRef = useRef<AbortController | null>(null);
+  const SLOT_TTL_MS = 30_000;
+
+  function slotKey(d: string, t: BookingType, pkg: string | null, addonsCsv: string): string {
+    return `${d}|${t}|${pkg ?? ""}|${addonsCsv}`;
+  }
+
+  /** Prefetch dienos slots'us fone (hover ant kalendoriaus). Naudoja tą patį cache. */
+  function prefetchSlots(d: string, t: BookingType, pkg: string | null, addonsCsv: string) {
+    const key = slotKey(d, t, pkg, addonsCsv);
+    const hit = slotCacheRef.current.get(key);
+    if (hit && Date.now() - hit.ts < SLOT_TTL_MS) return; // dar šviežia
+    const params = new URLSearchParams({ date: d, type: t });
+    if (pkg) params.set("pkg", pkg);
+    if (addonsCsv) params.set("addons", addonsCsv);
+    fetch(`/api/availability?${params.toString()}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const list: SlotStatus[] = data.slots ?? [];
+        slotCacheRef.current.set(key, { slots: list, ts: Date.now() });
+      })
+      .catch(() => {});
+  }
+
   const [players, setPlayers] = useState<number>(BOOKING.minPlayers);
   const [addons, setAddons] = useState<string[]>([]);
 
@@ -92,6 +121,12 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
   const [touched, setTouched] = useState({ name: false, phone: false, email: false });
+
+  // Gimtadienio kvietimas svečiams (tik "party"; nemokamas)
+  const [wantInvite, setWantInvite] = useState(false);
+  const [inviteLangs, setInviteLangs] = useState<string[]>(["lt"]);
+  const [celebrantName, setCelebrantName] = useState("");
+  const [celebrantAge, setCelebrantAge] = useState("");
 
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -120,27 +155,49 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const activeAddons = type === "party" ? partyExtras : addons;
   const addonsKey = activeAddons.join(",");
 
-  // Užkrauname laisvus laikus, kai turim tipą + datą (ir kai keičiasi trukmė)
+  // Užkrauname laisvus laikus, kai turim tipą + datą (ir kai keičiasi trukmė).
+  // Pirma tikrinam client cache — jei šviežias hit'as, atsakymas iš karto be network.
   useEffect(() => {
     if (!date || !type || (type === "party" && !pkgId)) return;
-    let cancelled = false;
+
+    const key = slotKey(date, type, pkgId, addonsKey);
+    const cached = slotCacheRef.current.get(key);
+    if (cached && Date.now() - cached.ts < SLOT_TTL_MS) {
+      // Instant path — jokių loading spinnerių, jokio fetch.
+      setSlots(cached.slots);
+      setSlotsLoading(false);
+      setTime((t) => (t && cached.slots.some((s) => s.time === t && s.available) ? t : null));
+      return;
+    }
+
+    // Nutraukiam ankstesnę užklausą (jei user greitai spragsi per datas)
+    abortRef.current?.abort();
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+
     setSlotsLoading(true);
     setSlots(null);
     const params = new URLSearchParams({ date, type });
     if (type === "party" && pkgId) params.set("pkg", pkgId);
     if (addonsKey) params.set("addons", addonsKey);
-    fetch(`/api/availability?${params.toString()}`)
+    fetch(`/api/availability?${params.toString()}`, { signal: ctrl.signal })
       .then((r) => r.json())
       .then((d) => {
-        if (cancelled) return;
+        if (ctrl.signal.aborted) return;
         const list: SlotStatus[] = d.slots ?? [];
+        slotCacheRef.current.set(key, { slots: list, ts: Date.now() });
         setSlots(list);
-        // Jei pasirinktas laikas nebeliko laisvas — išvalome
         setTime((t) => (t && list.some((s) => s.time === t && s.available) ? t : null));
       })
-      .catch(() => { if (!cancelled) setSlots([]); })
-      .finally(() => { if (!cancelled) setSlotsLoading(false); });
-    return () => { cancelled = true; };
+      .catch((err) => {
+        if (ctrl.signal.aborted || err?.name === "AbortError") return;
+        setSlots([]);
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setSlotsLoading(false);
+      });
+
+    return () => { ctrl.abort(); };
   }, [date, type, pkgId, addonsKey]);
 
   // Kainos. „rooms" — kaina už patį žaidimą (kambarys arba komandiniai žaidimai).
@@ -194,12 +251,19 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     setVoucherInput("");
   }
 
+  // Kvietimo duomenys pakankami tęsti? (personalizuotam reikia vardo + amžiaus)
+  const inviteAge = parseInt(celebrantAge, 10);
+  function inviteReady(): boolean {
+    if (type !== "party" || !wantInvite) return true;
+    return celebrantName.trim().length >= 1 && validCelebrantAge(inviteAge);
+  }
+
   function canProceed(): boolean {
     switch (phase) {
       case "type": return type === "room" || type === "game" || (type === "party" && !!pkgId);
       case "date": return !!(date && time);
       case "players": return players >= 1;
-      case "contact": return validName(name) && validPhone(phone) && validEmail(email);
+      case "contact": return validName(name) && validPhone(phone) && validEmail(email) && inviteReady();
       case "payment": return agreed;
       default: return false;
     }
@@ -216,6 +280,14 @@ export default function BookingFlow({ initialType, initialPkgId }: {
           type, packageId: pkgId, date, time, players,
           addons: activeAddons, name, phone, email, note,
           voucherCode: voucherCode || undefined,
+          ...(type === "party" && wantInvite
+            ? {
+                invitationType: "personalized",
+                invitationLangs: inviteLangs,
+                celebrantName: celebrantName.trim(),
+                celebrantAge: inviteAge,
+              }
+            : {}),
         }),
       });
       const data = await res.json();
@@ -276,6 +348,14 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     },
   };
   const head = { n: step, ...headByPhase[phase] };
+  const nextLabel = submitting
+    ? "Palaukite…"
+    : step === lastStep
+    ? onlineDue > 0
+      ? `Sumokėti ${formatEur(onlineDue)} € ›`
+      : "Patvirtinti rezervaciją ›"
+    : "Toliau ›";
+  const nextDisabled = !canProceed() || submitting;
 
   return (
     <div>
@@ -312,6 +392,10 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               slotsLoading={slotsLoading}
               type={type!}
               pkg={pkg}
+              onHoverDay={(iso) => {
+                if (!type || (type === "party" && !pkgId)) return;
+                prefetchSlots(iso, type, pkgId, addonsKey);
+              }}
               block={type === "party" && pkg && time
                 ? { start: time, end: toHHMM(activityEndMin("party", time, pkgId, partyExtras)) }
                 : null}
@@ -331,6 +415,17 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               email={email} setEmail={setEmail}
               note={note} setNote={setNote}
               touched={touched} setTouched={setTouched}
+              isParty={type === "party"}
+              invite={{
+                want: wantInvite, setWant: setWantInvite,
+                langs: inviteLangs, setLangs: setInviteLangs,
+                name: celebrantName, setName: setCelebrantName,
+                age: celebrantAge, setAge: setCelebrantAge,
+                date, time, phone,
+                endTime: type === "party" && time && pkgId
+                  ? toHHMM(activityEndMin("party", time, pkgId, activeAddons))
+                  : null,
+              }}
             />
           )}
           {phase === "payment" && (
@@ -355,40 +450,55 @@ export default function BookingFlow({ initialType, initialPkgId }: {
           )}
         </div>
 
-        <Summary
-          phase={phase}
-          type={type}
-          pkg={pkg}
-          date={date}
-          time={time}
-          players={players}
-          addons={addons}
-          partyExtras={partyExtras}
-          rooms={rooms}
-          total={total}
-          deposit={deposit}
-        />
+        <div className="lg:sticky lg:top-6 flex flex-col gap-4">
+          <Summary
+            phase={phase}
+            type={type}
+            pkg={pkg}
+            date={date}
+            time={time}
+            players={players}
+            addons={addons}
+            partyExtras={partyExtras}
+            rooms={rooms}
+            total={total}
+            voucherDiscount={voucherDiscount}
+            onlineDue={onlineDue}
+            onSite={onSite}
+          />
+          {/* Desktop navigacija — prie santraukos, aukščiau ir gerai matoma */}
+          <div className="hidden lg:flex flex-col gap-2">
+            <button
+              onClick={next}
+              disabled={nextDisabled}
+              className="w-full rounded-2xl bg-volt text-volt-ink font-extrabold text-[18px] px-6 py-4 shadow-[0_8px_24px_var(--btn-glow,rgba(255,228,0,.5))] transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
+            >
+              {nextLabel}
+            </button>
+            <button
+              onClick={back}
+              className={`text-smoke hover:text-white font-bold text-[15px] py-1 ${step === 1 ? "hidden" : ""}`}
+            >
+              ‹ Atgal
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="sticky bottom-0 z-20 -mx-5 mt-6 flex items-center justify-between gap-3 border-t border-line bg-ink px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] lg:static lg:mx-0 lg:mt-8 lg:bg-transparent lg:px-0 lg:pt-6 lg:pb-0">
+      {/* Mobili navigacija — prilipdyta apačioje */}
+      <div className="lg:hidden sticky bottom-0 z-20 -mx-5 mt-6 flex items-center justify-between gap-3 border-t border-line bg-ink/95 backdrop-blur px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <button
           onClick={back}
-          className={`text-smoke hover:text-white font-bold ${step === 1 ? "invisible" : ""}`}
+          className={`text-smoke hover:text-white font-bold text-[16px] ${step === 1 ? "invisible" : ""}`}
         >
           ‹ Atgal
         </button>
         <button
           onClick={next}
-          disabled={!canProceed() || submitting}
-          className="rounded-xl bg-volt text-volt-ink font-bold px-7 py-3.5 shadow-[0_6px_18px_var(--btn-glow,rgba(255,228,0,.35))] transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
+          disabled={nextDisabled}
+          className="rounded-2xl bg-volt text-volt-ink font-extrabold text-[17px] px-9 py-4 shadow-[0_8px_24px_var(--btn-glow,rgba(255,228,0,.5))] transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
         >
-          {submitting
-            ? "Palaukite…"
-            : step === lastStep
-            ? onlineDue > 0
-              ? `Sumokėti ${formatEur(onlineDue)} € ›`
-              : "Patvirtinti rezervaciją ›"
-            : "Toliau ›"}
+          {nextLabel}
         </button>
       </div>
     </div>
@@ -542,13 +652,14 @@ function TypeCard({ active, onClick, emoji, title, desc }: {
 }
 
 /* ---------------- Step 2: Date + Time ---------------- */
-function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime, slots, slotsLoading, type, pkg, block }: {
+function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime, slots, slotsLoading, type, pkg, block, onHoverDay }: {
   today: Date; viewMonth: Date; setViewMonth: (d: Date) => void;
   date: string | null; setDate: (d: string) => void;
   time: string | null; setTime: (t: string) => void;
   slots: SlotStatus[] | null; slotsLoading: boolean;
   type: BookingType; pkg: ReturnType<typeof getPartyPackage>;
   block: { start: string; end: string } | null;
+  onHoverDay?: (iso: string) => void;
 }) {
   const y = viewMonth.getFullYear();
   const m = viewMonth.getMonth();
@@ -599,6 +710,8 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
                 <button
                   key={d}
                   onClick={() => setDate(iso)}
+                  onMouseEnter={disabled ? undefined : () => onHoverDay?.(iso)}
+                  onFocus={disabled ? undefined : () => onHoverDay?.(iso)}
                   disabled={disabled}
                   className={`relative grid aspect-square place-items-center rounded-lg text-sm font-semibold transition ${
                     selected
@@ -748,13 +861,22 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms 
 }
 
 /* ---------------- Step 4: Contact ---------------- */
-function StepContact({ name, setName, phone, setPhone, email, setEmail, note, setNote, touched, setTouched }: {
+type InviteUI = {
+  want: boolean; setWant: (v: boolean) => void;
+  langs: string[]; setLangs: (v: string[]) => void;
+  name: string; setName: (v: string) => void;
+  age: string; setAge: (v: string) => void;
+  date: string | null; time: string | null; endTime: string | null; phone: string;
+};
+
+function StepContact({ name, setName, phone, setPhone, email, setEmail, note, setNote, touched, setTouched, isParty, invite }: {
   name: string; setName: (v: string) => void;
   phone: string; setPhone: (v: string) => void;
   email: string; setEmail: (v: string) => void;
   note: string; setNote: (v: string) => void;
   touched: { name: boolean; phone: boolean; email: boolean };
   setTouched: (t: { name: boolean; phone: boolean; email: boolean }) => void;
+  isParty: boolean; invite: InviteUI;
 }) {
   const nameOk = validName(name), phoneOk = validPhone(phone), emailOk = validEmail(email);
   return (
@@ -777,10 +899,74 @@ function StepContact({ name, setName, phone, setPhone, email, setEmail, note, se
         <div className="sm:col-span-2">
           <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Pastabos (nebūtina)</label>
           <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3}
-            placeholder="Pvz. gimtadienio vaiko amžius, tortas, alergijos…"
             className="w-full rounded-xl border border-line bg-ink-card px-3.5 py-3 text-white focus:outline-none focus:border-volt" />
         </div>
       </div>
+
+      {isParty && <InvitationBlock invite={invite} />}
+    </div>
+  );
+}
+
+/* ---- Gimtadienio kvietimas (nemokamas priedas, tik party) ---- */
+const LANG_LABELS: Record<string, string> = { lt: "Lietuvių", ru: "Rusų", en: "Anglų" };
+
+function InvitationBlock({ invite }: { invite: InviteUI }) {
+  const ageNum = parseInt(invite.age, 10);
+  const ageOk = validCelebrantAge(ageNum);
+  const nameOk = invite.name.trim().length >= 1;
+
+  return (
+    <div className="mt-6 max-w-[560px] rounded-2xl border border-line bg-ink-card/60 p-4 sm:p-5">
+      <label className="flex items-start gap-3 cursor-pointer">
+        <input type="checkbox" checked={invite.want} onChange={(e) => invite.setWant(e.target.checked)}
+          className="mt-1 h-4 w-4 accent-volt" />
+        <span>
+          <span className="block font-semibold text-white">Pridėti gimtadienio kvietimą svečiams</span>
+          <span className="block text-[13px] text-smoke-2">Nemokamai. Po apmokėjimo el. paštu gausite <b>kvietimą</b> (PDF).</span>
+        </span>
+      </label>
+
+      {invite.want && (
+        <div className="mt-4 grid gap-4">
+          <div>
+            <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Kalba (galima kelias)</label>
+            <div className="flex gap-2">
+              {ALL_INVITATION_LANGS.map((v) => {
+                const on = invite.langs.includes(v);
+                return (
+                  <button key={v} type="button"
+                    onClick={() => {
+                      const next = on ? invite.langs.filter((l) => l !== v) : [...invite.langs, v];
+                      invite.setLangs(next.length ? next : invite.langs); // bent viena kalba
+                    }}
+                    className={`flex-1 rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition-colors ${
+                      on ? "border-volt bg-volt/10 text-white" : "border-line text-smoke hover:border-line-strong"
+                    }`}>{LANG_LABELS[v]}</button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Jubiliato vardas" value={invite.name} onChange={invite.setName}
+              onBlur={() => {}} error="" ok={nameOk} placeholder={invite.langs.length === 1 && invite.langs[0] === "ru" ? "Тимофей" : "Tomas"} />
+            <div>
+              <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Kiek sukanka metų</label>
+              <input value={invite.age} onChange={(e) => invite.setAge(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                inputMode="numeric" placeholder="11"
+                className={`w-full rounded-xl border bg-ink-card px-3.5 py-3 text-white focus:outline-none focus:border-volt ${
+                  invite.age && !ageOk ? "border-genre-pink" : ageOk ? "border-genre-green/55" : "border-line"
+                }`} />
+              {invite.age && !ageOk && <p className="mt-1.5 text-[12.5px] font-semibold text-genre-pink">Įvesk amžių (1–99)</p>}
+            </div>
+          </div>
+
+          <p className="text-[12.5px] text-smoke-2 leading-relaxed">
+            Į kvietimą įrašysime: jubiliato vardą, {ageOk ? `${ageNum} m.` : "amžių"}, datą, laiką, vietą ir RSVP telefoną (jūsų nr.). Neoninis dizainas su VR žaidimo herojais.{invite.langs.length > 1 ? ` Gausite ${invite.langs.length} kvietimus (${invite.langs.map((l) => LANG_LABELS[l]).join(", ")}).` : ""}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -912,15 +1098,17 @@ function StepPayment({ deposit, onlineDue, onSite, voucherDiscount, error, agree
 }
 
 /* ---------------- Summary ---------------- */
-function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, rooms, total, deposit }: {
+function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, rooms, total, voucherDiscount, onlineDue, onSite }: {
   phase: Phase; type: BookingType | null; pkg: ReturnType<typeof getPartyPackage>;
   date: string | null; time: string | null; players: number;
-  addons: string[]; partyExtras: string[]; rooms: number; total: number; deposit: number;
+  addons: string[]; partyExtras: string[]; rooms: number; total: number;
+  voucherDiscount: number; onlineDue: number; onSite: number;
 }) {
   // Kambario kaina rodoma nuo tada, kai pasiekiama žaidėjų (ar vėlesnė) fazė.
   const reachedPlayers = phase === "players" || phase === "contact" || phase === "payment";
   const priceReady = !!type && (type === "room" || type === "game" ? reachedPlayers : !!pkg && !!date);
   const discount = type === "party" && date ? partyDiscount(date) : 0;
+  const effectiveTotal = Math.max(0, total - voucherDiscount);
 
   return (
     <aside className="rounded-2xl border border-line bg-ink-card p-5 lg:sticky lg:top-5">
@@ -956,12 +1144,13 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
           {type === "room" && addons.length > 0 && ADDONS.filter((a) => addons.includes(a.id)).map((a) => (
             <SumLine key={a.id} label={`+ ${a.name}`} value={`${a.price} €`} muted />
           ))}
+          {voucherDiscount > 0 && <SumLine label="Kuponas" value={`−${formatEur(voucherDiscount)} €`} muted />}
           <div className="mt-2 flex items-baseline justify-between border-t border-line pt-4">
             <span className="font-display text-lg uppercase">Viso</span>
-            <span className="font-display text-3xl tabular-nums">{formatEur(total)} €</span>
+            <span className="font-display text-3xl tabular-nums">{formatEur(effectiveTotal)} €</span>
           </div>
           <p className="mt-1 text-right font-mono text-xs text-volt">
-            Avansas dabar: {formatEur(deposit)} € · likutis {formatEur(total - deposit)} € vietoje
+            Avansas dabar: {formatEur(onlineDue)} € · likutis {formatEur(onSite)} € vietoje
           </p>
         </>
       ) : (

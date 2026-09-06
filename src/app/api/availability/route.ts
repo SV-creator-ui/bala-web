@@ -24,7 +24,16 @@ export async function GET(req: Request) {
 
   try {
     const slots = await getAvailability(date, { type, packageId, addons });
-    return NextResponse.json({ date, slots });
+    return NextResponse.json(
+      { date, slots },
+      {
+        headers: {
+          // Trumpas privatus cache: pakartotiniai fetch'ai per 15s eina iš naršyklės.
+          // stale-while-revalidate — dar 60s rodom „seną" ir tyliai atnaujinam fone.
+          "Cache-Control": "private, max-age=15, stale-while-revalidate=60",
+        },
+      },
+    );
   } catch (e) {
     console.error("availability error:", e);
     return NextResponse.json({ error: "Nepavyko gauti laisvų laikų" }, { status: 500 });
