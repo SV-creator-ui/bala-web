@@ -12,6 +12,7 @@ import nodemailer from "nodemailer";
 import type { BookingRow } from "@/lib/supabase/server";
 import { getPartyPackage } from "@/lib/booking/packages";
 import { formatEur } from "@/lib/booking/pricing";
+import { generateInvitationPdfs } from "@/lib/booking/invitation-pdf";
 
 function gmailUser(): string {
   return process.env.GMAIL_USER || "";
@@ -110,6 +111,7 @@ function customerHtml(b: BookingRow): string {
       ${row("Rezervacijos nr.", b.merchant_reference)}
     </table>
     <p style="margin:16px 0 0;color:#374151;font-size:14px">📍 Pajūrio g. 5B, Klaipėda${isParty ? " · atvykite ~15 min. anksčiau" : " · scenarijų pasirinksite atvykę"} · likutį sumokėsite vietoje.</p>
+    ${isParty && b.invitation_type ? `<p style="margin:12px 0 0;color:#374151;font-size:14px">🎉 Prie šio laiško pridėtas <b>gimtadienio kvietimas</b> (PDF) — atsisiųskite ir išsiųskite ar išspausdinkite svečiams.</p>` : ""}
     <p style="margin:12px 0 0;font-size:13px"><a href="${siteUrl()}/taisykles" style="color:#0d9488">BALA VR taisyklės</a></p>`;
   return shell("Rezervacija patvirtinta!", inner);
 }
@@ -144,12 +146,28 @@ export async function sendBookingEmails(b: BookingRow): Promise<void> {
   const from = `"BALA VR" <${gmailUser()}>`;
   const isParty = b.type === "party";
 
+  // Gimtadienio kvietimai (4 dizainai, PDF) — prisegami kliento laiške, jei pasirinkta.
+  let inviteAttachments: { filename: string; content: Buffer; contentType: string }[] = [];
+  if (isParty && b.invitation_type) {
+    try {
+      const pdfs = await generateInvitationPdfs(b);
+      inviteAttachments = pdfs.map((p) => ({
+        filename: p.filename,
+        content: Buffer.from(p.bytes),
+        contentType: "application/pdf",
+      }));
+    } catch (e) {
+      console.error("[email] kvietimų PDF klaida:", e);
+    }
+  }
+
   const results = await Promise.allSettled([
     transporter().sendMail({
       from,
       to: b.customer_email,
       subject: `Rezervacija patvirtinta — BALA VR (${fmtDate(b.date)} ${b.time})`,
       html: customerHtml(b),
+      attachments: inviteAttachments.length ? inviteAttachments : undefined,
     }),
     transporter().sendMail({
       from,

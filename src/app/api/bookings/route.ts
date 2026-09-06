@@ -24,6 +24,12 @@ import {
   validFutureDate,
   validBookingType,
 } from "@/lib/booking/validation";
+import {
+  validInvitationType,
+  parseInvitationLangs,
+  validCelebrantAge,
+  type InvitationType,
+} from "@/lib/booking/invitation";
 import { createPayseraPayment, payseraConfigured, bookingTestMode } from "@/lib/paysera";
 import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 import { notifyBookingPaid } from "@/lib/booking/notify";
@@ -69,6 +75,12 @@ export async function POST(req: Request) {
   let total: number;
   let addons: string[];
 
+  // Gimtadienio kvietimas svečiams (tik "party"; nemokamas priedas)
+  let invitationType: InvitationType | null = null;
+  let invitationLang: string | null = null; // kelios kalbos, pvz. "lt,ru,en"
+  let celebrantName: string | null = null;
+  let celebrantAge: number | null = null;
+
   if (type === "party") {
     const pkg = getPartyPackage(packageId || "");
     if (!pkg) errors.push("paketas");
@@ -77,6 +89,20 @@ export async function POST(req: Request) {
     if (pkg && (!Number.isInteger(players) || players < 1 || players > pkg.maxPlayers)) {
       errors.push("žaidėjai");
     }
+
+    // Kvietimas (neprivalomas)
+    if (validInvitationType(body.invitationType)) {
+      invitationType = body.invitationType;
+      const langsIn = parseInvitationLangs(body.invitationLangs ?? body.invitationLang);
+      invitationLang = (langsIn.length ? langsIn : ["lt"]).join(",");
+      if (invitationType === "personalized") {
+        celebrantName = body.celebrantName ? String(body.celebrantName).trim().slice(0, 40) : null;
+        const ageNum = Number(body.celebrantAge);
+        celebrantAge = validCelebrantAge(ageNum) ? ageNum : null;
+        if (!celebrantName || celebrantAge === null) errors.push("kvietimo duomenys");
+      }
+    }
+
     if (errors.length) {
       return NextResponse.json({ error: "Netinkami laukai: " + errors.join(", ") }, { status: 400 });
     }
@@ -172,6 +198,10 @@ export async function POST(req: Request) {
         merchant_reference: merchantReference,
         voucher_code: voucherCode,
         voucher_discount_eur: voucherDiscount,
+        invitation_type: invitationType,
+        invitation_lang: invitationLang,
+        celebrant_name: celebrantName,
+        celebrant_age: celebrantAge,
       })
       .select("id")
       .single();

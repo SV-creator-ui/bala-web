@@ -57,6 +57,10 @@ function mkBooking(
     emails_sent_at: null,
     voucher_code: null,
     voucher_discount_eur: 0,
+    invitation_type: null,
+    invitation_lang: null,
+    celebrant_name: null,
+    celebrant_age: null,
   };
 }
 
@@ -78,6 +82,10 @@ function mkParty(
     emails_sent_at: null,
     voucher_code: null,
     voucher_discount_eur: 0,
+    invitation_type: null,
+    invitation_lang: null,
+    celebrant_name: null,
+    celebrant_age: null,
   };
 }
 
