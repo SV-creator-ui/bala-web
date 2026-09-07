@@ -275,14 +275,14 @@ export default function Packages() {
             Padarykite šventę dar ypatingesnę
           </h3>
           <div className="extras-grid">
-            {/* Papildomas VR žaidimas */}
+            {/* Daugiau VR */}
             <div className="extra-card">
               <div className="extra-icon">
                 <EyeIcon />
               </div>
-              <div className="extra-name">VR žaidimai visos šventės metu</div>
+              <div className="extra-name">Daugiau VR</div>
               <div className="extra-desc">
-                Šventės planą sudėliosime su trumpesnėmis vaišių ir poilsio pertraukomis, kad kiekvienas žaidėjas spėtų sužaisti kuo daugiau žaidimų.
+                Žaidėjams, kuriems VR – svarbiausia šventės dalis. Trumpiname suplanuotas pertraukas ir daugiau šventės laiko skiriame VR žaidimams.
               </div>
               <div className="extra-price">nuo €29</div>
             </div>

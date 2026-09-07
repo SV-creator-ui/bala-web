@@ -55,7 +55,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p className="footer-copy">© {new Date().getFullYear()} BALA VR · Šarūnas Valius, ind. veiklos pažyma Nr. 1379347. Visos teisės saugomos.</p>
+          <p className="footer-copy">© {new Date().getFullYear()} BALA VR. Visos teisės saugomos.</p>
           <div className="footer-accent-line"></div>
           <p className="footer-copy">
             <a href="/taisykles" style={{ color: "inherit", textDecoration: "underline" }}>
@@ -68,7 +68,7 @@ export default function Footer() {
             · Klaipėda · Lietuva
           </p>
           <p className="footer-copy" style={{ fontSize: "11px", opacity: 0.7, marginTop: "8px" }}>
-            Šarūnas Valius, Individualios veiklos vykdymo pažyma Nr. 1379347
+            Šarūnas Valius, ind. veiklos pažyma Nr. 1379347
           </p>
         </div>
       </div>

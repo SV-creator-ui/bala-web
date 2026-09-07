@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     q: "Ar tėvai taip pat gali žaisti VR?",
-    a: "Tėvai gali išbandyti VR veiksmo žaidimus, jei lieka laisva vieta. Jei norima žaisti be pertraukų - reikia užsakyti „VR žaidimai visos šventės metu\" papildymą.",
+    a: "Tėvai gali išbandyti VR veiksmo žaidimus, jei lieka laisva vieta. Jei norima žaisti be pertraukų – reikia užsakyti „Daugiau VR\" papildymą: trumpiname suplanuotas pertraukas ir daugiau šventės laiko skiriame VR žaidimams.",
   },
   {
     q: "Ar galime atsivežti tortą ir dekoracijas?",

@@ -9,7 +9,7 @@ const steps = [
   },
   {
     title: "Žaidimas",
-    desc: "Žaidėjus supažindiname su taisyklėmis, ir jie linksmai neria į pagal amžių pritaikytus VR žaidimus. Per pertraukėles — laikas užkandžiams ir gimtadienio žvakutėms.",
+    desc: "Vaikus suskirstome į komandas ir parenkame jų amžiui tinkamus VR žaidimus. Kol viena komanda žaidžia VR, kiti renkasi interaktyvią sieną, arkadines pramogas arba vaišinasi.",
   },
 ];
 

@@ -107,8 +107,8 @@ export const PARTY_EXTRAS: readonly PartyExtra[] = [
     id: "vrmax",
     // Kaina PRIKLAUSO NUO PAKETO — žr. VR_MAX_PRICE_BY_PACKAGE. `price` čia tik
     // atsarginė reikšmė (naudojama, jei paketas dar nepasirinktas).
-    name: "Papildomas VR žaidimas kiekvienam",
-    desc: "Šventės planą sudėliosime su trumpesnėmis vaišių ir poilsio pertraukomis, kad kiekvienas vaikas spėtų sužaisti dar vieną VR žaidimą.",
+    name: "Daugiau VR",
+    desc: "Žaidėjams, kuriems VR – svarbiausia šventės dalis. Trumpiname suplanuotas pertraukas ir daugiau šventės laiko skiriame VR žaidimams.",
     price: 29,
     durationDeltaMin: 0,
   },

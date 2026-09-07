@@ -98,7 +98,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
 
       <footer className="mt-auto border-t border-line">
         <div className="mx-auto max-w-[1100px] px-6 md:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-smoke-2">
-          <span>© {new Date().getFullYear()} BALA VR · Šarūnas Valius, ind. veiklos pažyma Nr. 1379347 · Pajūrio g. 5B, Klaipėda</span>
+          <span>© {new Date().getFullYear()} BALA VR · Pajūrio g. 5B, Klaipėda</span>
           <a href={BUSINESS.phoneHref} className="font-semibold text-smoke hover:text-white transition-colors">
             {BUSINESS.phoneDisplay}
           </a>

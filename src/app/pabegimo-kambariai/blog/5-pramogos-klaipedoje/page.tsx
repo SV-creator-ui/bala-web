@@ -192,7 +192,7 @@ export default function BlogPost() {
 
       <footer className="border-t border-line mt-14 py-10 px-7">
         <div className="max-w-[1100px] mx-auto flex flex-wrap items-center justify-between gap-5 text-[13px] text-white/70">
-          <span>© {new Date().getFullYear()} BALA VR · Šarūnas Valius, ind. veiklos pažyma Nr. 1379347 · Pajūrio g. 5B, Klaipėda</span>
+          <span>© {new Date().getFullYear()} Bala VR · Pajūrio g. 5B, Klaipėda</span>
           <Link href="/pabegimo-kambariai" className="text-volt font-semibold hover:underline">
             Grįžti į pagrindinį puslapį →
           </Link>
