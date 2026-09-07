@@ -27,8 +27,8 @@ export default function Hero() {
           </div>
           <div className="hero-text">
             <h1 className="hero-h1 fade-up fade-up-1">
-              Nepamirštamas vaikų gimtadienis Klaipėdoje{" "}
-              <em>— BALA VR erdvėje</em>
+              Privatus VR gimtadienis,{" "}
+              <em>kuriame nė vienas vaikas nelieka be veiklos</em>
             </h1>
             <p className="hero-sub fade-up fade-up-2">
               Privati 220 m² BALA VR erdvė tik jūsų šventei: VR veiksmo

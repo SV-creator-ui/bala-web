@@ -9,15 +9,15 @@ const faqs = [
   },
   {
     q: "Ar tėvai taip pat gali žaisti VR?",
-    a: "Tėvai gali išbandyti VR veiksmo žaidimus, jei lieka laisva vieta. Jei norima žaisti be pertraukų - reikia užsakyti VR MAX papildymą.",
+    a: "Tėvai gali išbandyti VR veiksmo žaidimus, jei lieka laisva vieta. Jei norima žaisti be pertraukų - reikia užsakyti „Papildomas VR žaidimas kiekvienam\" papildymą.",
   },
   {
     q: "Ar galime atsivežti tortą ir dekoracijas?",
     a: "Žinoma! Galite atsivežti arba užsisakyti maistą, tortą, gėrimų, pasipuošti dekoracijas.",
   },
   {
-    q: "Kiek iš anksto reikia rezervuoti?",
-    a: "Savaitgalių laikas užpildomas 2–3 savaitės iš anksto. Darbo dienos — dažnai būna laisvesnės. Norėdami užsitikrinti norimą laiką - rezervuokite kuo greičiau.",
+    q: "Ar visi žaidėjai turės veiklos?",
+    a: "Taip. Kol viena komanda žaidžia VR, kita renkasi interaktyvią sieną, arkadinius (stalo) žaidimus, vairavimo simuliatorių arba vaišinasi. Komandos reguliariai keičiasi.",
   },
   {
     q: "Kas prižiūri vaikus šventės metu?",

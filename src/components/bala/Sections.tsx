@@ -166,7 +166,7 @@ export function KainosSection() {
         <RevealOnScroll className="flex justify-center mt-9">
           <a
             href="/rezervacija"
-            className="inline-flex items-center justify-center rounded-full bg-volt px-[34px] py-4 text-[15px] font-bold text-volt-ink transition-transform hover:-translate-y-0.5 hover:bg-volt-deep"
+            className="inline-flex items-center justify-center rounded-full bg-volt px-[30px] py-4 text-[15px] font-bold text-volt-ink transition-transform hover:-translate-y-0.5 hover:bg-volt-deep"
           >
             Rezervuoti dabar
           </a>
@@ -323,36 +323,80 @@ export function DovanuKuponasSection() {
     <section id="dovanu-kuponas" className="py-14 md:py-20">
       <div className="mx-auto max-w-[1280px] px-6 md:px-10 min-[1200px]:px-14">
         <RevealOnScroll>
-          <div className="relative overflow-hidden rounded-3xl border border-volt/30 bg-gradient-to-br from-ink-card to-ink p-8 md:p-12">
-            {/* dekoratyvus švytėjimas */}
-            <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-volt/15 blur-3xl" />
-            <div className="relative grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="relative overflow-hidden rounded-3xl border border-volt/30 bg-gradient-to-br from-ink-card via-ink-card to-ink p-8 md:p-14">
+            {/* dekoratyvūs švytėjimai */}
+            <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-volt/15 blur-3xl" />
+            <div className="pointer-events-none absolute -left-16 -bottom-24 h-56 w-56 rounded-full bg-volt/[.06] blur-3xl" />
+
+            <div className="relative grid gap-10 md:grid-cols-[1.15fr_1fr] md:items-center">
+              {/* KAIRĖ — turinys */}
               <div>
-                <div className="mb-3 flex items-center gap-2">
-                  <span className="text-3xl">🎁</span>
-                  <span className="font-mono text-xs uppercase tracking-[0.18em] text-volt">Dovanų kuponas</span>
+                <div className="mb-4 inline-flex items-center gap-2.5 rounded-full border border-volt/25 bg-volt/[.08] px-3.5 py-1.5">
+                  <span className="text-base leading-none">🎁</span>
+                  <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-volt">Dovanų kuponas</span>
                 </div>
-                <h2 className="font-display uppercase text-white leading-[1.05] text-[clamp(28px,4.6vw,52px)]">
+                <h2 className="font-display uppercase text-white leading-[1.05] tracking-[-.01em] text-[clamp(30px,4.8vw,54px)]">
                   Padovanok nuotykį
                 </h2>
-                <p className="mt-3 max-w-[52ch] text-smoke">
-                  Nežinai ką padovanoti? BALA VR dovanų kuponas — puiki dovana gimtadienio ar švenčių proga.
-                  Vertė nuo <b className="text-white">30 €</b>, galioja <b className="text-white">6 mėnesius</b> ir tinka bet kuriam pabėgimo kambariui.
-                  Apmokėjus atsiųsime gražų PDF kuponą į el. paštą.
+                <p className="mt-4 max-w-[52ch] text-[15.5px] leading-[1.65] text-smoke">
+                  BALA VR dovanų kuponas — jaudinanti dovana gimtadienio, Kalėdų ar bet kokios progos.
+                  Apmokėjus iškart išsiunčiame gražų PDF kuponą į el. paštą.
                 </p>
-                <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-smoke-2">
-                  <li className="flex items-center gap-2"><span className="text-volt">✓</span> Pasirenkama vertė</li>
-                  <li className="flex items-center gap-2"><span className="text-volt">✓</span> Iškart el. paštu</li>
-                  <li className="flex items-center gap-2"><span className="text-volt">✓</span> Galima personalizuoti</li>
+                <ul className="mt-6 grid gap-2.5 sm:grid-cols-2 text-[14.5px] text-white/85">
+                  <li className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-volt/20 text-volt text-xs font-bold">✓</span>
+                    <span>Pasirenkama vertė nuo <b className="text-white">30 €</b></span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-volt/20 text-volt text-xs font-bold">✓</span>
+                    <span>Galioja <b className="text-white">6 mėnesius</b></span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-volt/20 text-volt text-xs font-bold">✓</span>
+                    <span>Tinka bet kuriam kambariui</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-volt/20 text-volt text-xs font-bold">✓</span>
+                    <span>Galima personalizuoti tekstą</span>
+                  </li>
                 </ul>
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  <a
+                    href="/pabegimo-kambariai/dovanu-kuponas"
+                    className="inline-flex items-center justify-center rounded-full bg-volt text-volt-ink px-8 py-4 text-[15px] font-bold transition-transform hover:-translate-y-0.5 hover:bg-volt-deep whitespace-nowrap"
+                  >
+                    Užsisakyti kuponą
+                  </a>
+                  <span className="text-xs uppercase tracking-[0.14em] text-smoke-2">
+                    Iškart el. paštu · Saugus mokėjimas
+                  </span>
+                </div>
               </div>
-              <div className="flex md:flex-col gap-3.5">
-                <a
-                  href="/pabegimo-kambariai/dovanu-kuponas"
-                  className="inline-flex items-center justify-center rounded-full bg-volt text-volt-ink px-8 py-4 text-[15px] font-bold transition-transform hover:-translate-y-0.5 hover:bg-volt-deep whitespace-nowrap"
-                >
-                  Užsisakyti kuponą
-                </a>
+
+              {/* DEŠINĖ — dekoratyvus kupono maketas */}
+              <div className="relative hidden md:block">
+                <div className="relative mx-auto max-w-[360px] rotate-[-4deg] rounded-2xl border border-volt/30 bg-ink-card p-6 shadow-[0_20px_60px_-20px_rgba(255,228,0,.25)]">
+                  <div className="flex items-center justify-between border-b border-white/8 pb-3">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-volt">Bala VR</span>
+                    <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-smoke-2">№ 00X-XXX</span>
+                  </div>
+                  <div className="pt-5">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-smoke-2">Kuponas dovanoja</p>
+                    <p className="mt-2 font-display uppercase text-white text-[26px] leading-none">
+                      Nuotykį <span className="text-volt">VR pasaulyje</span>
+                    </p>
+                  </div>
+                  <div className="mt-6 flex items-end justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-smoke-2">Vertė</p>
+                      <p className="font-display text-volt text-[38px] leading-none mt-1">30 €<span className="text-smoke-2 text-lg">+</span></p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-smoke-2">Galioja</p>
+                      <p className="font-display text-white text-[15px] mt-1">6 mėn.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

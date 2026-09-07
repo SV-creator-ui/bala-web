@@ -508,28 +508,52 @@ export default function BookingFlow({ initialType, initialPkgId }: {
 /* ---------------- Progress ---------------- */
 function Steps({ phases, step }: { phases: Phase[]; step: number }) {
   return (
-    <div className="flex flex-wrap items-center">
+    <ol
+      role="list"
+      aria-label="Rezervacijos žingsniai"
+      className="flex flex-wrap items-center gap-y-3"
+    >
       {phases.map((p, i) => {
         const n = i + 1;
         const active = step === n;
         const done = step > n;
         return (
-          <div key={p} className="flex items-center">
-            <div className={`flex items-center gap-2 ${active || done ? "opacity-100" : "opacity-40"}`}>
+          <li key={p} className="flex items-center">
+            <div
+              className={`flex items-center gap-2.5 ${
+                active ? "text-white" : done ? "text-smoke" : "text-smoke-2"
+              }`}
+              aria-current={active ? "step" : undefined}
+            >
               <span
-                className={`grid h-7 w-7 place-items-center rounded-full border-2 text-xs font-bold ${
-                  active ? "border-volt bg-volt text-volt-ink" : done ? "border-genre-green text-genre-green" : "border-line-strong text-smoke"
+                className={`grid h-9 w-9 flex-none place-items-center rounded-full text-[13px] font-bold transition ${
+                  active
+                    ? "bg-volt text-volt-ink shadow-[0_0_0_4px_rgba(255,228,0,0.18)]"
+                    : done
+                    ? "bg-genre-green/15 text-genre-green ring-1 ring-inset ring-genre-green/40"
+                    : "bg-ink-card ring-1 ring-inset ring-line-strong"
                 }`}
               >
                 {done ? "✓" : n}
               </span>
-              <span className="hidden sm:inline text-[12.5px] font-semibold">{PHASE_LABEL[p]}</span>
+              <span
+                className={`hidden sm:inline text-[13px] font-semibold uppercase tracking-wide ${
+                  active ? "text-white" : done ? "text-smoke" : "text-smoke-2"
+                }`}
+              >
+                {PHASE_LABEL[p]}
+              </span>
             </div>
-            {n < phases.length && <span className="mx-2 h-0.5 w-5 bg-line" />}
-          </div>
+            {n < phases.length && (
+              <span
+                aria-hidden
+                className={`mx-3 h-px w-6 sm:w-8 ${done ? "bg-genre-green/50" : "bg-line-strong"}`}
+              />
+            )}
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }
 
@@ -737,11 +761,24 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
         </div>
 
         <div>
-          <h4 className="font-display uppercase text-base mb-1">Laisvi seansai</h4>
-          <p className="font-mono text-xs text-smoke-2 mb-3">
-            {!date ? "← Pirma pasirink dieną" : fmtDateGen(date)}
-          </p>
-          {date && slotsLoading && <p className="text-smoke text-sm">Kraunama…</p>}
+          <div className="mb-3 flex items-baseline justify-between gap-2">
+            <h4 className="font-display uppercase text-base text-white">Laisvi seansai</h4>
+            {date && <span className="font-mono text-[11px] uppercase tracking-wide text-smoke-2">{fmtDateGen(date)}</span>}
+          </div>
+          {!date && (
+            <div className="flex items-start gap-3 rounded-xl border border-dashed border-line-strong bg-ink-card/40 px-4 py-4">
+              <span className="grid h-8 w-8 flex-none place-items-center rounded-full bg-volt/15 text-volt text-base">←</span>
+              <div>
+                <p className="text-[13.5px] font-semibold text-white">Pirma pasirink dieną</p>
+                <p className="mt-0.5 text-xs text-smoke-2">Kalendoriuje kairėje pažymėk pageidaujamą datą.</p>
+              </div>
+            </div>
+          )}
+          {date && slotsLoading && (
+            <p className="flex items-center gap-2 text-smoke text-sm">
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-volt" /> Kraunama…
+            </p>
+          )}
           {date && !slotsLoading && slots && (
             <div className="grid grid-cols-3 gap-2">
               {slots.map((s) => (
@@ -751,9 +788,9 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
                   disabled={!s.available}
                   className={`rounded-lg border py-2.5 text-sm font-semibold transition ${
                     time === s.time
-                      ? "border-volt bg-volt text-volt-ink"
+                      ? "border-volt bg-volt text-volt-ink shadow-[0_4px_14px_-4px_rgba(255,228,0,.5)]"
                       : s.available
-                      ? "border-line bg-ink-card hover:border-line-strong"
+                      ? "border-line bg-ink-card text-white hover:border-volt hover:bg-volt/5"
                       : "border-line opacity-30 line-through cursor-not-allowed"
                   }`}
                 >
@@ -763,11 +800,13 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
             </div>
           )}
           {date && !slotsLoading && slots && slots.every((s) => !s.available) && (
-            <p className="text-smoke text-sm mt-3">Šią dieną laisvų laikų nėra. Pasirink kitą dieną.</p>
+            <p className="mt-3 rounded-lg border border-line bg-ink-card/60 px-3 py-2.5 text-sm text-smoke">
+              Šią dieną laisvų laikų nėra. Pasirink kitą dieną.
+            </p>
           )}
           {type === "party" && pkg && time && block && (
-            <p className="mt-3 text-[12.5px] text-smoke-2">
-              Šventė {time}. Ateiti galima 15 min. anksčiau. Salė rezervuojama nuo {block.start} iki {block.end}.{" "}
+            <p className="mt-4 rounded-lg border border-volt/25 bg-volt/[.05] px-3 py-2.5 text-[12.5px] leading-[1.5] text-smoke">
+              Šventė {time}. Ateiti galima 15 min. anksčiau. Salė rezervuojama nuo <b className="text-white">{block.start}</b> iki <b className="text-white">{block.end}</b>.{" "}
               Išeiti būtina iki {addMin(block.end, 5)}.
             </p>
           )}
@@ -1112,16 +1151,19 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
 
   return (
     <aside className="rounded-2xl border border-line bg-ink-card p-5 lg:sticky lg:top-5">
-      <h3 className="font-mono text-xs uppercase tracking-wider text-smoke-2 mb-4">Tavo rezervacija</h3>
+      <h3 className="mb-4 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-volt">
+        <span className="h-1.5 w-1.5 rounded-full bg-volt" />
+        Tavo rezervacija
+      </h3>
       <div className="flex items-center gap-3 border-b border-line pb-4 mb-4">
-        <div className="grid h-11 w-11 place-items-center rounded-lg bg-gradient-to-br from-neutral-700 to-black text-xl">
+        <div className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-neutral-700 to-black text-2xl ring-1 ring-inset ring-white/8">
           {type === "party" ? "🎂" : type === "game" ? "🎮" : "🥽"}
         </div>
         <div>
-          <h4 className="font-display uppercase text-[15px] leading-tight">
+          <h4 className="font-display uppercase text-[15.5px] leading-tight text-white">
             {type === "party" ? (pkg ? `Paketas ${pkg.name}` : "Šventės paketas") : type === "game" ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys"}
           </h4>
-          <span className="font-mono text-xs text-smoke-2">
+          <span className="mt-0.5 block font-mono text-[11.5px] uppercase tracking-wide text-smoke-2">
             {type === "party" ? (pkg ? pkg.durationLabel : "Pasirink paketą") : type === "game" ? "3 žaidimai · ~45 min." : "Scenarijus — vietoje"}
           </span>
         </div>
@@ -1145,16 +1187,23 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
             <SumLine key={a.id} label={`+ ${a.name}`} value={`${a.price} €`} muted />
           ))}
           {voucherDiscount > 0 && <SumLine label="Kuponas" value={`−${formatEur(voucherDiscount)} €`} muted />}
-          <div className="mt-2 flex items-baseline justify-between border-t border-line pt-4">
-            <span className="font-display text-lg uppercase">Viso</span>
-            <span className="font-display text-3xl tabular-nums">{formatEur(effectiveTotal)} €</span>
+          <div className="mt-3 flex items-baseline justify-between border-t border-line pt-4">
+            <span className="font-display text-[13px] uppercase tracking-wide text-smoke-2">Viso</span>
+            <span className="font-display text-[32px] leading-none text-white tabular-nums">{formatEur(effectiveTotal)} €</span>
           </div>
-          <p className="mt-1 text-right font-mono text-xs text-volt">
-            Avansas dabar: {formatEur(onlineDue)} € · likutis {formatEur(onSite)} € vietoje
-          </p>
+          <div className="mt-3 rounded-lg border border-volt/20 bg-volt/[.05] px-3 py-2.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[11px] uppercase tracking-wide text-smoke-2">Avansas dabar</span>
+              <span className="font-display text-[15px] text-volt tabular-nums">{formatEur(onlineDue)} €</span>
+            </div>
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="text-[11px] uppercase tracking-wide text-smoke-2">Likutis vietoje</span>
+              <span className="font-mono text-[12.5px] text-smoke tabular-nums">{formatEur(onSite)} €</span>
+            </div>
+          </div>
         </>
       ) : (
-        <p className="pt-1 text-[12.5px] italic text-smoke-2">
+        <p className="mt-3 rounded-lg border border-dashed border-line-strong bg-ink-card/40 px-3 py-2.5 text-[12.5px] text-smoke-2">
           {!type ? "Pasirink, ką rezervuoji." : type === "party" ? "Kaina paaiškės pasirinkus paketą ir datą." : "Kaina paaiškės pasirinkus žaidėjų skaičių."}
         </p>
       )}
@@ -1164,9 +1213,9 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
 
 function SumLine({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
   return (
-    <div className="mb-2.5 flex justify-between gap-2.5 text-sm">
-      <span className="text-smoke">{label}</span>
-      <span className={`text-right font-mono font-semibold tabular-nums ${muted ? "text-smoke" : "text-white"}`}>{value}</span>
+    <div className="mb-2 flex items-baseline justify-between gap-2.5 text-[13.5px]">
+      <span className={muted ? "text-smoke-2" : "text-smoke"}>{label}</span>
+      <span className={`text-right font-mono font-semibold tabular-nums ${muted ? "text-smoke-2" : "text-white"}`}>{value}</span>
     </div>
   );
 }
@@ -1174,9 +1223,14 @@ function SumLine({ label, value, muted = false }: { label: string; value: string
 /* ---------------- Shared ---------------- */
 function StepHead({ n, last, title }: { n: number; last: number; title: string }) {
   return (
-    <div className="flex items-baseline gap-3.5 mb-1">
-      <span className="font-mono text-xs text-volt">{String(n).padStart(2, "0")} / {String(last).padStart(2, "0")}</span>
-      <h2 className="font-display text-3xl md:text-4xl uppercase">{title}</h2>
+    <div className="mb-1">
+      <div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-volt">
+        <span>Žingsnis {String(n).padStart(2, "0")} iš {String(last).padStart(2, "0")}</span>
+        <span aria-hidden className="h-px w-8 bg-volt/40" />
+      </div>
+      <h2 className="font-display text-3xl md:text-[38px] leading-[1.05] tracking-[-.01em] uppercase text-white">
+        {title}
+      </h2>
     </div>
   );
 }

@@ -11,8 +11,8 @@ const features = [
   },
   {
     emoji: "🎮",
-    title: "Profesionalus renginio vedėjas",
-    desc: "Veda šventę ir paaiškina visas taisykles.",
+    title: "VR instruktorius visos šventės metu",
+    desc: "Padeda su VR įranga ir paaiškina žaidimų taisykles.",
   },
   {
     emoji: "✨",

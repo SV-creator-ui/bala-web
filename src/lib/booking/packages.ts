@@ -40,11 +40,12 @@ export const PARTY_PACKAGES: readonly PartyPackage[] = [
     tagline: "Populiariausias pasirinkimas 10–12 vaikų gimtadieniui.",
     features: [
       "2 val. apsilankymas",
-      "Įtraukta ~ 30 min. vaišėms",
-      "Iki 12 žaidėjų, 6 VR akiniai",
-      "VR veiksmo žaidimai",
+      "Įtraukta 30 min. vaišėms",
+      "6 VR akiniai",
+      "2 VR žaidimus kiekvienam",
       "Arkadiniai žaidimai",
-      "Instruktoriaus priežiūra",
+      "VR instruktoriaus priežiūra",
+      "Privati BALA VR erdvė",
     ],
   },
   {
@@ -55,16 +56,17 @@ export const PARTY_PACKAGES: readonly PartyPackage[] = [
     price: 289,
     maxPlayers: 14,
     vrHeadsets: 7,
-    tagline: "Dar daugiau VR žaidimų, daugiau laiko tortui ir mažiau skubėjimo.",
+    tagline: "Daugiau VR, daugiau laiko vaišėms ir mažiau skubėjimo.",
     features: [
       "2,5 val. apsilankymas",
-      "Įtraukta ~ 30 min. vaišėms",
-      "Iki 14 žaidėjų, 7 VR akiniai",
-      "VR veiksmo žaidimai",
+      "Įtraukta 30 min. vaišėms",
+      "7 VR akiniai",
+      "3 VR žaidimus kiekvienam",
       "Arkadiniai žaidimai",
       "Interaktyvi siena",
-      "Kava ir arbata tėveliams",
-      "Instruktoriaus priežiūra",
+      "Kava ir arbata tėvams",
+      "VR instruktoriaus priežiūra",
+      "Privati BALA VR erdvė",
     ],
     featured: true,
   },
@@ -76,16 +78,17 @@ export const PARTY_PACKAGES: readonly PartyPackage[] = [
     price: 359,
     maxPlayers: 16,
     vrHeadsets: 8,
-    tagline: "Kai norite išskirtinės šventės su daug laiko VR ir poilsiui.",
+    tagline: "Ilgiausia šventė didesnei kompanijai.",
     features: [
       "3 val. apsilankymas",
-      "Įtraukta ~ 30 min. vaišėms",
-      "Iki 16 žaidėjų, 8 VR akiniai",
-      "VR veiksmo žaidimai",
+      "Įtraukta 30 min. vaišėms",
+      "8 VR akiniai",
+      "3–4 VR žaidimus kiekvienam",
       "Arkadiniai žaidimai",
       "Interaktyvi siena",
-      "Kava ir arbata tėveliams",
-      "Instruktoriaus priežiūra",
+      "Kava ir arbata tėvams",
+      "VR instruktoriaus priežiūra",
+      "Privati BALA VR erdvė",
     ],
   },
 ] as const;
@@ -104,9 +107,9 @@ export const PARTY_EXTRAS: readonly PartyExtra[] = [
     id: "vrmax",
     // Kaina PRIKLAUSO NUO PAKETO — žr. VR_MAX_PRICE_BY_PACKAGE. `price` čia tik
     // atsarginė reikšmė (naudojama, jei paketas dar nepasirinktas).
-    name: "VR MAX",
-    desc: "Trumpiname pertraukas ir skiriame maksimaliai laiką VR žaidimams.",
-    price: 19,
+    name: "Papildomas VR žaidimas kiekvienam",
+    desc: "Šventės planą sudėliosime su trumpesnėmis vaišių ir poilsio pertraukomis, kad kiekvienas vaikas spėtų sužaisti dar vieną VR žaidimą.",
+    price: 29,
     durationDeltaMin: 0,
   },
   {
@@ -157,8 +160,8 @@ export function partyDiscount(dateStr: string): number {
  * visiems paketams (žr. PARTY_EXTRAS.price).
  */
 export const VR_MAX_PRICE_BY_PACKAGE: Record<PartyPackageId, number> = {
-  maksi: 19,
-  vip: 29,
+  maksi: 29,
+  vip: 35,
   gold: 39,
 };
 
