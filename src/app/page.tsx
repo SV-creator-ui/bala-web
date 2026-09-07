@@ -59,7 +59,19 @@ export default function ChooserPage() {
         <p className="mt-3 max-w-[640px] text-[14px] md:text-[16px] leading-[1.45] text-white/85 animate-hero-in [animation-delay:160ms]">
           Privati virtualios realybės erdvė — gimtadieniams, draugams ir komandoms.
         </p>
-        <div className="mt-2 h-2 md:mt-4 md:h-[24px]" aria-hidden />
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 animate-hero-in [animation-delay:240ms]">
+          <span className="text-[13px] tracking-[0.02em] text-[#ffd54a]" aria-hidden>
+            ★★★★★
+          </span>
+          <span className="text-[12px] md:text-[13px] font-semibold text-white">
+            4.9
+          </span>
+          <span className="text-[12px] md:text-[13px] text-white/60">·</span>
+          <span className="text-[12px] md:text-[13px] text-white/85">
+            8000+ lankytojų
+          </span>
+        </div>
+        <div className="mt-2 h-2 md:mt-4 md:h-[16px]" aria-hidden />
       </header>
 
       {/* Three choices */}
@@ -68,7 +80,7 @@ export default function ChooserPage() {
           {/* VR pabėgimo kambariai */}
           <Link
             href="/pabegimo-kambariai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.5)] hover:border-volt transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 animate-hero-in-scale [animation-fill-mode:backwards] min-[900px]:translate-y-3 min-[900px]:-rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:shadow-[0_20px_40px_-15px_rgba(255,228,0,0.35)]"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.5)] hover:border-volt transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 animate-hero-in-scale [animation-fill-mode:backwards] max-[899px]:scale-[0.98] min-[900px]:translate-y-3 min-[900px]:-rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:scale-100 hover:shadow-[0_20px_40px_-15px_rgba(255,228,0,0.35)]"
           >
             <div className="absolute inset-0 animate-ken-a will-change-transform motion-reduce:animate-none">
               <Image
@@ -99,17 +111,22 @@ export default function ChooserPage() {
                   "2–6 žaidėjai",
                 ]}
               />
-              <span className="mt-6 md:mt-auto inline-flex items-center gap-2 rounded-full bg-volt text-volt-ink font-bold text-[15px] px-6 py-3.5 self-start transition-transform group-hover:-translate-y-0.5 [text-shadow:none]">
-                Rinktis
-                <Arrow />
-              </span>
+              <div className="mt-6 md:mt-auto flex items-center gap-3 [text-shadow:none]">
+                <span className="inline-flex items-center gap-2 rounded-full bg-volt text-volt-ink font-bold text-[15px] px-6 py-3.5 transition-transform group-hover:-translate-y-0.5">
+                  Rinktis
+                  <Arrow />
+                </span>
+                <span className="text-[13px] font-semibold text-white/80">
+                  nuo €20<span className="text-white/50">/asm.</span>
+                </span>
+              </div>
             </div>
           </Link>
 
           {/* Gimtadienių paketai — featured */}
           <Link
             href="/gimtadieniai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border-2 border-[rgba(240,165,0,0.55)] hover:border-[#f0a500] transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#0d2b35] animate-hero-in-scale [animation-delay:70ms] [animation-fill-mode:backwards] min-[900px]:-translate-y-2 min-[900px]:scale-[1.03] hover:-translate-y-3 hover:shadow-[0_28px_50px_-15px_rgba(240,165,0,0.5)] z-10"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border-2 border-[rgba(240,165,0,0.55)] hover:border-[#f0a500] transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#0d2b35] animate-hero-in-scale [animation-delay:70ms] [animation-fill-mode:backwards] max-[899px]:scale-[1.01] min-[900px]:-translate-y-2 min-[900px]:scale-[1.03] hover:-translate-y-3 hover:shadow-[0_28px_50px_-15px_rgba(240,165,0,0.5)] z-10"
           >
             <div className="absolute inset-0 animate-ken-c will-change-transform motion-reduce:animate-none">
               <Image
@@ -144,20 +161,25 @@ export default function ChooserPage() {
                   "Vieta vaišėms",
                 ]}
               />
-              <span
-                className="mt-6 inline-flex items-center gap-2 rounded-full text-[#0d2b35] font-bold text-[15px] px-6 py-3.5 self-start transition-transform group-hover:-translate-y-0.5 [text-shadow:none]"
-                style={{ background: "linear-gradient(180deg, #ffbf33 0%, #f0a500 100%)" }}
-              >
-                Rinktis
-                <Arrow />
-              </span>
+              <div className="mt-6 flex items-center gap-3 [text-shadow:none]">
+                <span
+                  className="inline-flex items-center gap-2 rounded-full text-[#0d2b35] font-bold text-[15px] px-6 py-3.5 transition-transform group-hover:-translate-y-0.5 animate-cta-glow motion-reduce:animate-none"
+                  style={{ background: "linear-gradient(180deg, #ffbf33 0%, #f0a500 100%)" }}
+                >
+                  Rinktis
+                  <Arrow />
+                </span>
+                <span className="text-[13px] font-semibold text-white/85">
+                  nuo €239
+                </span>
+              </div>
             </div>
           </Link>
 
           {/* VR veiksmo žaidimai */}
           <Link
             href="/komandiniai-vr-zaidimai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#07242a] animate-hero-in-scale [animation-delay:140ms] [animation-fill-mode:backwards] min-[900px]:translate-y-4 min-[900px]:rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:shadow-[0_20px_40px_-15px_rgba(52,209,224,0.35)]"
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#07242a] animate-hero-in-scale [animation-delay:140ms] [animation-fill-mode:backwards] max-[899px]:scale-[0.98] min-[900px]:translate-y-4 min-[900px]:rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:scale-100 hover:shadow-[0_20px_40px_-15px_rgba(52,209,224,0.35)]"
           >
             <div className="absolute inset-0 animate-ken-b will-change-transform motion-reduce:animate-none">
               <Image
@@ -187,13 +209,18 @@ export default function ChooserPage() {
                   "Komandinis režimas",
                 ]}
               />
-              <span
-                className="mt-6 inline-flex items-center gap-2 rounded-full text-[#04252b] font-bold text-[15px] px-6 py-3.5 self-start transition-transform group-hover:-translate-y-0.5 [text-shadow:none]"
-                style={{ background: "linear-gradient(180deg, #5be6dc 0%, #34d1e0 100%)" }}
-              >
-                Rinktis
-                <Arrow />
-              </span>
+              <div className="mt-6 flex items-center gap-3 [text-shadow:none]">
+                <span
+                  className="inline-flex items-center gap-2 rounded-full text-[#04252b] font-bold text-[15px] px-6 py-3.5 transition-transform group-hover:-translate-y-0.5"
+                  style={{ background: "linear-gradient(180deg, #5be6dc 0%, #34d1e0 100%)" }}
+                >
+                  Rinktis
+                  <Arrow />
+                </span>
+                <span className="text-[13px] font-semibold text-white/80">
+                  nuo €50
+                </span>
+              </div>
             </div>
           </Link>
         </div>

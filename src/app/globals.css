@@ -82,6 +82,20 @@
     50% { transform: translate3d(30%, 0, 0); opacity: 1; }
     72% { opacity: 0; }
   }
+
+  /* Featured CTA — subtle glow pulse to draw the eye */
+  --animate-cta-glow: ctaGlow 2.6s ease-in-out infinite;
+  @keyframes ctaGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(240,165,0,0.55), 0 6px 18px -4px rgba(240,165,0,0.4); }
+    50%      { box-shadow: 0 0 0 8px rgba(240,165,0,0), 0 10px 24px -4px rgba(240,165,0,0.55); }
+  }
+
+  /* Card float — subtle up/down for the featured card so it doesn't sit still */
+  --animate-card-float: cardFloat 5.5s ease-in-out infinite;
+  @keyframes cardFloat {
+    0%, 100% { transform: translateY(-0.5rem) scale(1.03); }
+    50%      { transform: translateY(-0.75rem) scale(1.03); }
+  }
 }
 
 @layer base {
