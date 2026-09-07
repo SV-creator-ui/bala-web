@@ -229,7 +229,7 @@ export default function ChooserPage() {
       {/* Footer */}
       <footer className="border-t border-line">
         <div className="mx-auto max-w-[1180px] px-6 md:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-smoke-2">
-          <span>© {new Date().getFullYear()} BALA VR · Pajūrio g. 5B, Klaipėda</span>
+          <span>© {new Date().getFullYear()} BALA VR · Šarūnas Valius, ind. veiklos pažyma Nr. 1379347 · Pajūrio g. 5B, Klaipėda</span>
           <a href="tel:+37068426686" className="font-semibold text-smoke hover:text-white transition-colors">
             +370 684 26686
           </a>

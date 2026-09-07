@@ -5,7 +5,7 @@ import { useState } from "react";
 const faqs = [
   {
     q: "Nuo kokio amžiaus galima žaisti VR?",
-    a: "VR žaidimai - nuo 7 metų. Arkadiniai žaidimai — nuo mažesnio amžiaus. Instruktorius visada padeda ir prižiūri.",
+    a: "VR žaidimai – nuo 7 metų. Arkadiniai žaidimai – nuo mažesnio amžiaus. Instruktorius visada padeda ir prižiūri.",
   },
   {
     q: "Ar tėvai taip pat gali žaisti VR?",
@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "Ką daryti, jei vaikų bus daugiau nei planuota?",
-    a: "Rekomenduojame laikytis nurodyto žaidėjų skaičiaus, jog žaidėjams netektų ilgai laukti savo eilės. Taip pat galima užsakyti papildomus VR akinius. 1 VR akiniai - 20 eur.",
+    a: "Rekomenduojame laikytis nurodyto žaidėjų skaičiaus, jog žaidėjams netektų ilgai laukti savo eilės. Taip pat galima užsakyti papildomus VR akinius. Papildomas VR akinių komplektas – 20 €.",
   },
 ];
 

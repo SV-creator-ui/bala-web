@@ -52,7 +52,7 @@ export default function Page() {
 
       <footer className="mt-auto border-t border-line">
         <div className="mx-auto max-w-[1100px] px-6 md:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-smoke-2">
-          <span>© {new Date().getFullYear()} BALA VR · Pajūrio g. 5B, Klaipėda</span>
+          <span>© {new Date().getFullYear()} BALA VR · Šarūnas Valius, ind. veiklos pažyma Nr. 1379347 · Pajūrio g. 5B, Klaipėda</span>
           <div className="flex items-center gap-4">
             <a href="/taisykles" className="font-semibold text-smoke hover:text-white transition-colors">
               Taisyklės
