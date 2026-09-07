@@ -117,7 +117,7 @@ export default function ChooserPage() {
                   <Arrow />
                 </span>
                 <span className="text-[13px] font-semibold text-white/80">
-                  nuo €20<span className="text-white/50">/asm.</span>
+                  nuo €20/asm.
                 </span>
               </div>
             </div>
@@ -205,7 +205,7 @@ export default function ChooserPage() {
               <Features
                 color="text-[#34d1e0]"
                 items={[
-                  "Iki 6 žaidėjų",
+                  "Iki 10 žaidėjų",
                   "Komandinis režimas",
                 ]}
               />
@@ -218,7 +218,7 @@ export default function ChooserPage() {
                   <Arrow />
                 </span>
                 <span className="text-[13px] font-semibold text-white/80">
-                  nuo €50
+                  nuo €20/asm.
                 </span>
               </div>
             </div>
