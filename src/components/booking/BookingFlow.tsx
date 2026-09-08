@@ -139,6 +139,13 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const [voucherMsg, setVoucherMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [voucherChecking, setVoucherChecking] = useState(false);
 
+  // Promo/lojalumo kodas (neprivalomas, nesikaupia su kuponu)
+  const [promoInput, setPromoInput] = useState("");
+  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [promoChecking, setPromoChecking] = useState(false);
+
   const pkg = type === "party" && pkgId ? getPartyPackage(pkgId) : undefined;
 
   // Kai keičiasi paketas — dalyvių skaičių laikom paketo ribose
@@ -211,9 +218,10 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     ? gamesPrice(players)
     : 0;
 
-  // Kupono pritaikymas: taikomas visai sumai; jei padengia avansą — online 0 €.
+  // Nuolaidos: kuponas ir promo — mutualiai išskirtiniai (patikrinta serveryje).
   const voucherDiscount = voucherCode ? Math.min(voucherAmount, total) : 0;
-  const effectiveTotal = Math.max(0, total - voucherDiscount);
+  const activePromoDiscount = promoCode ? Math.min(promoDiscount, total) : 0;
+  const effectiveTotal = Math.max(0, total - voucherDiscount - activePromoDiscount);
   const onlineDue = Math.min(deposit, effectiveTotal);
   const onSite = effectiveTotal - onlineDue;
 
@@ -251,6 +259,40 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     setVoucherInput("");
   }
 
+  async function applyPromo() {
+    const code = promoInput.trim().toUpperCase();
+    if (!code || !type) return;
+    setPromoChecking(true);
+    setPromoMsg(null);
+    try {
+      const res = await fetch("/api/promo/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, email, type, total, hasVoucher: !!voucherCode }),
+      });
+      const d = await res.json();
+      if (d.ok) {
+        setPromoCode(d.code);
+        setPromoDiscount(Number(d.discount) || 0);
+        setPromoMsg({ ok: true, text: `Kodas pritaikytas: −${formatEur(Number(d.discount) || 0)} €` });
+      } else {
+        setPromoCode(null);
+        setPromoDiscount(0);
+        setPromoMsg({ ok: false, text: d.error || "Kodas negalioja" });
+      }
+    } catch {
+      setPromoMsg({ ok: false, text: "Nepavyko patikrinti kodo" });
+    } finally {
+      setPromoChecking(false);
+    }
+  }
+  function clearPromo() {
+    setPromoCode(null);
+    setPromoDiscount(0);
+    setPromoMsg(null);
+    setPromoInput("");
+  }
+
   // Kvietimo duomenys pakankami tęsti? (personalizuotam reikia vardo + amžiaus)
   const inviteAge = parseInt(celebrantAge, 10);
   function inviteReady(): boolean {
@@ -280,6 +322,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
           type, packageId: pkgId, date, time, players,
           addons: activeAddons, name, phone, email, note,
           voucherCode: voucherCode || undefined,
+          promoCode: promoCode || undefined,
           ...(type === "party" && wantInvite
             ? {
                 invitationType: "personalized",
@@ -434,6 +477,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               onlineDue={onlineDue}
               onSite={onSite}
               voucherDiscount={voucherDiscount}
+              promoDiscount={activePromoDiscount}
               error={error}
               agreed={agreed}
               setAgreed={setAgreed}
@@ -445,6 +489,15 @@ export default function BookingFlow({ initialType, initialPkgId }: {
                 msg: voucherMsg,
                 apply: applyVoucher,
                 clear: clearVoucher,
+              }}
+              promo={{
+                input: promoInput,
+                setInput: setPromoInput,
+                applied: promoCode,
+                checking: promoChecking,
+                msg: promoMsg,
+                apply: applyPromo,
+                clear: clearPromo,
               }}
             />
           )}
@@ -463,6 +516,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
             rooms={rooms}
             total={total}
             voucherDiscount={voucherDiscount}
+            promoDiscount={activePromoDiscount}
             onlineDue={onlineDue}
             onSite={onSite}
           />
@@ -1039,11 +1093,12 @@ type VoucherUI = {
   checking: boolean; msg: { ok: boolean; text: string } | null;
   apply: () => void; clear: () => void;
 };
-function StepPayment({ deposit, onlineDue, onSite, voucherDiscount, error, agreed, setAgreed, voucher }: {
-  deposit: number; onlineDue: number; onSite: number; voucherDiscount: number;
-  error: string | null; agreed: boolean; setAgreed: (v: boolean) => void; voucher: VoucherUI;
+function StepPayment({ deposit, onlineDue, onSite, voucherDiscount, promoDiscount, error, agreed, setAgreed, voucher, promo }: {
+  deposit: number; onlineDue: number; onSite: number; voucherDiscount: number; promoDiscount: number;
+  error: string | null; agreed: boolean; setAgreed: (v: boolean) => void; voucher: VoucherUI; promo: VoucherUI;
 }) {
-  const reduced = voucherDiscount > 0 && onlineDue < deposit;
+  const totalDiscount = voucherDiscount + promoDiscount;
+  const reduced = totalDiscount > 0 && onlineDue < deposit;
   return (
     <div>
       <div className="max-w-[560px]">
@@ -1056,50 +1111,94 @@ function StepPayment({ deposit, onlineDue, onSite, voucherDiscount, error, agree
           <span className="ml-auto font-mono text-[11px] text-smoke-2">Paysera</span>
         </div>
 
-        {/* Dovanų kuponas */}
-        <div className="mb-6">
-          <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Dovanų kuponas (nebūtina)</label>
-          {voucher.applied ? (
-            <div className="flex items-center gap-3 rounded-xl border border-genre-green/55 bg-genre-green/10 px-4 py-3">
-              <span className="text-genre-green">✓</span>
-              <span className="flex-1 text-sm">
-                <b className="font-mono">{voucher.applied}</b>
-                <span className="block text-xs text-smoke-2">Kuponas pritaikytas: −{formatEur(voucherDiscount)} €</span>
-              </span>
-              <button type="button" onClick={voucher.clear} className="text-[12.5px] font-semibold text-smoke hover:text-genre-pink">Pašalinti</button>
-            </div>
-          ) : (
-            <>
-              <div className="flex gap-2">
-                <input
-                  value={voucher.input}
-                  onChange={(e) => voucher.setInput(e.target.value.toUpperCase())}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); voucher.apply(); } }}
-                  placeholder="BALA-XXXX-XXXX"
-                  autoComplete="off"
-                  className="flex-1 rounded-xl border border-line bg-ink-card px-3.5 py-3 font-mono text-white focus:outline-none focus:border-volt"
-                />
-                <button
-                  type="button"
-                  onClick={voucher.apply}
-                  disabled={voucher.checking || !voucher.input.trim()}
-                  className="rounded-xl border border-line-strong px-4 py-3 text-sm font-bold hover:border-volt hover:text-volt disabled:opacity-40"
-                >
-                  {voucher.checking ? "…" : "Taikyti"}
-                </button>
+        {/* Dovanų kuponas — paslėptas jei jau pritaikytas promo */}
+        {!promo.applied && (
+          <div className="mb-4">
+            <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Dovanų kuponas (nebūtina)</label>
+            {voucher.applied ? (
+              <div className="flex items-center gap-3 rounded-xl border border-genre-green/55 bg-genre-green/10 px-4 py-3">
+                <span className="text-genre-green">✓</span>
+                <span className="flex-1 text-sm">
+                  <b className="font-mono">{voucher.applied}</b>
+                  <span className="block text-xs text-smoke-2">Kuponas pritaikytas: −{formatEur(voucherDiscount)} €</span>
+                </span>
+                <button type="button" onClick={voucher.clear} className="text-[12.5px] font-semibold text-smoke hover:text-genre-pink">Pašalinti</button>
               </div>
-              {voucher.msg && !voucher.msg.ok && (
-                <p className="mt-1.5 text-[12.5px] font-semibold text-genre-pink">{voucher.msg.text}</p>
-              )}
-            </>
-          )}
-        </div>
+            ) : (
+              <>
+                <div className="flex gap-2">
+                  <input
+                    value={voucher.input}
+                    onChange={(e) => voucher.setInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); voucher.apply(); } }}
+                    placeholder="BALA-XXXX-XXXX"
+                    autoComplete="off"
+                    className="flex-1 rounded-xl border border-line bg-ink-card px-3.5 py-3 font-mono text-white focus:outline-none focus:border-volt"
+                  />
+                  <button
+                    type="button"
+                    onClick={voucher.apply}
+                    disabled={voucher.checking || !voucher.input.trim()}
+                    className="rounded-xl border border-line-strong px-4 py-3 text-sm font-bold hover:border-volt hover:text-volt disabled:opacity-40"
+                  >
+                    {voucher.checking ? "…" : "Taikyti"}
+                  </button>
+                </div>
+                {voucher.msg && !voucher.msg.ok && (
+                  <p className="mt-1.5 text-[12.5px] font-semibold text-genre-pink">{voucher.msg.text}</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Nuolaidos kodas (loyalty / party thanks) — paslėptas jei jau pritaikytas dovanų kuponas */}
+        {!voucher.applied && (
+          <div className="mb-6">
+            <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Nuolaidos kodas (nebūtina)</label>
+            {promo.applied ? (
+              <div className="flex items-center gap-3 rounded-xl border border-genre-green/55 bg-genre-green/10 px-4 py-3">
+                <span className="text-genre-green">✓</span>
+                <span className="flex-1 text-sm">
+                  <b className="font-mono">{promo.applied}</b>
+                  <span className="block text-xs text-smoke-2">Nuolaida: −{formatEur(promoDiscount)} €</span>
+                </span>
+                <button type="button" onClick={promo.clear} className="text-[12.5px] font-semibold text-smoke hover:text-genre-pink">Pašalinti</button>
+              </div>
+            ) : (
+              <>
+                <div className="flex gap-2">
+                  <input
+                    value={promo.input}
+                    onChange={(e) => promo.setInput(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); promo.apply(); } }}
+                    placeholder="SUGRIZK-XXXXXX arba ACIU-XXXXXX"
+                    autoComplete="off"
+                    className="flex-1 rounded-xl border border-line bg-ink-card px-3.5 py-3 font-mono text-white focus:outline-none focus:border-volt"
+                  />
+                  <button
+                    type="button"
+                    onClick={promo.apply}
+                    disabled={promo.checking || !promo.input.trim()}
+                    className="rounded-xl border border-line-strong px-4 py-3 text-sm font-bold hover:border-volt hover:text-volt disabled:opacity-40"
+                  >
+                    {promo.checking ? "…" : "Taikyti"}
+                  </button>
+                </div>
+                {promo.msg && !promo.msg.ok && (
+                  <p className="mt-1.5 text-[12.5px] font-semibold text-genre-pink">{promo.msg.text}</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center justify-between gap-4 rounded-xl border border-volt/40 bg-volt/10 px-5 py-4.5">
           <div>
             <h4 className="font-display uppercase text-[15px]">{onlineDue > 0 ? "Mokėti dabar" : "Apmokėta kuponu"}</h4>
             <p className="text-sm text-smoke mt-1">
               {voucherDiscount > 0 && <>Kuponas −{formatEur(voucherDiscount)} € · </>}
+              {promoDiscount > 0 && <>Nuolaida −{formatEur(promoDiscount)} € · </>}
               Likutis {formatEur(onSite)} € — vietoje
             </p>
           </div>
@@ -1137,17 +1236,17 @@ function StepPayment({ deposit, onlineDue, onSite, voucherDiscount, error, agree
 }
 
 /* ---------------- Summary ---------------- */
-function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, rooms, total, voucherDiscount, onlineDue, onSite }: {
+function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, rooms, total, voucherDiscount, promoDiscount, onlineDue, onSite }: {
   phase: Phase; type: BookingType | null; pkg: ReturnType<typeof getPartyPackage>;
   date: string | null; time: string | null; players: number;
   addons: string[]; partyExtras: string[]; rooms: number; total: number;
-  voucherDiscount: number; onlineDue: number; onSite: number;
+  voucherDiscount: number; promoDiscount: number; onlineDue: number; onSite: number;
 }) {
   // Kambario kaina rodoma nuo tada, kai pasiekiama žaidėjų (ar vėlesnė) fazė.
   const reachedPlayers = phase === "players" || phase === "contact" || phase === "payment";
   const priceReady = !!type && (type === "room" || type === "game" ? reachedPlayers : !!pkg && !!date);
   const discount = type === "party" && date ? partyDiscount(date) : 0;
-  const effectiveTotal = Math.max(0, total - voucherDiscount);
+  const effectiveTotal = Math.max(0, total - voucherDiscount - promoDiscount);
 
   return (
     <aside className="rounded-2xl border border-line bg-ink-card p-5 lg:sticky lg:top-5">
@@ -1187,6 +1286,7 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
             <SumLine key={a.id} label={`+ ${a.name}`} value={`${a.price} €`} muted />
           ))}
           {voucherDiscount > 0 && <SumLine label="Kuponas" value={`−${formatEur(voucherDiscount)} €`} muted />}
+          {promoDiscount > 0 && <SumLine label="Nuolaidos kodas" value={`−${formatEur(promoDiscount)} €`} muted />}
           <div className="mt-3 flex items-baseline justify-between border-t border-line pt-4">
             <span className="font-display text-[13px] uppercase tracking-wide text-smoke-2">Viso</span>
             <span className="font-display text-[32px] leading-none text-white tabular-nums">{formatEur(effectiveTotal)} €</span>

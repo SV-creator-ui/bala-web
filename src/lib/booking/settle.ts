@@ -8,6 +8,14 @@ import { syncBookingCalendarByRef } from "./calendar-sync";
 import { notifyBookingPaidByRef } from "./notify";
 import { settleBookingVoucher } from "@/lib/voucher/redeem";
 import { fulfillVoucherByRef } from "@/lib/voucher/fulfill";
+import { settlePromoForBooking } from "@/lib/promo/redeem";
+
+/** Ištraukia promo kodą iš booking.note žymos „[PROMO:CODE:-XX.XX€]", jei ji yra. */
+function extractPromoCode(note: string | null): string | null {
+  if (!note) return null;
+  const m = note.match(/\[PROMO:([^:\]]+):[^\]]+\]/);
+  return m ? m[1] : null;
+}
 
 export async function markPaidByRef(ref: string): Promise<void> {
   // Dovanų kuponas
@@ -23,7 +31,12 @@ export async function markPaidByRef(ref: string): Promise<void> {
     .eq("merchant_reference", ref)
     .eq("status", "pending"); // tik jei dar nebuvo apmokėta
   const { data: b } = await supabase.from("bookings").select("*").eq("merchant_reference", ref).single();
-  if (b) await settleBookingVoucher(b as BookingRow); // nurašom panaudotą kuponą
+  if (b) {
+    const row = b as BookingRow;
+    await settleBookingVoucher(row); // nurašom panaudotą kuponą
+    const promoCode = extractPromoCode(row.note);
+    if (promoCode) await settlePromoForBooking(promoCode, { id: row.id, merchant_reference: row.merchant_reference });
+  }
   await syncBookingCalendarByRef(ref);
   await notifyBookingPaidByRef(ref);
 }

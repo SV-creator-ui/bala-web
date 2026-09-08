@@ -263,6 +263,26 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
         <p className="text-smoke text-sm mb-4">Užblokuoti seansai nerodomi klientams (remontas, privatūs renginiai).</p>
         <BlackoutManager blackouts={blackouts} onChange={load} />
       </div>
+
+      {/* Promo kodai */}
+      <div className="mt-10">
+        <h2 className="font-display text-2xl uppercase mb-3">Promo kodai</h2>
+        <p className="text-smoke text-sm mb-4">
+          Lojalumo (<b>SUGRIZK</b>) ir gimtadienių padėkos (<b>ACIU</b>) kodai generuojami automatiškai (kasryt ~10:00).
+          Rankiniu būdu gali kurti kodus akcijoms — pvz. studentams ar Black Friday.
+        </p>
+        <PromoCodeManager demo={demo} />
+      </div>
+
+      {/* Priminimo laiškas */}
+      <div className="mt-10">
+        <h2 className="font-display text-2xl uppercase mb-3">Priminimo laiškas</h2>
+        <p className="text-smoke text-sm mb-4">
+          Automatiškai siunčiamas <b>dieną prieš vizitą</b> (kasryt ~10:00) apmokėtoms rezervacijoms.
+          Redaguok tekstą ir antraštę žemiau. Palaikomi placeholder&apos;iai — jie pakeičiami tikrais rezervacijos duomenimis.
+        </p>
+        <ReminderTemplateEditor demo={demo} />
+      </div>
     </div>
   );
 }
@@ -499,6 +519,578 @@ function RescheduleForm({ currentDate, currentTime, onSubmit, onDone, onCancel }
         </button>
       </div>
       {error && <p className="text-sm font-semibold text-genre-pink">{error}</p>}
+    </div>
+  );
+}
+
+/* ---------------- Promo kodų valdymas ---------------- */
+type PromoCode = {
+  code: string;
+  kind: "loyalty" | "party_thanks" | "manual";
+  discount_type: "percent" | "fixed";
+  discount_value: number;
+  assigned_email: string; // tuščias = masinis kodas
+  applies_to: ("room" | "game" | "party")[];
+  valid_from: string;
+  valid_until: string;
+  issued_at: string;
+  used_at: string | null;
+  used_booking_ref: string | null;
+  cancelled: boolean;
+  min_visits_required: number;
+  max_uses: number; // 0 = neribotai
+  used_count: number;
+};
+
+const PROMO_KIND_LABEL: Record<PromoCode["kind"], string> = {
+  loyalty: "Lojalumas",
+  party_thanks: "Padėka po šventės",
+  manual: "Rankinis",
+};
+const PROMO_KIND_CLS: Record<PromoCode["kind"], string> = {
+  loyalty: "border-volt/40 bg-volt/10 text-volt",
+  party_thanks: "border-genre-pink/40 bg-genre-pink/10 text-genre-pink",
+  manual: "border-line-strong text-smoke",
+};
+
+function promoStatus(p: PromoCode): { label: string; cls: string } {
+  if (p.cancelled) return { label: "Atšauktas", cls: "bg-white/10 text-smoke-2 border-line" };
+  const maxUses = Number(p.max_uses ?? 1);
+  const usedCount = Number(p.used_count ?? (p.used_at ? 1 : 0));
+  if (maxUses > 0 && usedCount >= maxUses) return { label: "Išnaudotas", cls: "bg-white/10 text-smoke-2 border-line" };
+  const today = new Date().toISOString().slice(0, 10);
+  if (today > p.valid_until) return { label: "Pasibaigęs", cls: "bg-white/10 text-smoke-2 border-line" };
+  return { label: "Aktyvus", cls: "bg-genre-green/15 text-genre-green border-genre-green/40" };
+}
+function promoIsAvailable(p: PromoCode, today: string): boolean {
+  if (p.cancelled) return false;
+  const maxUses = Number(p.max_uses ?? 1);
+  const usedCount = Number(p.used_count ?? (p.used_at ? 1 : 0));
+  if (maxUses > 0 && usedCount >= maxUses) return false;
+  if (today > p.valid_until) return false;
+  return true;
+}
+
+function PromoCodeManager({ demo }: { demo: boolean }) {
+  const [codes, setCodes] = useState<PromoCode[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "active" | "used" | "expired">("all");
+  const [note, setNote] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+
+  // Rankinio (masinio) kūrimo forma
+  const [cValue, setCValue] = useState("20");
+  const [cType, setCType] = useState<"percent" | "fixed">("percent");
+  const [cApplies, setCApplies] = useState<Record<string, boolean>>({ room: true, game: true, party: false });
+  const [cDays, setCDays] = useState("14");
+  const [cCustom, setCCustom] = useState("");
+  const [cMaxUses, setCMaxUses] = useState("0"); // 0 = neribotai
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const d = await fetch("/api/admin/promo-codes").then((r) => r.json());
+      setCodes(d?.codes ?? []);
+    } catch {
+      setCodes([]);
+    }
+    setLoading(false);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  async function act(code: string, action: string, extra: Record<string, unknown> = {}) {
+    setBusy(code);
+    setNote(null);
+    const res = await fetch("/api/admin/promo-codes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, action, ...extra }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) setNote(d.error || "Nepavyko");
+    await load();
+    setBusy(null);
+  }
+
+  async function create() {
+    setBusy("__create");
+    setNote(null);
+    const applies = Object.entries(cApplies).filter(([, v]) => v).map(([k]) => k);
+    const res = await fetch("/api/admin/promo-codes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customCode: cCustom.trim() || undefined,
+        discountType: cType,
+        discountValue: Number(cValue),
+        appliesTo: applies,
+        validDays: Number(cDays),
+        maxUses: Number(cMaxUses) || 0,
+      }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) setNote(d.error || "Nepavyko sukurti");
+    else {
+      setNote(`Sukurta: ${d.code?.code}`);
+      setCCustom("");
+    }
+    await load();
+    setBusy(null);
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const stats = useMemo(() => {
+    const totalRedemptions = codes.reduce((s, c) => s + Number(c.used_count ?? (c.used_at ? 1 : 0)), 0);
+    return {
+      active: codes.filter((c) => promoIsAvailable(c, today)).length,
+      redemptions: totalRedemptions,
+      expired: codes.filter((c) => !c.cancelled && today > c.valid_until).length,
+      cancelled: codes.filter((c) => c.cancelled).length,
+    };
+  }, [codes, today]);
+
+  const filtered = useMemo(() => {
+    if (filter === "active") return codes.filter((c) => promoIsAvailable(c, today));
+    if (filter === "used") return codes.filter((c) => Number(c.used_count ?? (c.used_at ? 1 : 0)) > 0);
+    if (filter === "expired") return codes.filter((c) => c.cancelled || today > c.valid_until);
+    return codes;
+  }, [codes, filter, today]);
+
+  if (demo) {
+    return <p className="rounded-xl border border-line bg-ink-card px-4 py-3 text-sm text-smoke-2">Promo kodai saugomi DB — matomi tik su sukonfigūruota Supabase (ne DEMO režime).</p>;
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Statistika */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label="Aktyvūs" value={String(stats.active)} accent="green" />
+        <Stat label="Panaudojimų iš viso" value={String(stats.redemptions)} />
+        <Stat label="Pasibaigę" value={String(stats.expired)} />
+        <Stat label="Atšaukti" value={String(stats.cancelled)} />
+      </div>
+
+      {/* Filtras + naujo kūrimas */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex gap-1.5">
+          {(["all","active","used","expired"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-full border px-3.5 py-1 text-xs font-semibold ${
+                filter === f ? "border-volt bg-volt/10 text-volt" : "border-line-strong text-smoke hover:text-white"
+              }`}
+            >
+              {f === "all" ? "Visi" : f === "active" ? "Aktyvūs" : f === "used" ? "Panaudoti" : "Pasibaigę"}
+            </button>
+          ))}
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={load} className="rounded-lg border border-line-strong px-3 py-1.5 text-xs font-semibold hover:border-volt hover:text-volt">Atnaujinti</button>
+          <button
+            onClick={() => setShowCreate((v) => !v)}
+            className="rounded-lg border border-volt/50 bg-volt/10 px-3 py-1.5 text-xs font-semibold text-volt hover:bg-volt/20"
+          >
+            {showCreate ? "Uždaryti" : "+ Naujas kodas"}
+          </button>
+        </div>
+        {note && <span className="text-sm text-smoke">{note}</span>}
+      </div>
+
+      {/* Rankinio MASINIO kodo kūrimo forma */}
+      {showCreate && (
+        <div className="rounded-2xl border border-volt/30 bg-volt/5 p-5 space-y-3">
+          <h3 className="font-mono text-xs uppercase tracking-wider text-volt mb-1">Naujas masinis kodas</h3>
+          <p className="text-[12px] text-smoke-2 mb-2">
+            Kodą galės įvesti bet kuris klientas (be el. pašto apribojimo). Skirta akcijoms — Black Friday, Kalėdos, sezoninės nuolaidos.
+          </p>
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="block">
+              <div className="text-[11px] uppercase tracking-wider text-smoke-2 mb-1">Kodas (paliksi tuščią → sugeneruos)</div>
+              <input value={cCustom} onChange={(e) => setCCustom(e.target.value.toUpperCase())}
+                placeholder="BLACKFRIDAY2026"
+                className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-white font-mono text-sm" />
+            </label>
+            <label className="block">
+              <div className="text-[11px] uppercase tracking-wider text-smoke-2 mb-1">Nuolaida</div>
+              <div className="flex gap-2">
+                <input type="number" value={cValue} onChange={(e) => setCValue(e.target.value)} min={1} max={100}
+                  className="flex-1 rounded-lg border border-line bg-ink px-3 py-2 text-white text-sm" />
+                <select value={cType} onChange={(e) => setCType(e.target.value as "percent" | "fixed")}
+                  className="rounded-lg border border-line bg-ink px-3 py-2 text-white text-sm">
+                  <option value="percent">%</option>
+                  <option value="fixed">€</option>
+                </select>
+              </div>
+            </label>
+            <label className="block">
+              <div className="text-[11px] uppercase tracking-wider text-smoke-2 mb-1">Galiojimas (dienomis)</div>
+              <input type="number" value={cDays} onChange={(e) => setCDays(e.target.value)} min={1} max={365}
+                className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-white text-sm" />
+            </label>
+            <label className="block">
+              <div className="text-[11px] uppercase tracking-wider text-smoke-2 mb-1">Panaudojimų limitas (0 = neribotai)</div>
+              <input type="number" value={cMaxUses} onChange={(e) => setCMaxUses(e.target.value)} min={0} max={10000}
+                placeholder="0"
+                className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-white text-sm" />
+            </label>
+          </div>
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Tinka paslaugoms</div>
+            <div className="flex flex-wrap gap-4 text-sm">
+              {[
+                { k: "room", label: "Pabėgimo kambariai" },
+                { k: "game", label: "VR veiksmo žaidimai" },
+                { k: "party", label: "Gimtadieniai" },
+              ].map((o) => (
+                <label key={o.k} className="flex items-center gap-2">
+                  <input type="checkbox" checked={cApplies[o.k] ?? false}
+                    onChange={(e) => setCApplies({ ...cApplies, [o.k]: e.target.checked })}
+                    className="h-4 w-4" />
+                  {o.label}
+                </label>
+              ))}
+            </div>
+          </div>
+          <button onClick={create} disabled={busy === "__create"}
+            className="rounded-lg bg-volt px-4 py-2.5 font-bold text-volt-ink transition hover:-translate-y-0.5 disabled:opacity-40">
+            {busy === "__create" ? "Kuriama…" : "Sukurti kodą"}
+          </button>
+        </div>
+      )}
+
+      {/* Sąrašas */}
+      <div className="overflow-x-auto rounded-2xl border border-line">
+        <table className="w-full min-w-[900px] text-sm">
+          <thead>
+            <tr className="bg-ink-card text-left font-mono text-[11px] uppercase tracking-wider text-smoke-2">
+              <th className="px-4 py-3">Kodas</th>
+              <th className="px-4 py-3">Tipas</th>
+              <th className="px-4 py-3">Nuolaida</th>
+              <th className="px-4 py-3">Kam / Panaudojimai</th>
+              <th className="px-4 py-3">Galioja iki</th>
+              <th className="px-4 py-3">Būsena</th>
+              <th className="px-4 py-3 text-right">Veiksmai</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-smoke-2">Kraunama…</td></tr>
+            ) : filtered.length === 0 ? (
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-smoke-2">Kodų nėra.</td></tr>
+            ) : (
+              filtered.map((c) => {
+                const st = promoStatus(c);
+                const disc = c.discount_type === "percent" ? `${c.discount_value}%` : `${formatEur(c.discount_value)} €`;
+                const maxUses = Number(c.max_uses ?? 1);
+                const usedCount = Number(c.used_count ?? (c.used_at ? 1 : 0));
+                const isMass = !c.assigned_email;
+                const usageStr = maxUses === 0 ? `${usedCount} panaud.` : `${usedCount} / ${maxUses}`;
+                return (
+                  <tr key={c.code} className="border-t border-line align-top">
+                    <td className="px-4 py-3 font-mono whitespace-nowrap">
+                      {c.code}
+                      {c.used_booking_ref && usedCount === 1 && <div className="text-[11px] text-smoke-2">→ {c.used_booking_ref}</div>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block rounded-full border px-2.5 py-1 text-[11px] font-bold ${PROMO_KIND_CLS[c.kind]}`}>
+                        {PROMO_KIND_LABEL[c.kind]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono">
+                      {disc}
+                      <div className="text-[11px] text-smoke-2">{c.applies_to.map(shortAppliesLabel).join(" · ")}</div>
+                      {c.min_visits_required > 0 && (
+                        <div className="text-[11px] text-smoke-2">≥{c.min_visits_required + 1}-am vizitui</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-[13px]">
+                      {isMass ? (
+                        <>
+                          <span className="inline-block rounded-full border border-line-strong px-2 py-0.5 text-[10.5px] font-bold text-smoke">MASINIS</span>
+                          <div className="mt-0.5 font-mono text-smoke-2 text-[12.5px]">{usageStr}</div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-smoke">{c.assigned_email}</div>
+                          <div className="mt-0.5 font-mono text-smoke-2 text-[12.5px]">{usageStr}</div>
+                        </>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap font-mono">{c.valid_until}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block rounded-full border px-2.5 py-1 text-[11px] font-bold ${st.cls}`}>{st.label}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        {promoIsAvailable(c, today) && (
+                          <>
+                            <ActionBtn onClick={() => act(c.code, "extend", { extendDays: 30 })} disabled={busy === c.code} kind="ghost">+30d</ActionBtn>
+                            <ActionBtn onClick={() => act(c.code, "cancel")} disabled={busy === c.code} kind="danger">Atšaukti</ActionBtn>
+                          </>
+                        )}
+                        {c.cancelled && (
+                          <ActionBtn onClick={() => act(c.code, "reactivate")} disabled={busy === c.code} kind="ok">Atkurti</ActionBtn>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function shortAppliesLabel(t: string): string {
+  if (t === "room") return "kamb.";
+  if (t === "game") return "žaid.";
+  if (t === "party") return "gimt.";
+  return t;
+}
+
+/* ---------------- Priminimo laiškų redaktorius (po vieną kiekvienai paslaugai) ---------------- */
+type ReminderTemplate = { enabled: boolean; subject: string; body_html: string };
+type BookingType = "room" | "game" | "party";
+const BOOKING_TYPE_TABS: { key: BookingType; label: string; hint: string }[] = [
+  { key: "room",  label: "Kambariai", hint: "Pabėgimo kambariai — scenarijaus pasirinkimas vietoje" },
+  { key: "game",  label: "Žaidimai",  hint: "VR veiksmo žaidimai — aktyvūs, patogi apranga" },
+  { key: "party", label: "Gimtadieniai", hint: "Gimtadienio šventės — įtrauktas vėlavimo mokesčio įspėjimas" },
+];
+
+const PLACEHOLDER_HELP: { key: string; label: string }[] = [
+  { key: "name", label: "Kliento vardas" },
+  { key: "date", label: "Data (pvz. 12 rugsėjo 2026)" },
+  { key: "time", label: "Laikas (pvz. 16:30)" },
+  { key: "players", label: "Žaidėjų skaičius" },
+  { key: "service", label: "Paslauga (kambarys / žaidimai / paketas)" },
+  { key: "reference", label: "Rezervacijos numeris" },
+  { key: "total", label: "Bendra suma (€)" },
+  { key: "deposit", label: "Sumokėtas avansas (€)" },
+  { key: "on_site", label: "Likutis vietoje (€)" },
+];
+
+function ReminderTemplateEditor({ demo }: { demo: boolean }) {
+  const [templates, setTemplates] = useState<Record<BookingType, ReminderTemplate> | null>(null);
+  const [initial, setInitial] = useState<Record<BookingType, ReminderTemplate> | null>(null);
+  const [activeType, setActiveType] = useState<BookingType>("room");
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<null | "save" | "test" | "run">(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [testTo, setTestTo] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const d = await fetch("/api/admin/reminder-template").then((r) => r.json());
+      if (d?.templates) {
+        setTemplates(d.templates);
+        setInitial(d.templates);
+      }
+    } catch {
+      /* ignore */
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  function updateActive(patch: Partial<ReminderTemplate>) {
+    if (!templates) return;
+    setTemplates({ ...templates, [activeType]: { ...templates[activeType], ...patch } });
+  }
+
+  async function save() {
+    if (!templates) return;
+    setBusy("save"); setNote(null);
+    const res = await fetch("/api/admin/reminder-template", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: activeType, ...templates[activeType] }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) setNote(d.error || "Nepavyko išsaugoti");
+    else { setNote(`Išsaugota (${BOOKING_TYPE_TABS.find((t) => t.key === activeType)?.label}).`); setInitial(templates); }
+    setBusy(null);
+  }
+
+  async function test() {
+    if (!templates) return;
+    setBusy("test"); setNote(null);
+    const res = await fetch("/api/admin/reminder-template", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "test", type: activeType, to: testTo || undefined, template: templates[activeType] }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) setNote(d.error || "Nepavyko išsiųsti bandymo");
+    else setNote(`Bandymo laiškas (${activeType}) išsiųstas: ${d.sent_to}`);
+    setBusy(null);
+  }
+
+  async function runNow() {
+    if (!confirm("Paleisti priminimų siuntimą DABAR (rytojaus paid rezervacijoms, kurios dar negavo priminimo)?")) return;
+    setBusy("run"); setNote(null);
+    const res = await fetch("/api/admin/reminder-template", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "run_now" }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) setNote(d.error || "Nepavyko");
+    else setNote(`Rasta ${d.candidates}, išsiųsta ${d.sent}, klaidų ${d.failed}.${d.skipped_reason ? ` (${d.skipped_reason})` : ""}`);
+    setBusy(null);
+  }
+
+  if (demo) {
+    return <p className="rounded-xl border border-line bg-ink-card px-4 py-3 text-sm text-smoke-2">Priminimo šablonai saugomi DB — matomi tik su sukonfigūruota Supabase (ne DEMO režime).</p>;
+  }
+  if (loading || !templates || !initial) {
+    return <p className="rounded-xl border border-line bg-ink-card px-4 py-3 text-sm text-smoke-2">Kraunama…</p>;
+  }
+
+  const tmpl = templates[activeType];
+  const initTmpl = initial[activeType];
+  const dirty =
+    tmpl.enabled !== initTmpl.enabled ||
+    tmpl.subject !== initTmpl.subject ||
+    tmpl.body_html !== initTmpl.body_html;
+  const activeHint = BOOKING_TYPE_TABS.find((t) => t.key === activeType)?.hint;
+
+  return (
+    <div>
+      {/* Tabs */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        {BOOKING_TYPE_TABS.map((t) => {
+          const isActive = t.key === activeType;
+          const isDirty = initial && (
+            templates[t.key].enabled !== initial[t.key].enabled ||
+            templates[t.key].subject !== initial[t.key].subject ||
+            templates[t.key].body_html !== initial[t.key].body_html
+          );
+          return (
+            <button
+              key={t.key}
+              onClick={() => setActiveType(t.key)}
+              className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
+                isActive
+                  ? "border-volt bg-volt/10 text-volt"
+                  : "border-line-strong text-smoke hover:text-white"
+              }`}
+            >
+              {t.label}
+              {isDirty && <span className="ml-1.5 text-volt">•</span>}
+              {!templates[t.key].enabled && <span className="ml-1.5 text-smoke-2 text-[11px]">(išj.)</span>}
+            </button>
+          );
+        })}
+      </div>
+      {activeHint && <p className="text-xs text-smoke-2 mb-4 -mt-2">{activeHint}</p>}
+
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] items-start">
+        <div className="rounded-2xl border border-line bg-ink-card p-5 space-y-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={tmpl.enabled}
+              onChange={(e) => updateActive({ enabled: e.target.checked })}
+              className="h-4 w-4"
+            />
+            <span>Šio tipo priminimai <b>{tmpl.enabled ? "įjungti" : "išjungti"}</b> (siunčiami kasryt ~10:00)</span>
+          </label>
+
+          <label className="block">
+            <div className="font-mono text-[10.5px] uppercase tracking-wider text-smoke-2 mb-1">Antraštė (subject)</div>
+            <input
+              value={tmpl.subject}
+              onChange={(e) => updateActive({ subject: e.target.value })}
+              className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-white"
+            />
+          </label>
+
+          <label className="block">
+            <div className="font-mono text-[10.5px] uppercase tracking-wider text-smoke-2 mb-1">Laiško turinys (HTML)</div>
+            <textarea
+              value={tmpl.body_html}
+              onChange={(e) => updateActive({ body_html: e.target.value })}
+              rows={14}
+              className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-white font-mono text-[12.5px] leading-relaxed"
+              spellCheck={false}
+            />
+            <div className="text-[11px] text-smoke-2 mt-1">
+              Galima naudoti HTML žymes (&lt;p&gt;, &lt;b&gt;, &lt;ul&gt;, &lt;a href&gt;…). Aplink dedami antraštė ir kontaktai automatiškai.
+            </div>
+          </label>
+
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              onClick={save}
+              disabled={busy !== null || !dirty}
+              className="rounded-lg bg-volt px-4 py-2.5 font-bold text-volt-ink transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0"
+            >
+              {busy === "save" ? "Saugoma…" : dirty ? "Išsaugoti šį šabloną" : "Išsaugota"}
+            </button>
+            <button
+              onClick={() => setTemplates({ ...templates, [activeType]: initTmpl })}
+              disabled={!dirty || busy !== null}
+              className="rounded-lg border border-line-strong px-4 py-2 text-sm font-semibold text-smoke hover:text-white disabled:opacity-40"
+            >
+              Atšaukti pakeitimus
+            </button>
+            {note && <span className="text-sm text-smoke">{note}</span>}
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-line bg-ink-card p-5">
+            <h3 className="font-mono text-xs uppercase tracking-wider text-smoke-2 mb-3">Placeholder&apos;iai</h3>
+            <ul className="space-y-1.5 text-[12.5px]">
+              {PLACEHOLDER_HELP.map((p) => (
+                <li key={p.key} className="flex justify-between gap-3 border-b border-line/50 pb-1.5 last:border-b-0">
+                  <code className="text-volt">{`{{${p.key}}}`}</code>
+                  <span className="text-smoke-2 text-right">{p.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="rounded-2xl border border-line bg-ink-card p-5 space-y-3">
+            <h3 className="font-mono text-xs uppercase tracking-wider text-smoke-2">Bandymas / rankinis paleidimas</h3>
+            <div className="flex flex-col gap-2">
+              <input
+                type="email"
+                value={testTo}
+                onChange={(e) => setTestTo(e.target.value)}
+                placeholder="Bandymo el. paštas (jei tuščia — admino)"
+                className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-white text-sm"
+              />
+              <button
+                onClick={test}
+                disabled={busy !== null}
+                className="rounded-lg border border-line-strong px-4 py-2 text-sm font-semibold hover:border-volt hover:text-volt disabled:opacity-40"
+              >
+                {busy === "test" ? "Siunčiama…" : `Siųsti bandymo laišką (${BOOKING_TYPE_TABS.find((t) => t.key === activeType)?.label})`}
+              </button>
+            </div>
+            <div className="border-t border-line/50 pt-3">
+              <button
+                onClick={runNow}
+                disabled={busy !== null}
+                className="w-full rounded-lg border border-genre-pink/50 px-4 py-2 text-sm font-semibold text-genre-pink hover:bg-genre-pink/10 disabled:opacity-40"
+              >
+                {busy === "run" ? "Paleidžiama…" : "Paleisti priminimus DABAR (visi tipai)"}
+              </button>
+              <p className="mt-2 text-[11px] text-smoke-2">
+                Sesantis: išsiunčia rytojaus <b>paid</b> rezervacijoms, kurios dar negavo priminimo. Pakartoti tas pačias neišsiųs. Kiekvienai rezervacijai naudojamas atitinkamo tipo šablonas.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

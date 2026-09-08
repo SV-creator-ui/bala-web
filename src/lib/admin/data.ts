@@ -165,7 +165,14 @@ export async function listBlackouts(): Promise<Blackout[]> {
     return [...demoBlackouts].sort((a, b) => a.date.localeCompare(b.date));
   }
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase.from("blackouts").select("*").order("date");
+  // Filtruojame sistemos sentinel eilutes (žr. lib/booking/reminder.ts): priminimų
+  // šablonas ir „siųsta" žymos saugomos su sentinel date < 2000-01-01, kad admin
+  // sąraše šitų techninių įrašų klientas nematytų.
+  const { data, error } = await supabase
+    .from("blackouts")
+    .select("*")
+    .gte("date", "2000-01-01")
+    .order("date");
   if (error) throw error;
   return (data ?? []) as Blackout[];
 }

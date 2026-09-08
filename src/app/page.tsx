@@ -234,9 +234,6 @@ export default function ChooserPage() {
             +370 684 26686
           </a>
         </div>
-        <div className="mx-auto max-w-[1180px] px-6 md:px-10 pb-4 text-[11px] text-smoke-2/60">
-          Šarūnas Valius, ind. veiklos pažyma Nr. 1379347
-        </div>
       </footer>
     </main>
   );

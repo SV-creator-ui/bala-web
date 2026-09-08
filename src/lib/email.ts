@@ -24,7 +24,7 @@ function adminEmail(): string {
   return process.env.ADMIN_NOTIFY_EMAIL || gmailUser();
 }
 function siteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || "https://bala-web-roan.vercel.app").replace(/\/$/, "");
+  return (process.env.NEXT_PUBLIC_SITE_URL || "https://bala.lt").replace(/\/$/, "");
 }
 
 /** Ar el. paštas sukonfigūruotas. */
@@ -58,9 +58,12 @@ export function senderAddress(): string {
 export { adminEmail as adminNotifyAddress };
 
 const MONTHS = ["sausio","vasario","kovo","balandžio","gegužės","birželio","liepos","rugpjūčio","rugsėjo","spalio","lapkričio","gruodžio"];
+const WEEKDAYS = ["Sekmadienis","Pirmadienis","Antradienis","Trečiadienis","Ketvirtadienis","Penktadienis","Šeštadienis"];
+/** B formatas: „Šeštadienis, rugsėjo 12" (be metų — patvirtinimo laiške data + metai matomi rezervacijos numeryje ir kontekste). */
 function fmtDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
-  return `${d} ${MONTHS[m - 1]} ${y}`;
+  const wd = WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return `${wd}, ${MONTHS[m - 1]} ${d}`;
 }
 
 function serviceName(b: BookingRow): string {

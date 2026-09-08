@@ -35,6 +35,7 @@ import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 import { notifyBookingPaid } from "@/lib/booking/notify";
 import { applyVoucherToBooking } from "@/lib/voucher/redeem";
 import { settleVoucherForBooking } from "@/lib/voucher/store";
+import { validatePromoForBooking, settlePromoForBooking } from "@/lib/promo/redeem";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,19 @@ function siteUrl(req: Request): string {
   const env = process.env.NEXT_PUBLIC_SITE_URL;
   if (env) return env.replace(/\/$/, "");
   return new URL(req.url).origin;
+}
+
+/** Į booking.note įrašom promo žymą kaip prefix'ą, kad admin matytų nuolaidą. */
+function buildBookingNote(opts: {
+  testMode: boolean; base: string | null;
+  promoCode: string | null; promoDiscountEur: number;
+}): string | null {
+  const parts: string[] = [];
+  if (opts.testMode) parts.push("[TEST]");
+  if (opts.promoCode) parts.push(`[PROMO:${opts.promoCode}:-${opts.promoDiscountEur.toFixed(2)}€]`);
+  if (opts.base) parts.push(opts.base);
+  const joined = parts.join(" ").trim();
+  return joined || null;
 }
 
 export async function POST(req: Request) {
@@ -131,16 +145,38 @@ export async function POST(req: Request) {
     total = grandTotal(players, addons);
   }
 
+  // --- Promo kodas (neprivalomas) ---
+  // Nuolaida taikoma VISAI sumai prieš avanso skaičiavimą.
+  // Griežta validacija: kodas turi būti išduotas šiam email, tinkamas šio tipo paslaugai,
+  // galiojantis, nepanaudotas, o lojalumo kodui — kad būtų ≥3-ias vizitas.
+  const promoCodeRaw = body.promoCode ? String(body.promoCode).trim().toUpperCase() : "";
+  let promoCode: string | null = null;
+  let promoDiscountEur = 0;
+  let effectiveTotal = total;
+  if (promoCodeRaw) {
+    const pv = await validatePromoForBooking({
+      code: promoCodeRaw,
+      email: email.trim(),
+      type,
+      total,
+      hasVoucher: !!(body.voucherCode && String(body.voucherCode).trim()),
+    });
+    if (!pv.ok) return NextResponse.json({ error: pv.error }, { status: 400 });
+    promoCode = pv.promo.code;
+    promoDiscountEur = pv.discount;
+    effectiveTotal = Math.max(0, total - promoDiscountEur);
+  }
+
   const deposit = depositFor(type);
 
-  // --- Dovanų kuponas (neprivalomas) ---
-  // Kuponas taikomas VISAI sumai; jei padengia avansą — online mokėjimas
-  // praleidžiamas. Vienkartinis (likutis nesaugomas). Serveris perskaičiuoja.
+  // Su promo nuolaida — avansas neviršija naujo total'o.
+  let onlineDue = Math.min(deposit, effectiveTotal);
+
+  // --- Dovanų kuponas (neprivalomas, nesikaupia su promo) ---
   const voucherCodeRaw = body.voucherCode ? String(body.voucherCode) : "";
   let voucherCode: string | null = null;
   let voucherDiscount = 0;
-  let onlineDue = deposit;
-  if (voucherCodeRaw.trim()) {
+  if (voucherCodeRaw.trim() && !promoCode) {
     const app = await applyVoucherToBooking(voucherCodeRaw, total, deposit);
     if (!app) {
       return NextResponse.json({ error: "Dovanų kuponas negalioja arba jau panaudotas." }, { status: 400 });
@@ -191,8 +227,8 @@ export async function POST(req: Request) {
         customer_name: name.trim(),
         customer_phone: phone.trim(),
         customer_email: email.trim(),
-        note: testMode ? `[TEST] ${note ?? ""}`.trim() : note,
-        total_eur: total,
+        note: buildBookingNote({ testMode, base: note, promoCode, promoDiscountEur }),
+        total_eur: effectiveTotal,
         deposit_eur: onlineDue, // realiai internetu mokama suma (po kupono)
         status: immediatePaid ? "paid" : "pending",
         merchant_reference: merchantReference,
@@ -218,6 +254,7 @@ export async function POST(req: Request) {
     // --- Iškart apmokėta (test režimas arba kuponas padengė avansą) ---
     if (immediatePaid) {
       if (voucherCode) await settleVoucherForBooking(voucherCode, merchantReference); // nurašom kuponą
+      if (promoCode) await settlePromoForBooking(promoCode, { id: inserted.id, merchant_reference: merchantReference });
       await syncBookingCalendar(inserted.id); // į Google Calendar (jei sukonfigūruota)
       await notifyBookingPaid(inserted.id); // patvirtinimo laiškai (jei sukonfigūruota)
       const testSuffix = !paymentReady ? "&test=1" : "";

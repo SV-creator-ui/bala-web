@@ -159,7 +159,7 @@ export async function generateVoucherPdf(v: VoucherRow): Promise<Uint8Array> {
   page.drawRectangle({ x: contentX + 14, y: 62, width: colW - 28, height: 0.8, color: HAIR });
 
   // Kaip panaudoti + kontaktai
-  drawCenteredAt(cx, "Kodą nurodykite rezervuodami bala-web-roan.vercel.app arba pateikite atvykę.", 46, body, 6.6, GRAY_2);
+  drawCenteredAt(cx, "Kodą nurodykite rezervuodami bala.lt arba pateikite atvykę.", 46, body, 6.6, GRAY_2);
   drawCenteredAt(cx, "BALA VR · Pajūrio g. 5B, Klaipėda · +370 684 26686", 32, body, 6.6, GRAY_2);
 
   return doc.save();
