@@ -9,6 +9,7 @@ import { updateBookingStatus, rescheduleBooking, getBooking, type BookingStatus 
 import { getAvailability } from "@/lib/booking/availability";
 import { generateSlotsForDate } from "@/lib/booking/config";
 import { validFutureDate } from "@/lib/booking/validation";
+import { resendBookingEmails } from "@/lib/booking/resend";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,27 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!(await isAuthed())) return NextResponse.json({ error: "Neautorizuota" }, { status: 401 });
 
   const { id } = await params;
-  let body: { status?: string; date?: string; time?: string };
+  let body: { status?: string; date?: string; time?: string; action?: string; email?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Netinkami duomenys" }, { status: 400 });
+  }
+
+  // --- Pakartotinis laiško siuntimas (pvz. į teisingą adresą) ---
+  if (body.action === "resend") {
+    const override = validEmail(body.email);
+    if (body.email && !override) {
+      return NextResponse.json({ error: "Netinkamas el. pašto adresas" }, { status: 400 });
+    }
+    const ok = await resendBookingEmails(id, override);
+    if (!ok) {
+      return NextResponse.json(
+        { error: "Nepavyko išsiųsti (rezervacija ne apmokėta arba el. paštas nesukonfigūruotas)" },
+        { status: 400 },
+      );
+    }
+    return NextResponse.json({ ok: true });
   }
 
   // --- Perkėlimas į kitą laiką ---
@@ -69,4 +86,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     console.error("admin update booking error:", e);
     return NextResponse.json({ error: "Nepavyko atnaujinti" }, { status: 500 });
   }
+}
+
+/** Grąžina apkarpytą el. paštą, jei tinkamas; kitaip undefined (arba jei nebuvo). */
+function validEmail(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const e = raw.trim();
+  if (!e) return undefined;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? e : undefined;
 }

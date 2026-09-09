@@ -58,9 +58,19 @@ function adminHtml(v: VoucherRow): string {
   return shell("Naujas dovanų kuponas", inner);
 }
 
-/** Išsiunčia kupono PDF pirkėjui + pranešimą adminui. Klaidos — nefatališkos. */
-export async function sendVoucherEmails(v: VoucherRow, pdf: Uint8Array): Promise<void> {
+/**
+ * Išsiunčia kupono PDF pirkėjui + pranešimą adminui. Klaidos — nefatališkos.
+ * Jei `overrideBuyerEmail` nurodytas, PDF eina į tą adresą (originalus DB
+ * įraše lieka nepakeistas) — naudojama, kai klientas pirkdamas įrašė
+ * neteisingą pašto adresą ir admin persiunčia į teisingą.
+ */
+export async function sendVoucherEmails(
+  v: VoucherRow,
+  pdf: Uint8Array,
+  overrideBuyerEmail?: string,
+): Promise<void> {
   if (!emailConfigured()) return;
+  const buyerTo = overrideBuyerEmail || v.buyer_email;
   const from = senderAddress();
   const attachments = [{
     filename: `BALA-VR-dovanu-kuponas-${v.code ?? "kuponas"}.pdf`,
@@ -71,7 +81,7 @@ export async function sendVoucherEmails(v: VoucherRow, pdf: Uint8Array): Promise
   const results = await Promise.allSettled([
     getTransporter().sendMail({
       from,
-      to: v.buyer_email,
+      to: buyerTo,
       subject: `Jūsų dovanų kuponas — BALA VR (${formatEur(Number(v.amount_eur))} €)`,
       html: buyerHtml(v),
       attachments,
@@ -79,13 +89,13 @@ export async function sendVoucherEmails(v: VoucherRow, pdf: Uint8Array): Promise
     getTransporter().sendMail({
       from,
       to: adminNotifyAddress(),
-      replyTo: v.buyer_email,
+      replyTo: buyerTo,
       subject: `Parduotas dovanų kuponas — ${formatEur(Number(v.amount_eur))} € (${v.code ?? v.merchant_reference})`,
       html: adminHtml(v),
     }),
   ]);
 
-  const who = ["pirkėjui " + v.buyer_email, "adminui " + adminNotifyAddress()];
+  const who = ["pirkėjui " + buyerTo, "adminui " + adminNotifyAddress()];
   results.forEach((r, i) => {
     if (r.status === "fulfilled") {
       console.log(`[voucher-email] OK ${who[i]} messageId=${(r.value as { messageId?: string }).messageId}`);

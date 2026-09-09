@@ -103,6 +103,26 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
     return { ok: res.ok, error: d.error };
   }
 
+  async function resendBookingEmail(b: Booking) {
+    const to = window.prompt(
+      `Įveskite el. pašto adresą, į kurį siųsti patvirtinimą${b.type === "party" ? " ir gimtadienio kvietimus" : ""}.\n\nOriginalus (DB įraše išliks): ${b.customer_email}`,
+      b.customer_email,
+    );
+    if (!to) return;
+    const trimmed = to.trim();
+    if (!trimmed) return;
+    setBusy(b.id);
+    const res = await fetch(`/api/admin/bookings/${b.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "resend", email: trimmed === b.customer_email ? undefined : trimmed }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) window.alert(d.error || "Nepavyko išsiųsti");
+    else window.alert(`Išsiųsta: ${trimmed}`);
+    setBusy(null);
+  }
+
   async function logout() {
     await fetch("/api/admin/session", { method: "DELETE" });
     window.location.reload();
@@ -218,6 +238,9 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
                       {b.status === "pending" && (
                         <ActionBtn onClick={() => setBookingStatus(b.id, "paid")} disabled={busy === b.id} kind="ok">Apmokėta</ActionBtn>
                       )}
+                      {b.status === "paid" && (
+                        <ActionBtn onClick={() => resendBookingEmail(b)} disabled={busy === b.id} kind="ghost">Siųsti kitu adresu</ActionBtn>
+                      )}
                       {b.status !== "cancelled" && (
                         <ActionBtn onClick={() => setRescheduleId(rescheduleId === b.id ? null : b.id)} disabled={busy === b.id} kind="ghost">Perkelti</ActionBtn>
                       )}
@@ -330,19 +353,34 @@ function VoucherManager({ demo }: { demo: boolean }) {
 
   useEffect(() => { load(); }, [load]);
 
-  async function act(id: string, action: string) {
+  async function act(id: string, action: string, email?: string) {
     setBusy(id);
     setNote(null);
     const res = await fetch(`/api/admin/vouchers/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
+      body: JSON.stringify({ action, email }),
     });
     const d = await res.json().catch(() => ({}));
     if (!res.ok) setNote(d.error || "Nepavyko");
-    else if (action === "resend") setNote("PDF išsiųstas pirkėjui.");
+    else if (action === "resend") setNote(email ? `PDF išsiųstas: ${email}` : "PDF išsiųstas pirkėjui.");
     await load();
     setBusy(null);
+  }
+
+  function askAndResend(v: Voucher) {
+    const to = window.prompt(
+      `Įveskite el. pašto adresą, į kurį siųsti kupono PDF.\n\nOriginalus (klaidingas ar teisingas — DB įraše išliks): ${v.buyer_email}`,
+      v.buyer_email,
+    );
+    if (!to) return;
+    const trimmed = to.trim();
+    if (!trimmed || trimmed === v.buyer_email) {
+      // tuščias arba nepakeistas — siunčiam į originalų
+      act(v.id, "resend");
+      return;
+    }
+    act(v.id, "resend", trimmed);
   }
 
   if (demo) {
@@ -405,6 +443,7 @@ function VoucherManager({ demo }: { demo: boolean }) {
                         <>
                           <ActionBtn onClick={() => act(v.id, "redeem")} disabled={busy === v.id} kind="ghost">Panaudota</ActionBtn>
                           <ActionBtn onClick={() => act(v.id, "resend")} disabled={busy === v.id} kind="ghost">Siųsti PDF</ActionBtn>
+                          <ActionBtn onClick={() => askAndResend(v)} disabled={busy === v.id} kind="ghost">Siųsti kitu adresu</ActionBtn>
                           <ActionBtn onClick={() => act(v.id, "cancel")} disabled={busy === v.id} kind="danger">Atšaukti</ActionBtn>
                         </>
                       )}

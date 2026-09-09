@@ -143,9 +143,14 @@ function adminHtml(b: BookingRow): string {
 
 /* ------------------------- Siuntimas ------------------------- */
 
-/** Išsiunčia patvirtinimą klientui ir pranešimą adminui. Klaidos — nefatališkos. */
-export async function sendBookingEmails(b: BookingRow): Promise<void> {
+/**
+ * Išsiunčia patvirtinimą klientui ir pranešimą adminui. Klaidos — nefatališkos.
+ * Jei `overrideCustomerEmail` nurodytas, laiškas eina į tą adresą (DB įraše
+ * lieka nepakeistas) — naudojama, kai klientas įrašė neteisingą adresą.
+ */
+export async function sendBookingEmails(b: BookingRow, overrideCustomerEmail?: string): Promise<void> {
   if (!emailConfigured()) return;
+  const customerTo = overrideCustomerEmail || b.customer_email;
   const from = `"BALA VR" <${gmailUser()}>`;
   const isParty = b.type === "party";
 
@@ -167,7 +172,7 @@ export async function sendBookingEmails(b: BookingRow): Promise<void> {
   const results = await Promise.allSettled([
     transporter().sendMail({
       from,
-      to: b.customer_email,
+      to: customerTo,
       subject: `Rezervacija patvirtinta — BALA VR (${fmtDate(b.date)} ${b.time})`,
       html: customerHtml(b),
       attachments: inviteAttachments.length ? inviteAttachments : undefined,
@@ -175,14 +180,14 @@ export async function sendBookingEmails(b: BookingRow): Promise<void> {
     transporter().sendMail({
       from,
       to: adminEmail(),
-      replyTo: b.customer_email,
+      replyTo: customerTo,
       subject: `Nauja rezervacija — ${fmtDate(b.date)} ${b.time} · ${isParty ? "gimtadienis" : "kambarys"}`,
       html: adminHtml(b),
     }),
   ]);
 
   // Žurnalas (matoma Vercel loguose) — kad būtų aišku, ar laiškai išsiuntė.
-  const who = ["klientui " + b.customer_email, "adminui " + adminEmail()];
+  const who = ["klientui " + customerTo, "adminui " + adminEmail()];
   results.forEach((r, i) => {
     if (r.status === "fulfilled") {
       console.log(`[email] OK ${who[i]} messageId=${(r.value as { messageId?: string }).messageId}`);

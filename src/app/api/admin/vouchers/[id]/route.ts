@@ -15,7 +15,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!dbConfigured()) return NextResponse.json({ error: "DEMO režimas — nėra DB" }, { status: 400 });
 
   const { id } = await params;
-  let body: { action?: string };
+  let body: { action?: string; email?: string };
   try {
     body = await req.json();
   } catch {
@@ -34,7 +34,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         await updateVoucherStatus(id, "cancelled");
         break;
       case "resend": {
-        const ok = await resendVoucherEmail(id);
+        const override = validEmail(body.email);
+        if (body.email && !override) {
+          return NextResponse.json({ error: "Netinkamas el. pašto adresas" }, { status: 400 });
+        }
+        const ok = await resendVoucherEmail(id, override);
         if (!ok) return NextResponse.json({ error: "Nepavyko išsiųsti (kuponas neaktyvus arba el. paštas nesukonfigūruotas)" }, { status: 400 });
         break;
       }
@@ -46,4 +50,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     console.error("admin voucher patch error:", e);
     return NextResponse.json({ error: "Nepavyko atnaujinti" }, { status: 500 });
   }
+}
+
+/** Grąžina apkarpytą el. paštą, jei tinkamas; kitaip undefined (arba jei nebuvo). */
+function validEmail(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const e = raw.trim();
+  if (!e) return undefined;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? e : undefined;
 }

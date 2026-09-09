@@ -46,13 +46,17 @@ export async function fulfillVoucherByRef(ref: string): Promise<VoucherRow | nul
   }
 }
 
-/** Pakartotinis kupono PDF siuntimas (admin skydelis). */
-export async function resendVoucherEmail(id: string): Promise<boolean> {
+/**
+ * Pakartotinis kupono PDF siuntimas (admin skydelis).
+ * `overrideEmail` — jei perduodamas, PDF eina į tą adresą, ne į v.buyer_email
+ * (naudojama, kai klientas įrašė neteisingą adresą).
+ */
+export async function resendVoucherEmail(id: string, overrideEmail?: string): Promise<boolean> {
   const v = await getVoucherById(id);
   if (!v || v.status === "pending" || !v.code) return false;
   if (!emailConfigured()) return false;
   const pdf = await generateVoucherPdf(v);
-  await sendVoucherEmails(v, pdf);
+  await sendVoucherEmails(v, pdf, overrideEmail);
   await markVoucherEmailsSent(v.id);
   return true;
 }
