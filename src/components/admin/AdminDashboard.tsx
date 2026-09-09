@@ -138,6 +138,13 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
     };
   }, [bookings]);
 
+  // Atšauktos rezervacijos slepiamos iš „Visos" sąrašo — matomos tik jei
+  // atskirai pasirinkta būsena „Atšauktos".
+  const visibleBookings = useMemo(
+    () => (status === "cancelled" ? bookings : bookings.filter((b) => b.status !== "cancelled")),
+    [bookings, status],
+  );
+
   return (
     <div className="mx-auto max-w-[1200px] px-5 py-8">
       {/* Header */}
@@ -197,10 +204,10 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
           <tbody>
             {loading ? (
               <tr><td colSpan={7} className="px-4 py-10 text-center text-smoke-2">Kraunama…</td></tr>
-            ) : bookings.length === 0 ? (
+            ) : visibleBookings.length === 0 ? (
               <tr><td colSpan={7} className="px-4 py-10 text-center text-smoke-2">Rezervacijų nėra.</td></tr>
             ) : (
-              bookings.map((b) => (
+              visibleBookings.map((b) => (
                 <Fragment key={b.id}>
                 <tr className="border-t border-line align-top">
                   <td className="px-4 py-3 whitespace-nowrap">
