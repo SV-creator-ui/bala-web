@@ -75,7 +75,10 @@ function pad(hhmm: string): string {
 }
 
 function eventBody(b: BookingRow) {
-  const start = b.block_start ?? b.time;
+  // Kalendoriaus įvykis atspindi realią seanso pradžią (`b.time`), o ne salės
+  // paruošimo pradžią (`b.block_start`). Pabaigai naudojam salės atlaisvinimo
+  // laiką (`b.block_end`), nes tai realus laikas, kai salė vėl laisva.
+  const start = b.time;
   const end = b.block_end ?? b.time;
   const isParty = b.type === "party";
   const pkg = isParty ? getPartyPackage(b.package_id ?? "") : undefined;
@@ -87,6 +90,13 @@ function eventBody(b: BookingRow) {
     ? `🎮 VR veiksmo žaidimai — ${b.customer_name} (${b.players} asm.)`
     : `🥽 VR kambarys — ${b.customer_name} (${b.players} asm.)`;
 
+  // Jei salės paruošimo laikas skiriasi nuo seanso pradžios — parodom tai
+  // aprašyme, kad būtų aišku, kada personalas turi pradėti ruoštis.
+  const setupNote =
+    b.block_start && b.block_start !== b.time
+      ? `Salė užimta: ${b.block_start}–${b.block_end ?? b.time} (paruošimas ${b.block_start})`
+      : null;
+
   const lines = [
     isParty ? `Paketas: ${pkg ? pkg.name : "šventė"}` : isGame ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys",
     `Klientas: ${b.customer_name}`,
@@ -94,6 +104,7 @@ function eventBody(b: BookingRow) {
     `El. paštas: ${b.customer_email}`,
     `Dalyviai: ${b.players}`,
     `Suma: ${formatEur(Number(b.total_eur))} € (avansas ${formatEur(Number(b.deposit_eur))} €)`,
+    setupNote,
     b.note ? `Pastaba: ${b.note}` : null,
     `Nr.: ${b.merchant_reference}`,
   ].filter(Boolean);

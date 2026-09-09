@@ -103,6 +103,19 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
     return { ok: res.ok, error: d.error };
   }
 
+  async function resyncCalendar(b: Booking) {
+    setBusy(b.id);
+    const res = await fetch(`/api/admin/bookings/${b.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "resync-calendar" }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) window.alert(d.error || "Nepavyko sinchronizuoti");
+    else window.alert("Kalendoriaus įvykis atnaujintas");
+    setBusy(null);
+  }
+
   async function resendBookingEmail(b: Booking) {
     const to = window.prompt(
       `Įveskite el. pašto adresą, į kurį siųsti patvirtinimą${b.type === "party" ? " ir gimtadienio kvietimus" : ""}.\n\nOriginalus (DB įraše išliks): ${b.customer_email}`,
@@ -246,7 +259,10 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
                         <ActionBtn onClick={() => setBookingStatus(b.id, "paid")} disabled={busy === b.id} kind="ok">Apmokėta</ActionBtn>
                       )}
                       {b.status === "paid" && (
-                        <ActionBtn onClick={() => resendBookingEmail(b)} disabled={busy === b.id} kind="ghost">Siųsti kitu adresu</ActionBtn>
+                        <>
+                          <ActionBtn onClick={() => resendBookingEmail(b)} disabled={busy === b.id} kind="ghost">Siųsti kitu adresu</ActionBtn>
+                          <ActionBtn onClick={() => resyncCalendar(b)} disabled={busy === b.id} kind="ghost">Sinch. kalendorių</ActionBtn>
+                        </>
                       )}
                       {b.status !== "cancelled" && (
                         <ActionBtn onClick={() => setRescheduleId(rescheduleId === b.id ? null : b.id)} disabled={busy === b.id} kind="ghost">Perkelti</ActionBtn>

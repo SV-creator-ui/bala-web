@@ -10,6 +10,8 @@ import { getAvailability } from "@/lib/booking/availability";
 import { generateSlotsForDate } from "@/lib/booking/config";
 import { validFutureDate } from "@/lib/booking/validation";
 import { resendBookingEmails } from "@/lib/booking/resend";
+import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
+import { googleCalendarConfigured } from "@/lib/google-calendar";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +26,20 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Netinkami duomenys" }, { status: 400 });
+  }
+
+  // --- Pakartotinė kalendoriaus sinchronizacija (be jokių DB pakeitimų) ---
+  if (body.action === "resync-calendar") {
+    if (!googleCalendarConfigured()) {
+      return NextResponse.json({ error: "Google Calendar nesukonfigūruotas" }, { status: 400 });
+    }
+    try {
+      await syncBookingCalendar(id);
+      return NextResponse.json({ ok: true });
+    } catch (e) {
+      console.error("admin resync calendar error:", e);
+      return NextResponse.json({ error: "Kalendoriaus sinchronizacija nepavyko" }, { status: 500 });
+    }
   }
 
   // --- Pakartotinis laiško siuntimas (pvz. į teisingą adresą) ---
