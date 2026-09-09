@@ -7,7 +7,12 @@
  *
  * Grąžiname 200, kai apdorota; 401 esant blogam parašui (Paysera nekartos).
  */
-import { verifyPayseraSignature, parsePayseraWebhook } from "@/lib/paysera";
+import {
+  verifyPayseraSignature,
+  parsePayseraWebhook,
+  getPayseraOrderStatus,
+  isPaidStatus,
+} from "@/lib/paysera";
 import { markPaidByRef } from "@/lib/booking/settle";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +32,18 @@ export async function POST(req: Request) {
 
   const hook = parsePayseraWebhook(raw);
   if (!hook) return text(200, "OK"); // negalime nuskaityti — patvirtinam gavimą
-  if (!hook.paid) return text(200, "OK"); // dar neapmokėta / kitas įvykis
+
+  // Autoritetingas patikrinimas: „Checkout Modern" siunčia kelis webhook'us
+  // skirtinguose mokėjimo etapuose (authorized/processing/paid). Kad
+  // nepraleistume „paid" būsenos dėl neatpažinto body, papildomai užklausiam
+  // Paysera API pagal order id. Jei API grąžina „paid" — laikom apmokėta.
+  let paid = hook.paid;
+  if (!paid && hook.orderId) {
+    const st = await getPayseraOrderStatus(hook.orderId);
+    if (isPaidStatus(st)) paid = true;
+  }
+
+  if (!paid) return text(200, "OK"); // tikrai dar neapmokėta
 
   try {
     await markPaidByRef(hook.merchantReference);
