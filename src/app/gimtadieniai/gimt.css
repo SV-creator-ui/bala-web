@@ -233,7 +233,7 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .brand-bala, .brand-vr { animation: none; }
 }
-.nav-links { display: flex; gap: 32px; margin-left: auto; }
+.nav-links { display: flex; gap: 22px; margin-left: auto; flex-wrap: nowrap; }
 .nav-links a {
   position: relative;
   padding: 4px 0;
