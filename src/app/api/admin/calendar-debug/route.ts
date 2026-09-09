@@ -1,0 +1,66 @@
+/**
+ * GET /api/admin/calendar-debug?date=YYYY-MM-DD
+ * Diagnostikos endpoint'as — parodo, ką Google Calendar grąžina konkrečiai datai
+ * ir ar konfigūracija apskritai suveikia.
+ * Apsaugotas — reikia admin sesijos.
+ */
+import { NextResponse } from "next/server";
+import { isAuthed } from "@/lib/admin/auth";
+import {
+  googleCalendarConfigured,
+  fetchCalendarBusyForDate,
+} from "@/lib/google-calendar";
+
+export const dynamic = "force-dynamic";
+
+export async function GET(req: Request) {
+  if (!(await isAuthed())) {
+    return NextResponse.json({ error: "Neautorizuota" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const date = searchParams.get("date") || new Date().toISOString().slice(0, 10);
+
+  const configured = googleCalendarConfigured();
+  const envCheck = {
+    GOOGLE_CALENDAR_ID: !!process.env.GOOGLE_CALENDAR_ID,
+    GOOGLE_SA_EMAIL: !!process.env.GOOGLE_SA_EMAIL,
+    GOOGLE_SA_PRIVATE_KEY: !!process.env.GOOGLE_SA_PRIVATE_KEY,
+    GOOGLE_CALENDAR_ID_value: process.env.GOOGLE_CALENDAR_ID || null,
+    GOOGLE_SA_EMAIL_value: process.env.GOOGLE_SA_EMAIL || null,
+  };
+
+  if (!configured) {
+    return NextResponse.json({
+      configured: false,
+      envCheck,
+      date,
+      hint: "Trūksta kintamųjų. Patikrink Vercel env vars ir Redeploy.",
+    });
+  }
+
+  try {
+    const events = await fetchCalendarBusyForDate(date, new Set());
+    return NextResponse.json({
+      configured: true,
+      envCheck,
+      date,
+      eventsCount: events.length,
+      events: events.map((e) => ({
+        summary: e.summary,
+        eventId: e.eventId,
+        startMin: e.startMin,
+        endMin: e.endMin,
+        startTime: `${String(Math.floor(e.startMin / 60)).padStart(2, "0")}:${String(e.startMin % 60).padStart(2, "0")}`,
+        endTime: `${String(Math.floor(e.endMin / 60)).padStart(2, "0")}:${String(e.endMin % 60).padStart(2, "0")}`,
+      })),
+    });
+  } catch (e) {
+    return NextResponse.json({
+      configured: true,
+      envCheck,
+      date,
+      error: e instanceof Error ? e.message : String(e),
+    });
+  }
+}
