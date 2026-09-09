@@ -233,15 +233,22 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .brand-bala, .brand-vr { animation: none; }
 }
-.nav-links { display: flex; gap: 22px; margin-left: auto; flex-wrap: nowrap; }
+.nav-links { display: flex; gap: 18px; margin-left: auto; flex-wrap: nowrap; align-items: center; }
 .nav-links a {
   position: relative;
   padding: 4px 0;
   font-family: var(--font-body);
   font-weight: var(--fw-semibold);
-  font-size: 16px;
+  font-size: 15px;
   color: var(--white-68);
   transition: color var(--dur-fast) ease;
+  white-space: nowrap;
+}
+/* Vidutinio pločio ekranuose (~900–1200px) slepiam telefoną — CTA ir meniu svarbiau */
+@media (max-width: 1180px) {
+  .nav-phone { display: none; }
+  .nav-links { gap: 14px; }
+  .nav-links a { font-size: 14px; }
 }
 .nav-links a::after {
   content: '';
@@ -257,9 +264,10 @@ html { scroll-behavior: smooth; }
 .nav-phone {
   font-family: var(--font-body);
   font-weight: var(--fw-semibold);
-  font-size: 16px;
+  font-size: 15px;
   color: var(--white-68);
   transition: color var(--dur-fast) ease;
+  white-space: nowrap;
 }
 .nav-phone:hover { color: var(--amber); }
 .nav-cta {
