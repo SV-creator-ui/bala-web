@@ -91,6 +91,11 @@ export default function Nav() {
       >
         <button type="button" className="nav-mobile-backdrop" aria-label="Uždaryti meniu" onClick={close} />
         <div className="nav-mobile-panel">
+          <button type="button" className="nav-mobile-close" aria-label="Uždaryti meniu" onClick={close}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
           <ul className="nav-mobile-links">
             <li><a href="#kaip-vyksta" onClick={close}>Kaip vyksta</a></li>
             <li><a href="#paketai" onClick={close}>Paketai</a></li>

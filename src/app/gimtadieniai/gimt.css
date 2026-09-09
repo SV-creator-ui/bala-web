@@ -337,6 +337,20 @@ html { scroll-behavior: smooth; }
   transition: transform var(--dur-med, 240ms) cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: -12px 0 40px rgba(0, 0, 0, 0.45);
 }
+.nav-mobile-close {
+  position: absolute; top: 18px; right: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--white-12);
+  background: transparent;
+  color: var(--white-88);
+  cursor: pointer;
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+.nav-mobile-close:hover { color: var(--amber); border-color: var(--amber); }
+.nav-mobile-close svg { width: 20px; height: 20px; }
 .nav-mobile.is-open .nav-mobile-panel { transform: translateX(0); }
 .nav-mobile-links {
   list-style: none; margin: 0; padding: 0;
