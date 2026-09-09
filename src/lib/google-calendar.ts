@@ -84,8 +84,14 @@ function eventBody(b: BookingRow) {
   const pkg = isParty ? getPartyPackage(b.package_id ?? "") : undefined;
 
   const isGame = b.type === "game";
+  // Gimtadienio pavadinime pirmiausia rodom jubiliatą (jei žinomas iš kvietimo)
+  // — kad kalendoriuje iš karto matytųsi, kieno šventė ir kiek jam metų.
+  const celebrantLabel =
+    isParty && b.celebrant_name
+      ? ` ${b.celebrant_name}${b.celebrant_age ? ` (${b.celebrant_age} m.)` : ""}`
+      : "";
   const summary = isParty
-    ? `🎂 Gimtadienis${pkg ? " " + pkg.name : ""} — ${b.customer_name} (${b.players} asm.)`
+    ? `🎂 Gimtadienis${celebrantLabel} — ${b.customer_name}${pkg ? ` · ${pkg.name}` : ""} (${b.players} asm.)`
     : isGame
     ? `🎮 VR veiksmo žaidimai — ${b.customer_name} (${b.players} asm.)`
     : `🥽 VR kambarys — ${b.customer_name} (${b.players} asm.)`;
@@ -97,8 +103,16 @@ function eventBody(b: BookingRow) {
       ? `Salė užimta: ${b.block_start}–${b.block_end ?? b.time} (paruošimas ${b.block_start})`
       : null;
 
+  // Jubiliato eilutė aprašyme — kad būtų aišku, kieno gimtadienis (net jei
+  // pavadinime jau matoma) ir amžius. Rodom tik jei bent vardas žinomas.
+  const celebrantLine =
+    isParty && b.celebrant_name
+      ? `Jubiliatas: ${b.celebrant_name}${b.celebrant_age ? ` — ${b.celebrant_age} m.` : ""}`
+      : null;
+
   const lines = [
     isParty ? `Paketas: ${pkg ? pkg.name : "šventė"}` : isGame ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys",
+    celebrantLine,
     `Klientas: ${b.customer_name}`,
     `Tel.: ${b.customer_phone}`,
     `El. paštas: ${b.customer_email}`,
