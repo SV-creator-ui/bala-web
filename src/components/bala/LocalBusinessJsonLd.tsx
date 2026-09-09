@@ -15,7 +15,11 @@ export default function LocalBusinessJsonLd() {
       "VR pabėgimo kambariai Klaipėdoje – 9 virtualios realybės scenarijai komandai nuo 2 iki 6 žaidėjų.",
     url: BUSINESS.url,
     telephone: BUSINESS.phoneE164,
-    image: `${BUSINESS.url}/assets/logo-bala-vr.png`,
+    image: [
+      `${BUSINESS.url}/assets/logo-bala-vr.png`,
+      `${BUSINESS.url}/assets/drakonu-bokstas-vr-pabegimo-kambarys-klaipedoje.webp`,
+      `${BUSINESS.url}/assets/moteris-su-vr-akiniais-klaipedoje.webp`,
+    ],
     logo: `${BUSINESS.url}/assets/logo-bala-vr.png`,
     priceRange: "€€",
     currenciesAccepted: "EUR",
@@ -37,7 +41,7 @@ export default function LocalBusinessJsonLd() {
       opens: h.opens,
       closes: h.closes,
     })),
-    sameAs: [BUSINESS.facebookUrl, BUSINESS.bookingUrl],
+    sameAs: [BUSINESS.facebookUrl, BUSINESS.mapsUrl],
   };
 
   return (

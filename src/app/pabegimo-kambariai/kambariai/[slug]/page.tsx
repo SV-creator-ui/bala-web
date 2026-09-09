@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Nav from "@/components/bala/Nav";
 import Footer from "@/components/bala/Footer";
 import GameCard from "@/components/bala/GameCard";
+import BreadcrumbJsonLd from "@/components/bala/BreadcrumbJsonLd";
 import { CtaBandSection } from "@/components/bala/Sections";
 import { GAMES, getGame } from "@/lib/bala-data";
 
@@ -19,10 +20,26 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const game = getGame(slug);
-  if (!game) return { title: "Scenarijus nerastas — Bala VR" };
+  if (!game) return { title: "Scenarijus nerastas" };
+  const url = `/pabegimo-kambariai/kambariai/${game.slug}`;
   return {
-    title: `${game.title} — VR pabėgimo kambarys Klaipėdoje | Bala VR`,
+    title: `${game.title} — VR pabėgimo kambarys Klaipėdoje`,
     description: `${game.tagline} ${game.desc}`,
+    alternates: { canonical: url },
+    openGraph: {
+      title: `${game.title} — VR pabėgimo kambarys Klaipėdoje`,
+      description: game.tagline,
+      url,
+      type: "website",
+      images: [
+        {
+          url: game.poster,
+          width: 1200,
+          height: 630,
+          alt: `${game.title} — VR pabėgimo kambarys BALA VR`,
+        },
+      ],
+    },
   };
 }
 
@@ -49,8 +66,44 @@ export default async function GameDetailPage({
   // Sudėtingesni kambariai (4+ galvosūkių taškeliai) trunka ilgiau
   const durationLabel = game.difficulty >= 4 ? "iki 50 min." : game.time;
 
+  const roomSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: `${game.title} — VR pabėgimo kambarys Klaipėdoje`,
+    description: `${game.tagline} ${game.desc}`,
+    image: `https://bala.lt${game.poster}`,
+    brand: { "@type": "Brand", name: "BALA VR" },
+    category: "VR pabėgimo kambarys",
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "EUR",
+      price: "20",
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: "20",
+        priceCurrency: "EUR",
+        unitText: "asmeniui",
+      },
+      availability: "https://schema.org/InStock",
+      url: `https://bala.lt/pabegimo-kambariai/kambariai/${game.slug}`,
+      seller: { "@type": "Organization", name: "BALA VR", url: "https://bala.lt" },
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(roomSchema) }}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Pradžia", url: "https://bala.lt" },
+          { name: "Pabėgimo kambariai", url: "https://bala.lt/pabegimo-kambariai" },
+          { name: "Visi kambariai", url: "https://bala.lt/pabegimo-kambariai/kambariai" },
+          { name: game.title, url: `https://bala.lt/pabegimo-kambariai/kambariai/${game.slug}` },
+        ]}
+      />
       <Nav />
       <main>
         {/* HERO */}

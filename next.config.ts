@@ -12,12 +12,23 @@ const nextConfig: NextConfig = {
     "/gimtadieniai/rezervacija/patvirtinta": ["./src/lib/booking/assets/**"],
   },
   async redirects() {
+    // 308 (permanent: true) SEO požiūriu ekvivalentu 301 — Google supranta abu.
+    // Nukreipimai nuo senų WordPress URL'ų (bala.lt prieš perkėlimą), kad
+    // backlink'ai iš Facebook, direktorijų ir Google indeksuotų URL'ų nevestų į 404.
     return [
-      {
-        source: "/laisvas-zaidimas",
-        destination: "/komandiniai-vr-zaidimai",
-        permanent: true,
-      },
+      { source: "/laisvas-zaidimas", destination: "/komandiniai-vr-zaidimai", permanent: true },
+      { source: "/kontaktai", destination: "/pabegimo-kambariai#kontaktai", permanent: true },
+      { source: "/apie-mus", destination: "/pabegimo-kambariai", permanent: true },
+      { source: "/kambariai", destination: "/pabegimo-kambariai/kambariai", permanent: true },
+      { source: "/vr-pabegimo-kambariai", destination: "/pabegimo-kambariai", permanent: true },
+      { source: "/pabegimo-kambariai-klaipedoje", destination: "/pabegimo-kambariai", permanent: true },
+      { source: "/dovanu-kuponas", destination: "/pabegimo-kambariai/dovanu-kuponas", permanent: true },
+      { source: "/dovanu-kuponai", destination: "/pabegimo-kambariai/dovanu-kuponas", permanent: true },
+      { source: "/gimtadienis", destination: "/gimtadieniai", permanent: true },
+      { source: "/blog", destination: "/pabegimo-kambariai/blog", permanent: true },
+      { source: "/blog/:slug", destination: "/pabegimo-kambariai/blog/:slug", permanent: true },
+      { source: "/kaina", destination: "/pabegimo-kambariai#kainos", permanent: true },
+      { source: "/kainos", destination: "/pabegimo-kambariai#kainos", permanent: true },
     ];
   },
 };

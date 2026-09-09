@@ -416,7 +416,7 @@ export const BUSINESS = {
   name: "Bala VR",
   legalName: "Bala VR",
   legalNote: "Šarūnas Valius, ind. veiklos pažyma Nr. 1379347",
-  url: "https://bala-vr-nextjs.vercel.app",
+  url: "https://bala.lt",
   phoneDisplay: "+370 684 26686",
   phoneHref: "tel:+37068426686",
   phoneE164: "+37068426686",
@@ -426,7 +426,7 @@ export const BUSINESS = {
   addressLocality: "Klaip\u0117da",
   addressRegion: "Klaip\u0117dos apskritis",
   addressCountry: "LT",
-  bookingUrl: "https://bala.lt/",
+  bookingUrl: "https://bala.lt/rezervacija",
   facebookUrl: "https://www.facebook.com/BalaVRzaidimai/",
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=Paj%C5%ABrio%20g.%205B%2C%20Klaip%C4%97da",
   openingHours: [
