@@ -1,2 +1,1 @@
-paysera-verify-7b2767b544383fbc2feccd30ae10d411</content>
-</invoke>
+paysera-verify-7b2767b544383fbc2feccd30ae10d411
