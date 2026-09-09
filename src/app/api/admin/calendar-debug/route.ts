@@ -9,6 +9,7 @@ import { isAuthed } from "@/lib/admin/auth";
 import {
   googleCalendarConfigured,
   fetchCalendarBusyForDate,
+  listAccessibleCalendars,
 } from "@/lib/google-calendar";
 
 export const dynamic = "force-dynamic";
@@ -40,11 +41,19 @@ export async function GET(req: Request) {
   }
 
   try {
-    const events = await fetchCalendarBusyForDate(date, new Set());
+    const [events, calendars] = await Promise.all([
+      fetchCalendarBusyForDate(date, new Set()),
+      listAccessibleCalendars(),
+    ]);
     return NextResponse.json({
       configured: true,
       envCheck,
       date,
+      accessibleCalendars: calendars,
+      accessibleCalendarsHint:
+        "Jei čia sąrašas TUŠČIAS — kalendorius nesudalintas su service account. " +
+        "Jei čia matai bala.pramogos@gmail.com — dalinimasis OK. " +
+        "Jei matai kitą (pvz. Moizmo dedikuotą) — reikia pakeisti GOOGLE_CALENDAR_ID į jo id.",
       eventsCount: events.length,
       events: events.map((e) => ({
         summary: e.summary,

@@ -278,6 +278,41 @@ export async function fetchCalendarBusyForDate(
   }
 }
 
+/**
+ * Grąžina visus kalendorius, prie kurių service account turi prieigą.
+ * Diagnostikai — padeda išsiaiškinti, į kurį kalendorių Moizmo iš tiesų rašo.
+ */
+export async function listAccessibleCalendars(): Promise<
+  Array<{ id: string; summary: string; primary: boolean; accessRole: string }>
+> {
+  if (!googleCalendarConfigured()) return [];
+  try {
+    const token = await getAccessToken();
+    const res = await fetch(
+      "https://www.googleapis.com/calendar/v3/users/me/calendarList?maxResults=100",
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!res.ok) {
+      console.error(`calendarList ${res.status}`);
+      return [];
+    }
+    const data = (await res.json()) as {
+      items?: Array<{
+        id?: string; summary?: string; primary?: boolean; accessRole?: string;
+      }>;
+    };
+    return (data.items ?? []).map((c) => ({
+      id: c.id || "",
+      summary: c.summary || "",
+      primary: !!c.primary,
+      accessRole: c.accessRole || "",
+    }));
+  } catch (e) {
+    console.error("listAccessibleCalendars error:", e);
+    return [];
+  }
+}
+
 /** Ištrina kalendoriaus įvykį (atšaukus rezervaciją). */
 export async function deleteBookingEvent(eventId: string): Promise<void> {
   if (!googleCalendarConfigured() || !eventId) return;
