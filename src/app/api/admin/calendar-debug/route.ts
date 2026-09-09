@@ -10,9 +10,49 @@ import {
   googleCalendarConfigured,
   fetchCalendarBusyForDate,
   listAccessibleCalendars,
+  __debugGetAccessToken as getAccessToken,
 } from "@/lib/google-calendar";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Tiesioginis Google API iškvietimas — grąžina RAW atsakymą, kad matytume
+ * ar problema su prieiga, autentifikacija, ar kažkuo kitu.
+ */
+async function rawEventsCall(date: string): Promise<Record<string, unknown>> {
+  try {
+    const token = await getAccessToken();
+    const calId = process.env.GOOGLE_CALENDAR_ID || "";
+    const dayStartUtc = new Date(`${date}T00:00:00Z`);
+    const timeMin = new Date(dayStartUtc.getTime() - 12 * 3600_000).toISOString();
+    const timeMax = new Date(dayStartUtc.getTime() + 36 * 3600_000).toISOString();
+    const url = new URL(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`,
+    );
+    url.searchParams.set("timeMin", timeMin);
+    url.searchParams.set("timeMax", timeMax);
+    url.searchParams.set("singleEvents", "true");
+    url.searchParams.set("orderBy", "startTime");
+    url.searchParams.set("maxResults", "10");
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const text = await res.text();
+    let body: unknown = text;
+    try {
+      body = JSON.parse(text);
+    } catch {}
+    return {
+      urlCalledForCalendarId: calId,
+      httpStatus: res.status,
+      httpStatusText: res.statusText,
+      body,
+    };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
+}
 
 export async function GET(req: Request) {
   if (!(await isAuthed())) {
@@ -41,9 +81,10 @@ export async function GET(req: Request) {
   }
 
   try {
-    const [events, calendars] = await Promise.all([
+    const [events, calendars, rawEventsResult] = await Promise.all([
       fetchCalendarBusyForDate(date, new Set()),
       listAccessibleCalendars(),
+      rawEventsCall(date),
     ]);
     return NextResponse.json({
       configured: true,
@@ -63,6 +104,7 @@ export async function GET(req: Request) {
         startTime: `${String(Math.floor(e.startMin / 60)).padStart(2, "0")}:${String(e.startMin % 60).padStart(2, "0")}`,
         endTime: `${String(Math.floor(e.endMin / 60)).padStart(2, "0")}:${String(e.endMin % 60).padStart(2, "0")}`,
       })),
+      rawEventsCall: rawEventsResult,
     });
   } catch (e) {
     return NextResponse.json({

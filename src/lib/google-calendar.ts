@@ -278,6 +278,9 @@ export async function fetchCalendarBusyForDate(
   }
 }
 
+/** DEBUG ONLY — atveria vidinę getAccessToken funkciją diagnostikai. */
+export const __debugGetAccessToken = getAccessToken;
+
 /**
  * Grąžina visus kalendorius, prie kurių service account turi prieigą.
  * Diagnostikai — padeda išsiaiškinti, į kurį kalendorių Moizmo iš tiesų rašo.
