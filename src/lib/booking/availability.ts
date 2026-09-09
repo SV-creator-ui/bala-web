@@ -15,6 +15,7 @@ import {
   type Interval, type TypedInterval,
 } from "./window";
 import { isClosedHoliday } from "./holidays";
+import { fetchCalendarBusyForDate } from "@/lib/google-calendar";
 
 export type SlotStatus = { time: string; available: boolean };
 
@@ -61,14 +62,27 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
 
   const holdCutoff = new Date(Date.now() - BOOKING.pendingHoldMin * 60_000).toISOString();
 
-  const [{ data: bookings }, { data: blackouts }] = await Promise.all([
+  const [{ data: bookings }, { data: blackouts }, calendarBusyRaw] = await Promise.all([
     supabase
       .from("bookings")
-      .select("id,time,status,created_at,type,package_id,block_start,block_end,addons")
+      .select("id,time,status,created_at,type,package_id,block_start,block_end,addons,gcal_event_id")
       .eq("date", date)
       .in("status", ["paid", "pending"]),
     supabase.from("blackouts").select("time").eq("date", date),
+    // Google Calendar išoriniai įvykiai (Moizmo paveldas ar rankiniai įrašai).
+    // Fetch'inam BE filtro, po to žemiau išmetam savo pačių įvykius pagal
+    // gcal_event_id (kad nebūtų dvigubo skaičiavimo). Klaidos → tuščias sąrašas.
+    fetchCalendarBusyForDate(date, new Set()),
   ]);
+
+  // Išmetam iš kalendoriaus tuos įvykius, kuriuos patys sukūrėme (jų laikai
+  // jau įskaityti per `bookings` lentelę).
+  const ownGcalIds = new Set(
+    (bookings || [])
+      .map((b) => (b as { gcal_event_id?: string | null }).gcal_event_id)
+      .filter((id): id is string => !!id),
+  );
+  const calendarBusy = calendarBusyRaw.filter((ev) => !ownGcalIds.has(ev.eventId));
 
   const wholeDayBlocked = (blackouts || []).some((b) => b.time === null);
   // Kiekvienas užblokuotas laikas — 30 min. langas [t, t+step).
@@ -85,6 +99,14 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
     if (query.excludeId && b.id === query.excludeId) continue; // ji pati (perkeliama)
     if (b.status === "pending" && b.created_at < holdCutoff) continue; // nustojęs galioti holdas
     busy.push(existingActive(b));
+  }
+
+  // Google Calendar išoriniai įvykiai (Moizmo, rankiniai, sinchronizuoti iš kitur):
+  // pridedam kaip „party" tipo intervalus — konservatyviausias variantas, nes
+  // party tipas turi didžiausius reikalingus tarpus (30 min iki/po). Neaišku,
+  // kokia jų prigimtis, tad geriau saugiai per-blokuoti nei praleisti dubliavimą.
+  for (const ev of calendarBusy) {
+    busy.push({ startMin: ev.startMin, endMin: ev.endMin, type: "party" });
   }
 
   // Šiandienai visiškai nerodome praėjusių / per arti esančių laikų.

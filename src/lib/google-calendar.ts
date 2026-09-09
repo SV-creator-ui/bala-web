@@ -165,6 +165,119 @@ export async function syncBookingEvent(b: BookingRow): Promise<string | null> {
   return data.id;
 }
 
+/* ------------------------- Įvykių skaitymas ------------------------- */
+
+/**
+ * Užimtas kalendoriaus intervalas konkretaus tipo tikslams.
+ * Skirta perkelti Moizmo (ar rankiniu būdu įrašytus) įvykius į prieinamumo
+ * tikrintuvą, kad nauji klientai negalėtų rezervuoti to paties laiko.
+ */
+export type CalendarBusyInterval = {
+  startMin: number; // minutės nuo dienos pradžios (Vilniaus laiko juosta)
+  endMin: number;
+  eventId: string;
+  summary: string;
+};
+
+/** Skaido ISO 8601 datą (bet kokia laiko juosta) į Vilniaus vietinę datą + minutes. */
+function toVilniusDateAndMin(iso: string): { date: string; min: number } | null {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    // sv-SE formatuoja kaip YYYY-MM-DD HH:MM — patogu parsinti
+    const fmt = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: TIME_ZONE,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hour12: false,
+    });
+    const parts = Object.fromEntries(fmt.formatToParts(d).map((p) => [p.type, p.value]));
+    const date = `${parts.year}-${parts.month}-${parts.day}`;
+    const min = parseInt(parts.hour, 10) * 60 + parseInt(parts.minute, 10);
+    return { date, min };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Grąžina užimtus intervalus konkrečiai datai iš Google Calendar.
+ * `excludeEventIds` — savų (jau `bookings` lentelėje esančių) įvykių ID'ai,
+ * kad išvengtume dvigubo skaičiavimo.
+ * Klaidos — nefatališkos: grąžinam tuščią sąrašą.
+ */
+export async function fetchCalendarBusyForDate(
+  date: string,
+  excludeEventIds: Set<string>,
+): Promise<CalendarBusyInterval[]> {
+  if (!googleCalendarConfigured()) return [];
+  try {
+    const token = await getAccessToken();
+    // Vilnius = UTC+2/+3; UTC±12h dienos rėžis su atsarga (filtruosim vėliau).
+    const dayStartUtc = new Date(`${date}T00:00:00Z`);
+    const timeMin = new Date(dayStartUtc.getTime() - 12 * 3600_000).toISOString();
+    const timeMax = new Date(dayStartUtc.getTime() + 36 * 3600_000).toISOString();
+
+    const url = new URL(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId())}/events`,
+    );
+    url.searchParams.set("timeMin", timeMin);
+    url.searchParams.set("timeMax", timeMax);
+    url.searchParams.set("singleEvents", "true"); // išskaido pasikartojančius
+    url.searchParams.set("orderBy", "startTime");
+    url.searchParams.set("maxResults", "100");
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` },
+      // Trumpai cache'inam — kalendorius nesikeičia sekundės greičiu
+      next: { revalidate: 30 },
+    });
+    if (!res.ok) {
+      console.error(`Calendar events fetch ${res.status}`);
+      return [];
+    }
+    const data = (await res.json()) as {
+      items?: Array<{
+        id?: string;
+        summary?: string;
+        status?: string;
+        start?: { dateTime?: string; date?: string };
+        end?: { dateTime?: string; date?: string };
+      }>;
+    };
+
+    const out: CalendarBusyInterval[] = [];
+    for (const item of data.items ?? []) {
+      if (!item.id || item.status === "cancelled") continue;
+      if (excludeEventIds.has(item.id)) continue; // mūsų pačių — praleidžiam
+      const startIso = item.start?.dateTime;
+      const endIso = item.end?.dateTime;
+      if (!startIso || !endIso) continue; // visos-dienos įvykis — ignoruojam
+
+      const s = toVilniusDateAndMin(startIso);
+      const e = toVilniusDateAndMin(endIso);
+      if (!s || !e) continue;
+
+      // Perkėlimas per naktį — apkarpom į norimą dieną
+      let startMin = s.date === date ? s.min : s.date < date ? 0 : -1;
+      let endMin = e.date === date ? e.min : e.date > date ? 24 * 60 : -1;
+      if (startMin < 0 || endMin < 0 || endMin <= startMin) continue;
+      // Kartais end ties pat vidurnakčiu — tokį ignoruojam
+      if (endMin === 0) continue;
+
+      out.push({
+        startMin,
+        endMin,
+        eventId: item.id,
+        summary: item.summary || "Kalendorius",
+      });
+    }
+    return out;
+  } catch (e) {
+    console.error("fetchCalendarBusyForDate error:", e);
+    return [];
+  }
+}
+
 /** Ištrina kalendoriaus įvykį (atšaukus rezervaciją). */
 export async function deleteBookingEvent(eventId: string): Promise<void> {
   if (!googleCalendarConfigured() || !eventId) return;
