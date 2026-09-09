@@ -628,7 +628,7 @@ html { scroll-behavior: smooth; }
   position: relative;
   background:
     linear-gradient(rgba(10,34,42,0.58), rgba(10,34,42,0.68)),
-    url('/tortas.png') center / cover no-repeat fixed;
+    url('/tortas.webp') center / cover no-repeat fixed;
 }
 @media (max-width: 768px) {
   .how { background-attachment: scroll; }

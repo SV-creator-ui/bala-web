@@ -130,7 +130,7 @@ export default function ChooserPage() {
           >
             <div className="absolute inset-0 animate-ken-c will-change-transform motion-reduce:animate-none">
               <Image
-                src="/tortas.png"
+                src="/tortas.webp"
                 alt="Gimtadienio tortas — BALA VR"
                 fill
                 sizes="(min-width:768px) 440px, 100vw"
