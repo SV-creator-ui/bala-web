@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
       { source: "/blog/:slug", destination: "/pabegimo-kambariai/blog/:slug", permanent: true },
       { source: "/kaina", destination: "/pabegimo-kambariai#kainos", permanent: true },
       { source: "/kainos", destination: "/pabegimo-kambariai#kainos", permanent: true },
+      // Google indeksavęs senus WP sitelink'us — nukreipiam į atitinkamus naujus
+      { source: "/paslaugu-teikimo-salygos", destination: "/taisykles", permanent: true },
+      { source: "/paslaugos", destination: "/pabegimo-kambariai", permanent: true },
+      { source: "/privatumas", destination: "/privatumo-politika", permanent: true },
+      { source: "/vr-veiksmo-zaidimai", destination: "/komandiniai-vr-zaidimai", permanent: true },
     ];
   },
 };
