@@ -6,6 +6,7 @@ const BOOKING_URL = "/gimtadieniai/rezervacija";
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -13,6 +14,21 @@ export default function Nav() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Uždarom meniu paspaudus Esc + užrakinam body scroll kai atidarytas
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  const close = () => setOpen(false);
 
   return (
     <nav className={`nav${scrolled ? " scrolled" : ""}`}>
@@ -51,6 +67,44 @@ export default function Nav() {
       <a href={BOOKING_URL} className="btn btn-primary nav-cta">
         REZERVUOTI
       </a>
+      <button
+        type="button"
+        className={`nav-burger${open ? " is-open" : ""}`}
+        aria-label={open ? "Uždaryti meniu" : "Atidaryti meniu"}
+        aria-expanded={open}
+        aria-controls="nav-mobile"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span aria-hidden />
+        <span aria-hidden />
+        <span aria-hidden />
+      </button>
+      </div>
+
+      {/* Mobile meniu — atidaromas pagal hamburger */}
+      <div
+        id="nav-mobile"
+        className={`nav-mobile${open ? " is-open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-hidden={!open}
+      >
+        <button type="button" className="nav-mobile-backdrop" aria-label="Uždaryti meniu" onClick={close} />
+        <div className="nav-mobile-panel">
+          <ul className="nav-mobile-links">
+            <li><a href="#kaip-vyksta" onClick={close}>Kaip vyksta</a></li>
+            <li><a href="#paketai" onClick={close}>Paketai</a></li>
+            <li><a href="#atsiliepimai" onClick={close}>Atsiliepimai</a></li>
+            <li><a href="#duk" onClick={close}>DUK</a></li>
+            <li><a href="#kontaktai" onClick={close}>Kontaktai</a></li>
+          </ul>
+          <a href="tel:+37068426686" className="nav-mobile-phone" onClick={close}>
+            +370 684 26686
+          </a>
+          <a href={BOOKING_URL} className="btn btn-primary nav-mobile-cta" onClick={close}>
+            REZERVUOTI
+          </a>
+        </div>
       </div>
     </nav>
   );
