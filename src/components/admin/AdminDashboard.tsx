@@ -27,7 +27,7 @@ type Booking = {
 function serviceLabel(b: Booking): string {
   if (b.type === "party") {
     const pkg = getPartyPackage(b.package_id ?? "");
-    return pkg ? `Paketas ${pkg.name}` : "Šventės paketas";
+    return pkg ? `${pkg.name} šventė` : "Gimtadienio šventė";
   }
   if (b.type === "game") return "VR veiksmo žaidimai";
   return "Pabėgimo kambarys";
@@ -929,7 +929,7 @@ const PLACEHOLDER_HELP: { key: string; label: string }[] = [
   { key: "date", label: "Data (pvz. 12 rugsėjo 2026)" },
   { key: "time", label: "Laikas (pvz. 16:30)" },
   { key: "players", label: "Žaidėjų skaičius" },
-  { key: "service", label: "Paslauga (kambarys / žaidimai / paketas)" },
+  { key: "service", label: "Paslauga (kambarys / žaidimai / gimtadienis)" },
   { key: "reference", label: "Rezervacijos numeris" },
   { key: "total", label: "Bendra suma (€)" },
   { key: "deposit", label: "Sumokėtas avansas (€)" },

@@ -47,7 +47,7 @@ export default function Nav() {
       <ul className="nav-links">
         <li><a href="#pradzia">Pradžia</a></li>
         <li><a href="#kaip-vyksta">Kaip vyksta</a></li>
-        <li><a href="#paketai">Paketai</a></li>
+        <li><a href="#paketai">Kainos</a></li>
         <li><a href="#zaidimai">Populiariausi žaidimai</a></li>
         <li><a href="#akimirkos">Galerija</a></li>
         <li><a href="#atsiliepimai">Atsiliepimai</a></li>
@@ -92,7 +92,7 @@ export default function Nav() {
           <ul className="nav-mobile-links">
             <li><a href="#pradzia" onClick={close}>Pradžia</a></li>
             <li><a href="#kaip-vyksta" onClick={close}>Kaip vyksta</a></li>
-            <li><a href="#paketai" onClick={close}>Paketai</a></li>
+            <li><a href="#paketai" onClick={close}>Kainos</a></li>
             <li><a href="#zaidimai" onClick={close}>Populiariausi žaidimai</a></li>
             <li><a href="#akimirkos" onClick={close}>Galerija</a></li>
             <li><a href="#atsiliepimai" onClick={close}>Atsiliepimai</a></li>

@@ -2,6 +2,7 @@
  * Grįžimo iš Montonio puslapis (komandiniai VR žaidimai). Patikrina order-token,
  * atnaujina rezervacijos būseną (jei webhook dar nespėjo) ir parodo rezultatą.
  */
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
@@ -11,6 +12,11 @@ import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/c
 import { googleCalendarRenderUrl } from "@/lib/booking/calendar-link";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Rezervacija patvirtinta | Komandiniai VR žaidimai — BALA VR",
+  robots: { index: false, follow: false },
+};
 
 const CYAN_THEME = {
   "--color-volt": "#34d1e0",

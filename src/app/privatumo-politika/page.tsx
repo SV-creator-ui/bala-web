@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Privatumo politika — BALA VR Klaipėda",
   description:
     "BALA VR privatumo politika: kokius asmens duomenis renkame rezervuojant, kaip juos naudojame ir saugome, mokėjimų tvarkymas per Paysera bei jūsų teisės pagal BDAR.",
+  alternates: { canonical: "/privatumo-politika" },
 };
 
 type Section = {

@@ -201,7 +201,7 @@ export default function Packages() {
   return (
     <section className="packages section" id="paketai">
       <div className="container">
-        <div className="label">Gimtadienio paketai</div>
+        <div className="label">Gimtadienio kainos</div>
         <h2 className="section-heading">Pasirinkite savo šventę</h2>
         <div className="packages-grid">
           {packages.map((pkg) => (
@@ -225,7 +225,7 @@ export default function Packages() {
                 </div>
                 <div className="price-amount">
                   <span className="price-num">{pkg.price}</span>
-                  <span className="price-period">visas paketas</span>
+                  <span className="price-period">visa šventė</span>
                 </div>
                 <div className="price-divider"></div>
                 <ul className="price-features">

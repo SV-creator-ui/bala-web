@@ -2,6 +2,7 @@
  * Grįžimo iš Montonio puslapis (dovanų kuponas). Patikrina order-token,
  * aktyvuoja kuponą (jei webhook dar nespėjo), išsiunčia PDF ir parodo rezultatą.
  */
+import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/bala/Nav";
 import Footer from "@/components/bala/Footer";
@@ -10,6 +11,11 @@ import { readConfirmParams } from "@/lib/booking/confirm";
 import { resolveVoucher, resolveVoucherByRef } from "@/lib/voucher/fulfill";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Dovanų kuponas patvirtintas | BALA VR",
+  robots: { index: false, follow: false },
+};
 
 const MONTHS = ["sausio","vasario","kovo","balandžio","gegužės","birželio","liepos","rugpjūčio","rugsėjo","spalio","lapkričio","gruodžio"];
 function fmtDate(iso: string): string {

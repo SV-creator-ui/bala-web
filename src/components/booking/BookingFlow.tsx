@@ -361,10 +361,10 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const partyOnly = typeLocked && type === "party";
   const headByPhase: Record<Phase, { title: string; intro: string }> = {
     type: {
-      title: partyOnly ? "Pasirinkite paketą" : "Ką rezervuojate?",
+      title: partyOnly ? "Pasirinkite kainą" : "Ką rezervuojate?",
       intro: partyOnly
-        ? "Pasirinkite gimtadienio / šventės paketą. Papildymus galite pridėti žemiau."
-        : "Pasirinkite įprastą VR pabėgimo kambario apsilankymą arba gimtadienio / šventės paketą.",
+        ? "Pasirinkite gimtadienio šventę. Papildymus galite pridėti žemiau."
+        : "Pasirinkite įprastą VR pabėgimo kambario apsilankymą arba gimtadienio šventę.",
     },
     date: {
       title: "Data ir laikas",
@@ -649,15 +649,15 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
             active={type === "party"}
             onClick={() => setType("party")}
             emoji="🎂"
-            title="Gimtadienio / šventės paketas"
-            desc="Pilnas šventės paketas su vaišėms skirtu laiku ir instruktoriumi."
+            title="Gimtadienio šventė"
+            desc="Pilna šventė su vaišėms skirtu laiku ir instruktoriumi."
           />
         </div>
       )}
 
       {type === "party" && (
         <>
-          {!partyOnly && <h3 className="font-display uppercase text-lg mt-8 mb-3">Pasirinkite paketą</h3>}
+          {!partyOnly && <h3 className="font-display uppercase text-lg mt-8 mb-3">Pasirinkite kainą</h3>}
           <div className="grid gap-3 sm:grid-cols-3">
             {PARTY_PACKAGES.map((p) => {
               const on = pkgId === p.id;
@@ -914,7 +914,7 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms,
               </p>
             )}
             {type === "party" && pkg && (
-              <p className="text-xs text-smoke-2 mt-1">Paketas {pkg.name} · iki {pkg.maxPlayers} žaidėjų.</p>
+              <p className="text-xs text-smoke-2 mt-1">{pkg.name} šventė · iki {pkg.maxPlayers} žaidėjų.</p>
             )}
           </div>
           <div className="flex items-center gap-4">
@@ -1306,10 +1306,10 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
         </div>
         <div>
           <h4 className="font-display uppercase text-[15.5px] leading-tight text-white">
-            {type === "party" ? (pkg ? `Paketas ${pkg.name}` : "Šventės paketas") : type === "game" ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys"}
+            {type === "party" ? (pkg ? `${pkg.name} šventė` : "Gimtadienio šventė") : type === "game" ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys"}
           </h4>
           <span className="mt-0.5 block font-mono text-[11.5px] uppercase tracking-wide text-smoke-2">
-            {type === "party" ? (pkg ? pkg.durationLabel : "Pasirink paketą") : type === "game" ? "3 žaidimai · ~45 min." : "Scenarijus — vietoje"}
+            {type === "party" ? (pkg ? pkg.durationLabel : "Pasirink kainą") : type === "game" ? "3 žaidimai · ~45 min." : "Scenarijus — vietoje"}
           </span>
         </div>
       </div>
@@ -1320,7 +1320,7 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
           {(type === "room" || type === "game") && <SumLine label={`Žaidėjai · ${players} asm.`} value={`${formatEur(rooms)} €`} />}
           {type === "party" && pkg && (
             <>
-              <SumLine label={`Paketas ${pkg.name}`} value={`${formatEur(pkg.price)} €`} />
+              <SumLine label={`${pkg.name} šventė`} value={`${formatEur(pkg.price)} €`} />
               {discount > 0 && <SumLine label="I–IV nuolaida" value={`−${formatEur(discount)} €`} muted />}
               {PARTY_EXTRAS.filter((e) => partyExtras.includes(e.id)).map((e) => (
                 <SumLine key={e.id} label={`+ ${e.name}`} value={`${extraPrice(e, pkg.id)} €`} muted />
@@ -1350,7 +1350,7 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
         </>
       ) : (
         <p className="mt-3 rounded-lg border border-dashed border-line-strong bg-ink-card/40 px-3 py-2.5 text-[12.5px] text-smoke-2">
-          {!type ? "Pasirink, ką rezervuoji." : type === "party" ? "Kaina paaiškės pasirinkus paketą ir datą." : "Kaina paaiškės pasirinkus žaidėjų skaičių."}
+          {!type ? "Pasirink, ką rezervuoji." : type === "party" ? "Kaina paaiškės pasirinkus šventę ir datą." : "Kaina paaiškės pasirinkus žaidėjų skaičių."}
         </p>
       )}
     </aside>

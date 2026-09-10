@@ -14,7 +14,7 @@ export default function MidCta() {
           </div>
           <div className="midcta-actions">
             <a href={BOOKING_URL} className="btn btn-primary">
-              PASIRINKTI PAKETĄ
+              PASIRINKTI KAINĄ
             </a>
             <a href="tel:+37068426686" className="btn btn-ghost">
               SKAMBINTI

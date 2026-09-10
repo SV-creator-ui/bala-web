@@ -26,9 +26,9 @@ function Check({ className }: { className?: string }) {
 
 function Features({ items, color }: { items: string[]; color: string }) {
   return (
-    <ul className="mt-4 flex flex-col gap-2">
+    <ul className="mt-4 flex flex-col gap-2.5 md:gap-2">
       {items.map((f) => (
-        <li key={f} className="flex items-start gap-2.5 text-[13.5px] md:text-[14.5px] leading-[1.35] text-white font-medium">
+        <li key={f} className="flex items-start gap-2.5 text-[15px] md:text-[14.5px] leading-[1.4] md:leading-[1.35] text-white font-semibold md:font-medium">
           <Check className={color} />
           {f}
         </li>
@@ -50,8 +50,8 @@ export default function ChooserPage() {
           className="h-[26px] md:h-[32px] w-auto"
           priority
         />
-        <span className="mt-2 text-[11px] font-bold uppercase tracking-[0.24em] leading-none text-volt animate-hero-in">
-          220 m² · Klaipėda · Pajūrio g. 5B
+        <span className="mt-2 whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.24em] leading-none text-white animate-hero-in">
+          Virtualios realybės erdvė
         </span>
         <h1 className="mt-6 md:mt-4 font-display uppercase leading-[1.02] tracking-[-.01em] text-[clamp(28px,4.8vw,48px)] animate-hero-in [animation-delay:80ms]">
           Rinkitės savo <span className="text-volt">nuotykį</span>
@@ -92,16 +92,16 @@ export default function ChooserPage() {
                 priority
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/50 md:via-ink/72 md:to-ink/42" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink from-[38%] via-ink/88 via-[70%] to-ink/55 md:from-0% md:via-ink/72 md:via-50% md:to-ink/42" />
             <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-ink/55 to-transparent md:from-ink/25" />
             <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_2px_10px_rgba(0,0,0,0.92)]">
-              <p className="text-[11px] md:text-[12px] font-bold uppercase tracking-[0.18em] text-volt">
+              <p className="text-[12.5px] md:text-[12px] font-bold uppercase tracking-[0.18em] text-volt">
                 Draugams · nuo 14 m.
               </p>
               <h2 className="mt-2 font-display uppercase text-white text-[clamp(24px,3.1vw,32px)] leading-[1.06]">
                 Pabėgimo kambarys
               </h2>
-              <p className="mt-3 text-[15px] md:text-[16px] leading-[1.4] text-white/95 font-medium">
+              <p className="mt-3 text-[16.5px] md:text-[16px] leading-[1.45] md:leading-[1.4] text-white font-medium">
                 50 min. galvosūkių ir azarto. Išgelbėkite save ir draugus.
               </p>
               <Features
@@ -116,7 +116,7 @@ export default function ChooserPage() {
                   Rinktis
                   <Arrow />
                 </span>
-                <span className="text-[13px] font-semibold text-white/80">
+                <span className="text-[14px] md:text-[13px] font-semibold text-white/95 md:text-white/80">
                   nuo €20/asm.
                 </span>
               </div>
@@ -137,21 +137,16 @@ export default function ChooserPage() {
                 className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/50 md:via-ink/72 md:to-ink/42" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink from-[38%] via-ink/88 via-[70%] to-ink/55 md:from-0% md:via-ink/72 md:via-50% md:to-ink/42" />
             <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-ink/55 to-transparent md:from-ink/25" />
             <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_2px_10px_rgba(0,0,0,0.92)]">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-[11px] md:text-[12px] font-bold uppercase tracking-[0.18em] text-[#f0a500]">
-                  Privati šventė · nuo 7 m.
-                </p>
-                <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-[0.14em] text-[#0d2b35] shadow-[0_2px_8px_rgba(0,0,0,0.3)] [text-shadow:none]" style={{ background: "linear-gradient(180deg, #ffbf33 0%, #f0a500 100%)" }}>
-                  Populiariausia
-                </span>
-              </div>
+              <p className="text-[12.5px] md:text-[12px] font-bold uppercase tracking-[0.18em] text-[#f0a500]">
+                Privati šventė · nuo 7 m.
+              </p>
               <h2 className="mt-2 font-display uppercase text-white whitespace-nowrap text-[clamp(22px,2.5vw,30px)] leading-[1.06]">
-                Gimtadienių paketai
+                Gimtadienių kainos
               </h2>
-              <p className="mt-3 text-[15px] md:text-[16px] leading-[1.4] text-white/95 font-medium">
+              <p className="mt-3 text-[16.5px] md:text-[16px] leading-[1.45] md:leading-[1.4] text-white font-medium">
                 Visa 220 m² erdvė tik jūsų kompanijai. VR, arkados ir vieta tortui.
               </p>
               <Features
@@ -169,8 +164,8 @@ export default function ChooserPage() {
                   Rinktis
                   <Arrow />
                 </span>
-                <span className="text-[13px] font-semibold text-white/85">
-                  nuo €239
+                <span className="text-[14px] md:text-[13px] font-semibold text-white/95 md:text-white/85">
+                  nuo €219
                 </span>
               </div>
             </div>
@@ -190,16 +185,16 @@ export default function ChooserPage() {
                 className="object-cover object-[50%_38%] transition-transform duration-500 group-hover:scale-105"
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/80 to-ink/50 md:via-ink/72 md:to-ink/42" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink from-[38%] via-ink/88 via-[70%] to-ink/55 md:from-0% md:via-ink/72 md:via-50% md:to-ink/42" />
             <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-ink/55 to-transparent md:from-ink/25" />
             <div className="relative flex flex-1 flex-col p-5 md:p-7 [text-shadow:0_2px_10px_rgba(0,0,0,0.92)]">
-              <p className="text-[11px] md:text-[12px] font-bold uppercase tracking-[0.18em] text-[#34d1e0]">
+              <p className="text-[12.5px] md:text-[12px] font-bold uppercase tracking-[0.18em] text-[#34d1e0]">
                 Kompanijai · nuo 7 m.
               </p>
               <h2 className="mt-2 font-display uppercase text-white text-[clamp(24px,3.1vw,32px)] leading-[1.06]">
                 VR veiksmo žaidimai
               </h2>
-              <p className="mt-3 text-[15px] md:text-[16px] leading-[1.4] text-white/95 font-medium">
+              <p className="mt-3 text-[16.5px] md:text-[16px] leading-[1.45] md:leading-[1.4] text-white font-medium">
                 3 žaidimai per 45 min. Zombiai, kovos, magija, burgerių kepimas.
               </p>
               <Features
@@ -217,7 +212,7 @@ export default function ChooserPage() {
                   Rinktis
                   <Arrow />
                 </span>
-                <span className="text-[13px] font-semibold text-white/80">
+                <span className="text-[14px] md:text-[13px] font-semibold text-white/95 md:text-white/80">
                   nuo €20/asm.
                 </span>
               </div>
@@ -225,6 +220,18 @@ export default function ChooserPage() {
           </Link>
         </div>
       </div>
+
+      {/* About BALA VR Klaipėda */}
+      <section className="border-t border-line/60 bg-ink">
+        <div className="mx-auto max-w-[820px] px-6 md:px-10 py-12 md:py-16 text-center">
+          <h2 className="font-display uppercase leading-[1.05] tracking-[-.01em] text-[clamp(24px,3.6vw,36px)] text-white">
+            BALA VR <span className="text-volt">Klaipėdoje</span>
+          </h2>
+          <p className="mt-5 md:mt-6 text-[16px] md:text-[17px] leading-[1.65] text-white/85">
+            Privati 220 m² virtualios realybės erdvė vaikų gimtadieniams, draugų kompanijoms, šeimoms ir kolektyvams. Mūsų erdvėje rasite komandinius VR žaidimus, devynis pabėgimo kambarius, interaktyvią sieną ir arkadines pramogas.
+          </p>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="border-t border-line">

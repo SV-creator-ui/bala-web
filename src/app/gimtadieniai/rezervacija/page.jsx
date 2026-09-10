@@ -4,7 +4,8 @@ import BookingFlow from "@/components/booking/BookingFlow";
 export const metadata = {
   title: "Gimtadienio rezervacija | BALA VR Klaipėda",
   description:
-    "Rezervuokite vaiko gimtadienio šventę BALA VR Klaipėdoje: pasirinkite paketą, laiką ir sumokėkite avansą internetu.",
+    "Rezervuokite vaiko gimtadienio šventę BALA VR Klaipėdoje: pasirinkite kainą, laiką ir sumokėkite avansą internetu.",
+  alternates: { canonical: "/gimtadieniai/rezervacija" },
 };
 
 export default async function Page({ searchParams }) {
@@ -34,7 +35,7 @@ export default async function Page({ searchParams }) {
             Rezervuokite <em>šventę</em>
           </h1>
           <p className="gimt-res-lead">
-            Pasirinkite paketą, dieną ir laiką. Vietai patvirtinti sumokamas avansas
+            Pasirinkite kainą, dieną ir laiką. Vietai patvirtinti sumokamas avansas
             internetu — likutį sumokėsite vietoje.
           </p>
 

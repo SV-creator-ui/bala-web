@@ -97,7 +97,7 @@ export async function POST(req: Request) {
 
   if (type === "party") {
     const pkg = getPartyPackage(packageId || "");
-    if (!pkg) errors.push("paketas");
+    if (!pkg) errors.push("kaina");
     const validExtraIds = PARTY_EXTRAS.map((e) => e.id);
     addons = rawAddons.filter((id) => validExtraIds.includes(id));
     if (pkg && (!Number.isInteger(players) || players < 1 || players > pkg.maxPlayers)) {
@@ -270,7 +270,7 @@ export async function POST(req: Request) {
     // --- Paysera mokėjimas (avansas, po kupono jei buvo) ---
     const base = siteUrl(req);
     const label = type === "party"
-      ? `BALA VR gimtadienio paketo avansas — ${date} ${time}`
+      ? `BALA VR gimtadienio šventės avansas — ${date} ${time}`
       : type === "game"
       ? `BALA VR veiksmo žaidimų avansas — ${date} ${time}`
       : `BALA VR pabėgimo kambario avansas — ${date} ${time}`;

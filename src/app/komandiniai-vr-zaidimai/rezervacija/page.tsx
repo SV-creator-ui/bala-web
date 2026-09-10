@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Rezervacija — Komandiniai VR žaidimai | BALA VR Klaipėda",
   description:
     "Rezervuok komandinių VR žaidimų laiką BALA VR Klaipėdoje. Pasirink laiką, žaidėjų skaičių ir sumokėk avansą internetu.",
+  alternates: { canonical: "/komandiniai-vr-zaidimai/rezervacija" },
 };
 
 // Komandinių žaidimų puslapio akcentas (žydras). Perrašom Tailwind „volt" temos

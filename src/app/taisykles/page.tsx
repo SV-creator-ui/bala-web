@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Taisyklės — BALA VR Klaipėda",
   description:
     "BALA VR žaidimų erdvės taisyklės: sauga, amžiaus reikalavimai, elgesys žaidimų zonoje, apmokėjimas ir atsakomybė. Pajūrio g. 5B, Klaipėda.",
+  alternates: { canonical: "/taisykles" },
 };
 
 type Section = {

@@ -1,7 +1,7 @@
 const steps = [
   {
-    title: "Pasirenkate paketą",
-    desc: "Išsirinkite paketą pagal vaikų skaičių ir šventės trukmę, patogiai rezervuokite internetu ir patvirtinkite vietą sumokėję avansą.",
+    title: "Pasirenkate kainą",
+    desc: "Išsirinkite kainą pagal vaikų skaičių ir šventės trukmę, patogiai rezervuokite internetu ir patvirtinkite vietą sumokėję avansą.",
   },
   {
     title: "Atvykimas",

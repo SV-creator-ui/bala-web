@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Rezervacija — BALA VR pabėgimo kambariai Klaipėdoje",
   description:
     "Rezervuok VR pabėgimo kambario laiką BALA VR Klaipėdoje. Pasirink laiką, žaidėjų skaičių ir sumokėk avansą internetu.",
+  alternates: { canonical: "/rezervacija" },
 };
 
 export default async function Page() {

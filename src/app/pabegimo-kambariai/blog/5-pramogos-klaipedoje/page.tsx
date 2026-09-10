@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "5 pramogos Klaipėdoje, kurias verta išbandyti | Bala VR blogas",
   description:
     "Ką veikti Klaipėdoje? 5 geriausios pramogos Klaipėdoje visai komandai: VR pabėgimo kambariai, boulingas, kartingas, laser tag ir jūrų muziejus. Idėjos laisvalaikiui, gimtadieniui ir komandos formavimui.",
+  alternates: { canonical: "/pabegimo-kambariai/blog/5-pramogos-klaipedoje" },
   openGraph: {
     title: "5 pramogos Klaipėdoje, kurias verta išbandyti",
     description: "Idėjos laisvalaikiui Klaipėdoje visai komandai – nuo VR pabėgimo kambarių iki boulingo ir jūrų muziejaus.",

@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "VR blogas — pramogos ir laisvalaikis Klaipėdoje | Bala VR",
   description:
     "Bala VR blogas: idėjos laisvalaikiui Klaipėdoje, VR pabėgimo kambarių patarimai ir pramogos visai komandai, šeimai bei gimtadieniui.",
+  alternates: { canonical: "/pabegimo-kambariai/blog" },
 };
 
 type Post = {

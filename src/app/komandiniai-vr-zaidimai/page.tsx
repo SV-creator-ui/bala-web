@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "VR veiksmo žaidimai Klaipėdoje — BALA VR",
   description:
     "VR veiksmo žaidimai be pabėgimo scenarijaus: 3 žaidimai (~45 min.) nuo €50 ir arkadiniai žaidimai nuo €8. BALA VR Klaipėdoje.",
+  alternates: { canonical: "/komandiniai-vr-zaidimai" },
 };
 
 const ACCENT = "#34d1e0";

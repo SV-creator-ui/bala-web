@@ -2,6 +2,7 @@
  * Grįžimo iš Montonio puslapis. Patikrina order-token, atnaujina rezervacijos
  * būseną (jei webhook dar nespėjo) ir parodo rezultatą.
  */
+import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/bala/Nav";
 import Footer from "@/components/bala/Footer";
@@ -11,6 +12,11 @@ import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/c
 import { googleCalendarRenderUrl } from "@/lib/booking/calendar-link";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Rezervacija patvirtinta | BALA VR",
+  robots: { index: false, follow: false },
+};
 
 const MONTHS = ["sausio","vasario","kovo","balandžio","gegužės","birželio","liepos","rugpjūčio","rugsėjo","spalio","lapkričio","gruodžio"];
 function fmtDate(iso: string): string {
@@ -43,7 +49,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
                   <Item
                     k="Paslauga"
                     v={booking.type === "party"
-                      ? `Gimtadienio paketas${getPartyPackage(booking.package_id ?? "") ? " " + getPartyPackage(booking.package_id!)!.name : ""}`
+                      ? (getPartyPackage(booking.package_id ?? "") ? `${getPartyPackage(booking.package_id!)!.name} šventė` : "Gimtadienio šventė")
                       : "VR pabėgimo kambarys"}
                     full
                   />

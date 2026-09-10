@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Rezervacija patvirtinta | BALA VR gimtadieniai",
+  robots: { index: false, follow: false },
 };
 
 const MONTHS = ["sausio","vasario","kovo","balandžio","gegužės","birželio","liepos","rugpjūčio","rugsėjo","spalio","lapkričio","gruodžio"];
@@ -18,7 +19,7 @@ function fmtDate(iso) {
 
 function serviceLabel(booking) {
   const pkg = getPartyPackage(booking.package_id ?? "");
-  return pkg ? `Gimtadienio paketas ${pkg.name}` : "Gimtadienio šventė";
+  return pkg ? `${pkg.name} šventė` : "Gimtadienio šventė";
 }
 
 function Header() {

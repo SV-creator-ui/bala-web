@@ -111,7 +111,7 @@ function eventBody(b: BookingRow) {
       : null;
 
   const lines = [
-    isParty ? `Paketas: ${pkg ? pkg.name : "šventė"}` : isGame ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys",
+    isParty ? `Šventė: ${pkg ? pkg.name : "gimtadienis"}` : isGame ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys",
     celebrantLine,
     `Klientas: ${b.customer_name}`,
     `Tel.: ${b.customer_phone}`,

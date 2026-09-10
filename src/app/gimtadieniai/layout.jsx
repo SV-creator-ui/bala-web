@@ -20,6 +20,7 @@ export const metadata = {
   title: "Gimtadienis BALA VR | Klaipėda",
   description:
     "Privati 220 m² BALA VR erdvė vaikų gimtadieniams Klaipėdoje: VR misijos, interaktyvi siena, nemokami arkadiniai žaidimai, instruktoriaus priežiūra ir poilsio zona tėvams.",
+  alternates: { canonical: "/gimtadieniai" },
 };
 
 export default function GimtadieniaiLayout({ children }) {

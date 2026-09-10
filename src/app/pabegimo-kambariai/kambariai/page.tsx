@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Visi VR pabėgimo kambariai — Bala VR Klaipėda",
   description:
     "Visi 9 Bala VR pabėgimo kambariai Klaipėdoje — nuo drakonų pilies iki nevaldomo traukinio. Iki 45 min., 2–6 žaidėjai, bet kokio patyrimo lygio.",
+  alternates: { canonical: "/pabegimo-kambariai/kambariai" },
 };
 
 export default function KambariaiPage() {

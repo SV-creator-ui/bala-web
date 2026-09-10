@@ -69,7 +69,7 @@ function fmtDate(iso: string): string {
 function serviceName(b: BookingRow): string {
   if (b.type === "party") {
     const pkg = getPartyPackage(b.package_id ?? "");
-    return pkg ? `Gimtadienio paketas ${pkg.name}` : "Gimtadienio šventė";
+    return pkg ? `${pkg.name} šventė` : "Gimtadienio šventė";
   }
   if (b.type === "game") return "VR veiksmo žaidimai";
   return "VR pabėgimo kambarys";
