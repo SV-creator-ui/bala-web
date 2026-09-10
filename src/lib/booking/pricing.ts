@@ -8,7 +8,7 @@ import { ADDONS, BOOKING } from "./config";
 /** Kaina grupei už patį žaidimą pagal žaidėjų skaičių */
 export function roomsPrice(players: number): number {
   if (players <= 2) return 50;
-  if (players === 3) return 65;
+  if (players === 3) return 63;
   return 20 * players; // 4–10 asm. po 20 €/asm.
 }
 

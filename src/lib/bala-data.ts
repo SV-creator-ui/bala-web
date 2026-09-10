@@ -284,7 +284,7 @@ export function getGame(slug: string) {
 
 export const PRICING = [
   { players: "2 žaidėjai", price: "50", unit: "€", per: "25 €/asm.", popular: false },
-  { players: "3 žaidėjai", price: "65", unit: "€", per: "21,67 €/asm.", popular: false },
+  { players: "3 žaidėjai", price: "63", unit: "€", per: "21 €/asm.", popular: false },
   { players: "4–6 žaidėjai", price: "20", unit: "€/asm.", per: "Viena komanda", popular: true },
   { players: "7–10 žaidėjų", price: "20", unit: "€/asm.", per: "Dvi komandos vienu metu", popular: false },
 ];
