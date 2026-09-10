@@ -153,7 +153,10 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     if (type === "party" && pkg) {
       setPlayers((p) => Math.min(Math.max(1, p), pkg.maxPlayers));
     } else if (type === "room" || type === "game") {
-      setPlayers((p) => Math.min(Math.max(BOOKING.minPlayers, p), BOOKING.maxOnlinePlayers));
+      // Veiksmo žaidimams leidžiama iki maxPlayers (10) internetu — komanda
+      // gali žaisti visa. Kambariams — iki maxOnlinePlayers (6).
+      const cap = type === "game" ? BOOKING.maxPlayers : BOOKING.maxOnlinePlayers;
+      setPlayers((p) => Math.min(Math.max(BOOKING.minPlayers, p), cap));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type, pkgId]);
@@ -378,7 +381,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
         type === "party"
           ? "Minimalus žaidėjų amžius – 7 metai. Jaunesni svečiai VR žaisti negalės."
           : type === "game"
-          ? `2–${BOOKING.maxOnlinePlayers} žaidėjų.`
+          ? `2–${BOOKING.maxPlayers} žaidėjų.`
           : `2–${BOOKING.maxOnlinePlayers} žaidėjų. Didesnei grupei (${BOOKING.maxOnlinePlayers + 1}–${BOOKING.maxPlayers}) susisiekite telefonu.`,
     },
     contact: {
@@ -888,8 +891,14 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms,
   voucher: VoucherUI; voucherDiscount: number;
 }) {
   const min = type === "party" ? 1 : BOOKING.minPlayers;
-  const max = type === "party" && pkg ? pkg.maxPlayers : BOOKING.maxOnlinePlayers;
-  const bigGroup = (type === "room" || type === "game") && players >= BOOKING.maxOnlinePlayers;
+  // Veiksmo žaidimams — visa fizinė talpa (iki 10) internetu; kambariams — iki 6.
+  const max = type === "party" && pkg
+    ? pkg.maxPlayers
+    : type === "game"
+    ? BOOKING.maxPlayers
+    : BOOKING.maxOnlinePlayers;
+  // „Didesnei grupei — telefonu" įspėjimas tik kambariams; žaidimams nebereikia.
+  const bigGroup = type === "room" && players >= BOOKING.maxOnlinePlayers;
   // Kupono laukelis paslėptas iki paspaudimo („nebūtina" daugumai — nesiūlyti aktyviai)
   const [voucherOpen, setVoucherOpen] = useState(!!voucher.applied);
 

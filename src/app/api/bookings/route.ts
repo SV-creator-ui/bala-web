@@ -123,9 +123,11 @@ export async function POST(req: Request) {
     total = partyTotal(pkg!, date, addons);
   } else if (type === "game") {
     // Komandiniai VR žaidimai — be priedų, sava kainodara.
-    // Internetu rezervuojama 2–maxOnlinePlayers; didesnės grupės tik telefonu.
+    // Internetu rezervuojama 2–maxPlayers (10) — visa fizinė talpa, komanda gali
+    // žaisti visa. Kambariams (žr. else) — riba maxOnlinePlayers, didesnės grupės
+    // per telefoną.
     addons = [];
-    if (!Number.isInteger(players) || players < BOOKING.minPlayers || players > BOOKING.maxOnlinePlayers) {
+    if (!Number.isInteger(players) || players < BOOKING.minPlayers || players > BOOKING.maxPlayers) {
       errors.push("žaidėjai");
     }
     if (errors.length) {
