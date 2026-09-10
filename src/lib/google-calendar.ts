@@ -123,10 +123,16 @@ function eventBody(b: BookingRow) {
     `Nr.: ${b.merchant_reference}`,
   ].filter(Boolean);
 
+  // Google Calendar spalvos pagal rezervacijos tipą.
+  // 10 = Basil (žalia) — gimtadienis; 9 = Blueberry (mėlyna) — pabėgimo kambarys;
+  // 6 = Tangerine (oranžinė) — VR veiksmo žaidimai.
+  const colorId = isParty ? "10" : isGame ? "6" : "9";
+
   return {
     summary,
     description: lines.join("\n"),
     location: "BALA VR, Pajūrio g. 5B, Klaipėda",
+    colorId,
     start: { dateTime: `${b.date}T${pad(start)}`, timeZone: TIME_ZONE },
     end: { dateTime: `${b.date}T${pad(end)}`, timeZone: TIME_ZONE },
   };
