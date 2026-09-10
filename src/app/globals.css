@@ -100,8 +100,21 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scroll-padding-top: 96px; }
-  body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 96px;
+    /* Užsandarina scroll'ą prie viršaus/apačios — nutraukia iOS elastišką
+       „bounce" efektą, kuris kartu su fixed nav'u ir 100vh gali sukelti
+       vaizdo šokinėjimą kai keičiasi naršyklės adreso juosta. */
+    overscroll-behavior-y: none;
+  }
+  body {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Papildoma apsauga — kad ir body neleisdintų elastic bounce'o */
+    overscroll-behavior-y: none;
+  }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after {
@@ -110,6 +123,11 @@
       transition-duration: .001ms !important;
       scroll-behavior: auto !important;
     }
+  }
+  /* Mobile — išjungiam smooth scroll'ą, nes iOS Safari su smooth kartais
+     susivaido su savo momentum scroll'u ir sukuria papildomus jumps'us. */
+  @media (max-width: 768px) {
+    html { scroll-behavior: auto; }
   }
 }
 
