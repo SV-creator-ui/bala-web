@@ -981,7 +981,6 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms,
                   value={voucher.input}
                   onChange={(e) => voucher.setInput(e.target.value.toUpperCase())}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); voucher.apply(); } }}
-                  placeholder="BALA-XXXX-XXXX"
                   autoComplete="off"
                   className="flex-1 rounded-xl border border-line bg-ink-card px-3.5 py-3 font-mono text-white focus:outline-none focus:border-volt"
                 />
