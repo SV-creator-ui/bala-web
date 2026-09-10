@@ -119,9 +119,13 @@ export default function Testimonials() {
     };
   }, [active]);
 
-  // Automatinis sukimasis (sustoja užvedus pelę arba esant reduced-motion)
+  // Automatinis sukimasis (sustoja užvedus pelę arba esant reduced-motion).
+  // NELEIDŽIAMAS mobile'e — atsiliepimų tekstai labai skirtingo ilgio, todėl
+  // auto-perjungimas mobiliai keičia kortelės aukštį → visas turinys žemiau
+  // šokinėja aukštyn/žemyn. Telefone vartotojas swipe'ina rankiniu būdu.
   useEffect(() => {
     if (paused || reducedRef.current) return;
+    if (typeof window !== "undefined" && window.innerWidth <= 768) return;
     const id = setTimeout(next, AUTOPLAY_MS);
     return () => clearTimeout(id);
   }, [active, paused]);

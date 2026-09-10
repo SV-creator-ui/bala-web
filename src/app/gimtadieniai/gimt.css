@@ -1571,18 +1571,28 @@
 /* Mobiliesiems — tik centrinė kortelė, be 3D */
 @media (max-width: 768px) {
   .coverflow {
-    height: auto;
-    min-height: 300px;
+    /* Fiksuotas aukštis, kad atsiliepimai su labai skirtingu teksto ilgiu
+       nekeistų layouto (ilgiausio teksto atveju vidinis scroll'as). Prieš tai
+       min-height buvo 300px — trumpi atsiliepimai kartais staiga suplokščia
+       kortelę, o vėlesni ilgesni ją didina → visas turinys žemiau šokinėja. */
+    height: 460px;
     touch-action: pan-y;
   }
   .cf-card {
     position: relative;
     top: auto; left: auto;
     width: 100%;
+    height: 100%;
     transform: none !important;
   }
   .cf-left, .cf-right, .cf-hidden { display: none; }
-  .cf-inner { height: auto; min-height: 240px; }
+  .cf-inner {
+    height: 100%;
+    /* Ilgiausi atsiliepimai (pvz. Irina A. ~600 simbolių) turi vidinį
+       scroll'ą, kad išorinis konteineris likti fiksuoto aukščio. */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .cf-center .cf-inner { animation: none; }
   .cf-swipe-hint {
     display: block;
