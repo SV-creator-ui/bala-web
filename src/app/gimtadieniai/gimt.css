@@ -67,7 +67,11 @@
 .gimt, .gimt *, .gimt *::before, .gimt *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 .gimt {
+  /* svh = stabili mobili aukštis — nesikeičia kai iOS/Chrome adreso juosta
+     pasirodo ar dingsta (išvengiam „vaizdas šokinėja pats" bugo). vh — fallback
+     senesniems telefonams. */
   min-height: 100vh;
+  min-height: 100svh;
   background: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -392,7 +396,9 @@ html { scroll-behavior: smooth; }
 
 /* ── HERO ── */
 .hero {
+  /* svh — stabili mobile aukštis (žr. .gimt komentarą aukščiau) */
   min-height: 100vh;
+  min-height: 100svh;
   background: var(--grad-hero);
   display: flex; align-items: center;
   padding: 120px 0 80px;
