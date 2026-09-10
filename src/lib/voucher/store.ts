@@ -129,6 +129,13 @@ export async function getRedeemableVoucher(code: string): Promise<VoucherRow | n
   return v;
 }
 
+/** Kuponas pagal kodą, bet kokios būsenos — arba null jei nerastas. */
+export async function lookupVoucher(code: string): Promise<VoucherRow | null> {
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase.from("vouchers").select("*").eq("code", code).maybeSingle();
+  return (data as VoucherRow | null) ?? null;
+}
+
 /**
  * Nurašo kuponą (vienkartinis) konkrečiai rezervacijai. Atominis:
  * active -> redeemed tik jei DAR aktyvus. Idempotentiška, saugu kartoti.
