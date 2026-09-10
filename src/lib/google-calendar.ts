@@ -13,7 +13,8 @@
  */
 import { SignJWT, importPKCS8 } from "jose";
 import type { BookingRow } from "@/lib/supabase/server";
-import { getPartyPackage } from "@/lib/booking/packages";
+import { getPartyPackage, PARTY_EXTRAS } from "@/lib/booking/packages";
+import { ADDONS } from "@/lib/booking/config";
 import { formatEur } from "@/lib/booking/pricing";
 
 const TIME_ZONE = "Europe/Vilnius";
@@ -110,6 +111,13 @@ function eventBody(b: BookingRow) {
       ? `Jubiliatas: ${b.celebrant_name}${b.celebrant_age ? ` — ${b.celebrant_age} m.` : ""}`
       : null;
 
+  // Priedai / papildomos paslaugos (popkornas, papildomas laikas, VR MAX ir kt.)
+  const addonIds: string[] = Array.isArray(b.addons) ? b.addons : [];
+  const addonNames = isParty
+    ? PARTY_EXTRAS.filter((e) => addonIds.includes(e.id)).map((e) => e.name)
+    : ADDONS.filter((a) => addonIds.includes(a.id)).map((a) => a.name);
+  const addonsLine = addonNames.length ? `Priedai: ${addonNames.join(", ")}` : null;
+
   const lines = [
     isParty ? `Šventė: ${pkg ? pkg.name : "gimtadienis"}` : isGame ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys",
     celebrantLine,
@@ -117,6 +125,7 @@ function eventBody(b: BookingRow) {
     `Tel.: ${b.customer_phone}`,
     `El. paštas: ${b.customer_email}`,
     `Dalyviai: ${b.players}`,
+    addonsLine,
     `Suma: ${formatEur(Number(b.total_eur))} € (avansas ${formatEur(Number(b.deposit_eur))} €)`,
     setupNote,
     b.note ? `Pastaba: ${b.note}` : null,
