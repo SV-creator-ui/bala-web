@@ -21,27 +21,8 @@ export default function Footer() {
       <div className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full bg-volt/[.06] blur-3xl" />
 
       <div className="relative mx-auto max-w-[1280px] px-6 md:px-10 min-[1200px]:px-14 pt-16 md:pt-20 pb-8">
-        {/* Farewell juosta — signature moment, ne trečias CTA */}
-        <div className="flex flex-col items-start gap-8 border-b border-line pb-14 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-[560px]">
-            <h3 className="font-display uppercase text-white leading-[1.05] tracking-[-.01em] text-[clamp(28px,4vw,42px)]">
-              Pasiruošę <span className="text-volt">pabėgti?</span>
-            </h3>
-            <p className="mt-4 text-[15.5px] leading-[1.6] text-smoke max-w-[440px]">
-              9 VR pabėgimo kambariai, ilgas nuotykis, viena komanda.
-              Išsirinkite scenarijų ir rezervuokite patogų laiką.
-            </p>
-          </div>
-          <a
-            href="/rezervacija"
-            className="inline-flex items-center justify-center rounded-full bg-volt px-[30px] py-4 text-[15px] font-bold text-volt-ink transition-transform hover:-translate-y-0.5 hover:bg-volt-deep"
-          >
-            Rezervuoti dabar
-          </a>
-        </div>
-
         {/* Stulpeliai */}
-        <div className="grid gap-10 py-14 sm:grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-10 pb-14 sm:grid-cols-2 md:grid-cols-4">
           <div>
             <h4 className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-smoke-2">Puslapis</h4>
             <div className="flex flex-col gap-0.5">
