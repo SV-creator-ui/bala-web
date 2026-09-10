@@ -65,7 +65,10 @@
 
 /* ── Reset ── */
 .gimt, .gimt *, .gimt *::before, .gimt *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+/* NB: html { scroll-behavior: smooth } dublikatą pašalinom — jį apibrėžia
+   globals.css @layer base, kuris turi mobile override (auto <769px, kad
+   iOS Safari smooth scroll'as nesusivaidytų su native momentum scroll'u).
+   Duplikatas čia buvo unlayered ir perrašydavo mobile taisyklę. */
 .gimt {
   /* svh = stabili mobili aukštis — nesikeičia kai iOS/Chrome adreso juosta
      pasirodo ar dingsta (išvengiam „vaizdas šokinėja pats" bugo). vh — fallback
