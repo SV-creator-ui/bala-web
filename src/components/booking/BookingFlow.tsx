@@ -378,7 +378,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
         type === "party"
           ? "Minimalus žaidėjų amžius – 7 metai. Jaunesni svečiai VR žaisti negalės."
           : type === "game"
-          ? `2–${BOOKING.maxOnlinePlayers} žaidėjų. 2 žaid. – 50 €, 3 žaid. – 60 €, kiekvienas papildomas +20 €.`
+          ? `2–${BOOKING.maxOnlinePlayers} žaidėjų.`
           : `2–${BOOKING.maxOnlinePlayers} žaidėjų. Didesnei grupei (${BOOKING.maxOnlinePlayers + 1}–${BOOKING.maxPlayers}) susisiekite telefonu.`,
     },
     contact: {
