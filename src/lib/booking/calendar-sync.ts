@@ -12,24 +12,46 @@ import { googleCalendarConfigured, syncBookingEvent, deleteBookingEvent } from "
  *  - paid:      sukuria arba atnaujina įvykį (ir įsimena gcal_event_id)
  *  - cancelled/expired: ištrina įvykį
  *  - pending:   nieko (įvykis kuriamas tik apmokėjus)
+ *
+ * `opts.throwOnError` — default false (mokėjimo srautuose praleidžia klaidas
+ * tyliai). Admin „Sinch. kalendorių" veiksmui perduodama true, kad admin
+ * matytų realią klaidos priežastį, o ne netikrą „atnaujinta".
+ * `opts.forceRecreate` — pirma nunulina gcal_event_id ir sukuria naują įvykį.
+ * Naudinga kai senas įvykis „miręs" (ištrintas iš šiukšliadėžės ar orphan).
  */
-export async function syncBookingCalendar(bookingId: string): Promise<void> {
+export async function syncBookingCalendar(
+  bookingId: string,
+  opts: { throwOnError?: boolean; forceRecreate?: boolean } = {},
+): Promise<void> {
   if (!googleCalendarConfigured()) return;
-  try {
+  const run = async () => {
     const supabase = getSupabaseAdmin();
-    const { data } = await supabase.from("bookings").select("*").eq("id", bookingId).single();
+    const { data, error: readError } = await supabase.from("bookings").select("*").eq("id", bookingId).single();
+    if (readError) throw readError;
     const b = data as BookingRow | null;
-    if (!b) return;
+    if (!b) throw new Error("Rezervacija nerasta");
 
     if (b.status === "paid") {
-      const eventId = await syncBookingEvent(b);
-      if (eventId && eventId !== b.gcal_event_id) {
-        await supabase.from("bookings").update({ gcal_event_id: eventId }).eq("id", b.id);
+      // Perkuriant pirmiausia sukuriame naują įvykį, o seną DB nuorodą
+      // pakeičiame tik po sėkmės. Nesėkmės atveju senas ID neprarandamas.
+      const working: BookingRow = opts.forceRecreate ? { ...b, gcal_event_id: null } : b;
+      const eventId = await syncBookingEvent(working);
+      if (eventId && eventId !== working.gcal_event_id) {
+        const { error } = await supabase.from("bookings").update({ gcal_event_id: eventId }).eq("id", b.id);
+        if (error) throw error;
       }
     } else if ((b.status === "cancelled" || b.status === "expired") && b.gcal_event_id) {
       await deleteBookingEvent(b.gcal_event_id);
-      await supabase.from("bookings").update({ gcal_event_id: null }).eq("id", b.id);
+      const { error } = await supabase.from("bookings").update({ gcal_event_id: null }).eq("id", b.id);
+      if (error) throw error;
     }
+  };
+  if (opts.throwOnError) {
+    await run();
+    return;
+  }
+  try {
+    await run();
   } catch (e) {
     console.error("calendar sync error:", e);
   }

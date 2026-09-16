@@ -197,3 +197,53 @@ export async function sendBookingEmails(b: BookingRow, overrideCustomerEmail?: s
     }
   });
 }
+
+/**
+ * Persiunčia TIK gimtadienio kvietimo PDF (be pilno rezervacijos patvirtinimo).
+ * Naudinga admin skydelyje, kai klientas prarado kvietimą arba pakeitė jubiliato
+ * duomenis ir norima naujo dizaino. PDF regeneruojamas iš dabartinių DB reikšmių.
+ * Grąžina true jei bent vienas PDF sugeneruotas ir laiškas priimtas SMTP.
+ */
+export async function sendInvitationOnly(
+  b: BookingRow,
+  overrideCustomerEmail?: string,
+): Promise<{ ok: boolean; count: number; error?: string }> {
+  if (!emailConfigured()) return { ok: false, count: 0, error: "El. paštas nesukonfigūruotas" };
+  if (b.type !== "party" || !b.invitation_type) {
+    return { ok: false, count: 0, error: "Ši rezervacija be gimtadienio kvietimo" };
+  }
+  const to = overrideCustomerEmail || b.customer_email;
+  let pdfs: { filename: string; bytes: Uint8Array }[] = [];
+  try {
+    pdfs = await generateInvitationPdfs(b);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, count: 0, error: `PDF generavimas nepavyko: ${msg}` };
+  }
+  if (!pdfs.length) return { ok: false, count: 0, error: "Kvietimo PDF nesugeneruotas" };
+
+  const attachments = pdfs.map((p) => ({
+    filename: p.filename,
+    content: Buffer.from(p.bytes),
+    contentType: "application/pdf",
+  }));
+
+  const shell = (title: string, inner: string) => `<!doctype html><html><body style="margin:0;padding:24px;background:#0b0b12;color:#fff;font-family:Inter,Arial,sans-serif"><div style="max-width:560px;margin:0 auto;background:#141428;border:1px solid #2b2b45;border-radius:16px;padding:28px"><h1 style="margin:0 0 12px;font-size:22px;letter-spacing:.02em">${title}</h1>${inner}<p style="margin:20px 0 0;font-size:12px;color:#8f8fa8">— BALA VR</p></div></body></html>`;
+  const inner = `<p style="margin:0 0 12px;color:#e6e6f0">🎉 Prisegame jūsų gimtadienio kvietimą (PDF). Atsisiųskite ir išsiųskite ar išspausdinkite svečiams.</p>${pdfs.length > 1 ? `<p style="margin:0;color:#8f8fa8;font-size:13px">Prisegta versijų: ${pdfs.length}.</p>` : ""}`;
+
+  try {
+    await transporter().sendMail({
+      from: `"BALA VR" <${gmailUser()}>`,
+      to,
+      subject: `Gimtadienio kvietimas — BALA VR`,
+      html: shell("Gimtadienio kvietimas", inner),
+      attachments,
+    });
+    console.log(`[email] OK kvietimas ${to} (${pdfs.length} PDF)`);
+    return { ok: true, count: pdfs.length };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`[email] KLAIDA kvietimas ${to}: ${msg}`);
+    return { ok: false, count: 0, error: msg };
+  }
+}

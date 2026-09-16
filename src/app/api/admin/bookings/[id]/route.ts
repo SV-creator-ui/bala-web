@@ -9,10 +9,13 @@ import { updateBookingStatus, rescheduleBooking, getBooking, BookingConflictErro
 import { getAvailability } from "@/lib/booking/availability";
 import { generateSlotsForDate } from "@/lib/booking/config";
 import { validFutureDate } from "@/lib/booking/validation";
-import { isBookingOverlap } from "@/lib/booking/conflict";
 import { resendBookingEmails } from "@/lib/booking/resend";
+import { sendInvitationOnly } from "@/lib/email";
 import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 import { googleCalendarConfigured } from "@/lib/google-calendar";
+import { getPayseraOrderStatus, isPaidStatus, payseraConfigured } from "@/lib/paysera";
+import { markPaidByRef } from "@/lib/booking/settle";
+import { BookingPaymentConflictError, isBookingOverlap } from "@/lib/booking/conflict";
 
 export const dynamic = "force-dynamic";
 
@@ -29,17 +32,69 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "Netinkami duomenys" }, { status: 400 });
   }
 
-  // --- Pakartotinė kalendoriaus sinchronizacija (be jokių DB pakeitimų) ---
-  if (body.action === "resync-calendar") {
+  // --- Pakartotinė kalendoriaus sinchronizacija ---
+  // action="resync-calendar"       — PATCH esamą įvykį (arba POST jei nėra id)
+  // action="force-recreate-calendar" — visada išmesti seną id ir kurti naują
+  if (body.action === "resync-calendar" || body.action === "force-recreate-calendar") {
     if (!googleCalendarConfigured()) {
       return NextResponse.json({ error: "Google Calendar nesukonfigūruotas" }, { status: 400 });
     }
     try {
-      await syncBookingCalendar(id);
-      return NextResponse.json({ ok: true });
+      await syncBookingCalendar(id, {
+        throwOnError: true,
+        forceRecreate: body.action === "force-recreate-calendar",
+      });
+      return NextResponse.json({ ok: true, recreated: body.action === "force-recreate-calendar" });
     } catch (e) {
-      console.error("admin resync calendar error:", e);
-      return NextResponse.json({ error: "Kalendoriaus sinchronizacija nepavyko" }, { status: 500 });
+      const message = e instanceof Error ? e.message : String(e);
+      console.error("admin resync calendar error:", message);
+      return NextResponse.json({ error: `Kalendoriaus sinchronizacija nepavyko: ${message}` }, { status: 500 });
+    }
+  }
+
+  // --- Persiųsti TIK gimtadienio kvietimo PDF (regeneruoja iš dabartinių duomenų) ---
+  if (body.action === "resend-invitation") {
+    const override = validEmail(body.email);
+    if (body.email && !override) {
+      return NextResponse.json({ error: "Netinkamas el. pašto adresas" }, { status: 400 });
+    }
+    const booking = await getBooking(id);
+    if (!booking) return NextResponse.json({ error: "Rezervacija nerasta" }, { status: 404 });
+    const result = await sendInvitationOnly(booking, override);
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error || "Nepavyko išsiųsti" }, { status: 400 });
+    }
+    return NextResponse.json({ ok: true, count: result.count });
+  }
+
+  // --- Sinchronizacija su Paysera (fallback, kai callback nesuveikė) ---
+  // Skirta pending arba expired rezervacijoms: paklausiam Paysera pagal
+  // saugotą order id (montonio_uuid) — jei pilnai apmokėta, iškviečiam
+  // `markPaidByRef` (statusas → paid, kalendorius, laiškai, kvietimas).
+  if (body.action === "check-paysera") {
+    if (!payseraConfigured()) {
+      return NextResponse.json({ error: "Paysera nesukonfigūruota" }, { status: 400 });
+    }
+    const booking = await getBooking(id);
+    if (!booking) return NextResponse.json({ error: "Rezervacija nerasta" }, { status: 404 });
+    if (booking.status === "paid") {
+      return NextResponse.json({ ok: true, status: "paid", note: "Jau apmokėta" });
+    }
+    if (!booking.montonio_uuid) {
+      return NextResponse.json({ error: "Nėra Paysera order id (montonio_uuid tuščias)" }, { status: 400 });
+    }
+    const st = await getPayseraOrderStatus(booking.montonio_uuid);
+    if (!isPaidStatus(st)) {
+      return NextResponse.json({ ok: true, status: st ?? "unknown", note: "Paysera dar neapmokėta" });
+    }
+    try {
+      await markPaidByRef(booking.merchant_reference);
+      const fresh = await getBooking(id);
+      return NextResponse.json({ ok: true, status: fresh?.status ?? "paid", settled: true });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      console.error("admin check-paysera settle error:", message);
+      return NextResponse.json({ error: `Sinchronizacija nepavyko: ${message}` }, { status: e instanceof BookingPaymentConflictError ? 409 : 500 });
     }
   }
 

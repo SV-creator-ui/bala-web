@@ -6,6 +6,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/bala/Nav";
 import Footer from "@/components/bala/Footer";
+import BookingConversionTracker from "@/components/booking/BookingConversionTracker";
 import { formatEur } from "@/lib/booking/pricing";
 import { getPartyPackage } from "@/lib/booking/packages";
 import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/confirm";
@@ -36,6 +37,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
         <div className="w-full max-w-[520px]">
           {status === "paid" && booking && (
             <div className="text-center">
+              <BookingConversionTracker
+                transactionId={booking.merchant_reference}
+                value={Number(booking.deposit_eur)}
+                email={booking.customer_email}
+              />
               <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-volt text-volt-ink text-4xl font-extrabold">✓</div>
               <h1 className="font-display text-4xl uppercase mb-2">Rezervacija patvirtinta!</h1>
               <p className="text-smoke mb-8">Patvirtinimą išsiuntėme el. paštu <b className="text-white">{booking.customer_email}</b>. Iki pasimatymo BALA VR!</p>

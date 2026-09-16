@@ -10,12 +10,25 @@ import { BookingPaymentConflictError } from "./conflict";
 import { settleBookingVoucher } from "@/lib/voucher/redeem";
 import { fulfillVoucherByRef } from "@/lib/voucher/fulfill";
 import { settlePromoForBooking } from "@/lib/promo/redeem";
+import { sendCapiPurchase } from "@/lib/meta-capi";
 
 /** Ištraukia promo kodą iš booking.note žymos „[PROMO:CODE:-XX.XX€]", jei ji yra. */
 function extractPromoCode(note: string | null): string | null {
   if (!note) return null;
   const m = note.match(/\[PROMO:([^:\]]+):[^\]]+\]/);
   return m ? m[1] : null;
+}
+
+/** Grąžina rezervacijos patvirtinta puslapio URL pagal booking.type. */
+function getConfirmUrl(type: BookingRow["type"]): string {
+  switch (type) {
+    case "party":
+      return "https://bala.lt/gimtadieniai/rezervacija/patvirtinta";
+    case "game":
+      return "https://bala.lt/komandiniai-vr-zaidimai/rezervacija/patvirtinta";
+    default:
+      return "https://bala.lt/rezervacija/patvirtinta";
+  }
 }
 
 export async function markPaidByRef(ref: string): Promise<void> {
@@ -56,4 +69,13 @@ export async function markPaidByRef(ref: string): Promise<void> {
   if (promoCode) await settlePromoForBooking(promoCode, { id: row.id, merchant_reference: row.merchant_reference });
   await syncBookingCalendarByRef(ref);
   await notifyBookingPaidByRef(ref);
+  // Meta Conversions API — server-side Purchase (dedupe su browser Pixel per event_id=ref)
+  await sendCapiPurchase({
+    eventId: ref,
+    value: Number(row.deposit_eur),
+    contentName: "booking",
+    email: row.customer_email,
+    phone: row.customer_phone,
+    eventSourceUrl: getConfirmUrl(row.type),
+  });
 }

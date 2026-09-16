@@ -22,6 +22,8 @@ type Booking = {
   deposit_eur: number;
   status: "pending" | "paid" | "cancelled" | "expired";
   merchant_reference: string;
+  invitation_type?: string | null;
+  montonio_uuid?: string | null;
 };
 
 function serviceLabel(b: Booking): string {
@@ -61,7 +63,7 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
   const [loading, setLoading] = useState(true);
   const [from, setFrom] = useState(todayISO());
   const [to, setTo] = useState("");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState("paid");
   const [busy, setBusy] = useState<string | null>(null);
   const [rescheduleId, setRescheduleId] = useState<string | null>(null);
 
@@ -80,15 +82,23 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
     setLoading(false);
   }, [from, to, status]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // Duomenų užkrovimas sąmoningai inicializuoja šios lentelės būseną.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  }, [load]);
 
   async function setBookingStatus(id: string, newStatus: Booking["status"]) {
     setBusy(id);
-    await fetch(`/api/admin/bookings/${id}`, {
+    const res = await fetch(`/api/admin/bookings/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      window.alert(d.error || "Nepavyko atnaujinti būsenos");
+    }
     await load();
     setBusy(null);
   }
@@ -103,17 +113,63 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
     return { ok: res.ok, error: d.error };
   }
 
-  async function resyncCalendar(b: Booking) {
+  async function checkPaysera(b: Booking) {
     setBusy(b.id);
     const res = await fetch(`/api/admin/bookings/${b.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "resync-calendar" }),
+      body: JSON.stringify({ action: "check-paysera" }),
     });
     const d = await res.json().catch(() => ({}));
-    if (!res.ok) window.alert(d.error || "Nepavyko sinchronizuoti");
-    else window.alert("Kalendoriaus įvykis atnaujintas");
+    if (!res.ok) {
+      window.alert(d.error || "Nepavyko sinchronizuoti su Paysera");
+    } else if (d.settled) {
+      window.alert(`Rezervacija atkurta iš Paysera — statusas: apmokėta.\nIšsiųsti laiškai ir sukurtas kalendoriaus įvykis.`);
+    } else if (d.status === "paid") {
+      window.alert("Rezervacija jau buvo apmokėta.");
+    } else {
+      window.alert(`Paysera dar neapmokėta (${d.status || "nežinoma"}).`);
+    }
     setBusy(null);
+    await load();
+  }
+
+  async function resendInvitation(b: Booking) {
+    const to = window.prompt(
+      `Įveskite el. pašto adresą, į kurį siųsti gimtadienio kvietimą.\n\nOriginalus (DB įraše išliks): ${b.customer_email}`,
+      b.customer_email,
+    );
+    if (!to) return;
+    const trimmed = to.trim();
+    if (!trimmed) return;
+    setBusy(b.id);
+    const res = await fetch(`/api/admin/bookings/${b.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "resend-invitation",
+        email: trimmed === b.customer_email ? undefined : trimmed,
+      }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) window.alert(d.error || "Nepavyko išsiųsti kvietimo");
+    else window.alert(`Kvietimas išsiųstas: ${trimmed}${d.count > 1 ? ` (${d.count} versijos)` : ""}`);
+    setBusy(null);
+  }
+
+  async function recreateCalendar(b: Booking) {
+    if (!confirm(`Sukurti naują kalendoriaus įvykį šiai rezervacijai?\n\nSenas įvykis (jei dar egzistuoja) liks kalendoriuje — jei jis nepageidautinas, jį ištrinkite rankomis.`)) return;
+    setBusy(b.id);
+    const res = await fetch(`/api/admin/bookings/${b.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "force-recreate-calendar" }),
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) window.alert(d.error || "Nepavyko sukurti įvykio");
+    else window.alert("Naujas kalendoriaus įvykis sukurtas");
+    setBusy(null);
+    await load();
   }
 
   async function resendBookingEmail(b: Booking) {
@@ -241,7 +297,7 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
                     <div className="font-semibold">{b.customer_name}</div>
                     <div className="text-smoke-2 text-[13px]">{b.customer_phone}</div>
                     <div className="text-smoke-2 text-[13px]">{b.customer_email}</div>
-                    {b.note && <div className="mt-1 text-[12.5px] italic text-smoke-2">„{b.note}"</div>}
+                    {b.note && <div className="mt-1 text-[12.5px] italic text-smoke-2">„{b.note}“</div>}
                   </td>
                   <td className="px-4 py-3 font-mono">{b.players}</td>
                   <td className="px-4 py-3 whitespace-nowrap font-mono">
@@ -255,13 +311,21 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap justify-end gap-1.5">
-                      {b.status === "pending" && (
-                        <ActionBtn onClick={() => setBookingStatus(b.id, "paid")} disabled={busy === b.id} kind="ok">Apmokėta</ActionBtn>
+                      {(b.status === "pending" || b.status === "expired") && (
+                        <>
+                          {b.montonio_uuid && (
+                            <ActionBtn onClick={() => checkPaysera(b)} disabled={busy === b.id} kind="ghost">Patikrinti Paysera</ActionBtn>
+                          )}
+                          <ActionBtn onClick={() => setBookingStatus(b.id, "paid")} disabled={busy === b.id} kind="ok">Apmokėta</ActionBtn>
+                        </>
                       )}
                       {b.status === "paid" && (
                         <>
                           <ActionBtn onClick={() => resendBookingEmail(b)} disabled={busy === b.id} kind="ghost">Siųsti kitu adresu</ActionBtn>
-                          <ActionBtn onClick={() => resyncCalendar(b)} disabled={busy === b.id} kind="ghost">Sinch. kalendorių</ActionBtn>
+                          {b.type === "party" && b.invitation_type && (
+                            <ActionBtn onClick={() => resendInvitation(b)} disabled={busy === b.id} kind="ghost">Persiųsti kvietimą</ActionBtn>
+                          )}
+                          <ActionBtn onClick={() => recreateCalendar(b)} disabled={busy === b.id} kind="ghost">Perkurti kal. įvykį</ActionBtn>
                         </>
                       )}
                       {b.status !== "cancelled" && (
@@ -299,7 +363,7 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
       {/* Dovanų kuponai */}
       <div className="mt-10">
         <h2 className="font-display text-2xl uppercase mb-3">Dovanų kuponai</h2>
-        <p className="text-smoke text-sm mb-4">Parduoti dovanų kuponai. „Panaudota" — nurašo rankiniu būdu; „Siųsti PDF" — persiunčia kuponą pirkėjui.</p>
+        <p className="text-smoke text-sm mb-4">Parduoti dovanų kuponai. „Panaudota“ — nurašo rankiniu būdu; „Siųsti PDF“ — persiunčia kuponą pirkėjui.</p>
         <VoucherManager demo={demo} />
       </div>
 
@@ -374,7 +438,11 @@ function VoucherManager({ demo }: { demo: boolean }) {
     setLoading(false);
   }, [status]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // Duomenų užkrovimas sąmoningai inicializuoja šios lentelės būseną.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  }, [load]);
 
   async function act(id: string, action: string, email?: string) {
     setBusy(id);
@@ -532,6 +600,8 @@ function RescheduleForm({ currentDate, currentTime, onSubmit, onDone, onCancel }
 
   useEffect(() => {
     let cancelled = false;
+    // Keičiant datą iš karto rodome naujo užkrovimo būseną.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSlots(null);
     fetch(`/api/availability?date=${date}`)
       .then((r) => r.json())
@@ -659,7 +729,11 @@ function PromoCodeManager({ demo }: { demo: boolean }) {
     }
     setLoading(false);
   }, []);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // Duomenų užkrovimas sąmoningai inicializuoja šios lentelės būseną.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  }, [load]);
 
   async function act(code: string, action: string, extra: Record<string, unknown> = {}) {
     setBusy(code);
@@ -959,7 +1033,11 @@ function ReminderTemplateEditor({ demo }: { demo: boolean }) {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // Duomenų užkrovimas sąmoningai inicializuoja šios lentelės būseną.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  }, [load]);
 
   function updateActive(patch: Partial<ReminderTemplate>) {
     if (!templates) return;
@@ -1162,6 +1240,7 @@ function BlackoutManager({ blackouts, onChange }: { blackouts: Blackout[]; onCha
   const [time, setTime] = useState("all");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
 
   async function add() {
     setBusy(true);
@@ -1199,23 +1278,46 @@ function BlackoutManager({ blackouts, onChange }: { blackouts: Blackout[]; onCha
       </div>
 
       <div className="rounded-2xl border border-line overflow-hidden">
-        {blackouts.length === 0 ? (
-          <p className="px-4 py-8 text-center text-smoke-2 text-sm">Užblokuotų laikų nėra.</p>
-        ) : (
-          <ul>
-            {blackouts.map((bo) => (
-              <li key={bo.id} className="flex items-center justify-between gap-3 border-b border-line px-4 py-3 last:border-b-0">
-                <div>
-                  <span className="font-semibold">{fmtDate(bo.date)}</span>
-                  <span className="ml-2 font-mono text-smoke-2">{bo.time ?? "visa diena"}</span>
-                  {bo.reason && <span className="ml-2 text-smoke-2 text-[13px]">· {bo.reason}</span>}
-                </div>
-                <button onClick={() => remove(bo.id)} disabled={busy} className="rounded-lg border border-genre-pink/50 px-3 py-1.5 text-[12.5px] font-semibold text-genre-pink hover:bg-genre-pink/10 disabled:opacity-40">
-                  Pašalinti
-                </button>
-              </li>
-            ))}
-          </ul>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/5"
+        >
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs uppercase tracking-wider text-smoke-2">Užblokuoti laikai</span>
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-white">
+              {blackouts.length}
+            </span>
+          </div>
+          <svg
+            className={`h-4 w-4 shrink-0 text-smoke-2 transition-transform ${open ? "rotate-180" : ""}`}
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.24 4.38a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+          </svg>
+        </button>
+        {open && (
+          blackouts.length === 0 ? (
+            <p className="border-t border-line px-4 py-8 text-center text-smoke-2 text-sm">Užblokuotų laikų nėra.</p>
+          ) : (
+            <ul className="max-h-80 overflow-y-auto border-t border-line">
+              {blackouts.map((bo) => (
+                <li key={bo.id} className="flex items-center justify-between gap-3 border-b border-line px-4 py-3 last:border-b-0">
+                  <div>
+                    <span className="font-semibold">{fmtDate(bo.date)}</span>
+                    <span className="ml-2 font-mono text-smoke-2">{bo.time ?? "visa diena"}</span>
+                    {bo.reason && <span className="ml-2 text-smoke-2 text-[13px]">· {bo.reason}</span>}
+                  </div>
+                  <button onClick={() => remove(bo.id)} disabled={busy} className="rounded-lg border border-genre-pink/50 px-3 py-1.5 text-[12.5px] font-semibold text-genre-pink hover:bg-genre-pink/10 disabled:opacity-40">
+                    Pašalinti
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )
         )}
       </div>
     </div>

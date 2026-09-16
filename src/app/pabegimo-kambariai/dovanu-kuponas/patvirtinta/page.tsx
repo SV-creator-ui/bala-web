@@ -6,6 +6,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Nav from "@/components/bala/Nav";
 import Footer from "@/components/bala/Footer";
+import BookingConversionTracker from "@/components/booking/BookingConversionTracker";
+import { ADS_CONVERSION_GIFT_CARD } from "@/lib/analytics";
 import { formatEur } from "@/lib/booking/pricing";
 import { readConfirmParams } from "@/lib/booking/confirm";
 import { resolveVoucher, resolveVoucherByRef } from "@/lib/voucher/fulfill";
@@ -35,6 +37,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
         <div className="w-full max-w-[520px]">
           {status === "active" && voucher && (
             <div className="text-center">
+              <BookingConversionTracker
+                transactionId={voucher.merchant_reference}
+                value={Number(voucher.amount_eur)}
+                email={voucher.buyer_email ?? undefined}
+                sendTo={ADS_CONVERSION_GIFT_CARD}
+              />
               <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-volt text-volt-ink text-4xl">🎁</div>
               <h1 className="font-display text-4xl uppercase mb-2">Kuponas paruoštas!</h1>
               <p className="text-smoke mb-8">

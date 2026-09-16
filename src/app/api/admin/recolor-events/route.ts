@@ -1,7 +1,7 @@
 /**
  * POST /api/admin/recolor-events
  * Vienkartinis įrankis — perspalvina JAU esamus Google Calendar įvykius pagal
- * dabartinę schemą (party→žalia, game→oranžinė, room→mėlyna). Nauji įvykiai
+ * dabartinę schemą (visi tipai → geltona Banana, colorId 5). Nauji įvykiai
  * spalvą gauna automatiškai per `syncBookingEvent`; ši rutina užpildo istoriją.
  *
  * Elgesys: eina per visas rezervacijas su `gcal_event_id`, kiekvienam siunčia
@@ -17,12 +17,6 @@ import {
 } from "@/lib/google-calendar";
 
 export const dynamic = "force-dynamic";
-
-function colorIdFor(type: string): string {
-  if (type === "party") return "10"; // Basil — žalia
-  if (type === "game") return "6"; // Tangerine — oranžinė
-  return "9"; // Blueberry — mėlyna (room)
-}
 
 export async function POST() {
   if (!(await isAuthed())) {
@@ -43,7 +37,7 @@ export async function POST() {
   const errors: Array<{ id: string; ref: string; status: number; message: string }> = [];
 
   for (const b of withEvent) {
-    const colorId = colorIdFor(b.type);
+    const colorId = "5"; // Banana — geltona (visi tipai)
     try {
       const res = await fetch(`${base}/${encodeURIComponent(b.gcal_event_id!)}`, {
         method: "PATCH",

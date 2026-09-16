@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Anton, Archivo } from "next/font/google";
 import LocalBusinessJsonLd from "@/components/bala/LocalBusinessJsonLd";
+import Analytics from "@/components/shared/Analytics";
 import "./globals.css";
 
 const anton = Anton({
@@ -60,6 +61,7 @@ export default function RootLayout({
       <body className="bg-ink text-white font-body antialiased">
         <LocalBusinessJsonLd />
         {children}
+        <Analytics />
       </body>
     </html>
   );

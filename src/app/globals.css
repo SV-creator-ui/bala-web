@@ -96,6 +96,34 @@
     0%, 100% { transform: translateY(-0.5rem) scale(1.03); }
     50%      { transform: translateY(-0.75rem) scale(1.03); }
   }
+
+  /* Google atsiliepimų marquee — nenutrūkstamai plaukianti juosta.
+     Turinys dubliuojamas, todėl -50% grąžina į to paties elemento pradžią. */
+  --animate-review-marquee: reviewMarquee 55s linear infinite;
+  @keyframes reviewMarquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+}
+
+/* Mobilus scroll-linked reveal 3 tituliniam kortelėms.
+   Kortelė paslėpta iki kol įslenka į matomą sritį — tada linijiškai atsiveria.
+   Palaikoma šiuolaikinių Chromium naršyklių (Android Chrome, Edge). Safari/Firefox
+   negauna @supports bloko — kortelės matomos iš karto (dabartinis elgesys). */
+@media (max-width: 899px) {
+  @supports (animation-timeline: view()) {
+    .card-mobile-reveal {
+      opacity: 0;
+      translate: 0 44px;
+      animation: cardMobileReveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 32%;
+    }
+  }
+}
+@keyframes cardMobileReveal {
+  to { opacity: 1; translate: 0 0; }
 }
 
 @layer base {

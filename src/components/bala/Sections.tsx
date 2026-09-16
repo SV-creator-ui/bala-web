@@ -145,21 +145,21 @@ export function KainosSection() {
           {PRICING.map((p) => (
             <div
               key={p.players}
-              className={`flex-none w-[200px] rounded-2xl border-[1.5px] border-volt p-[26px_22px] relative transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-1 hover:border-volt-deep hover:shadow-[0_0_0_1px_var(--color-volt),0_16px_34px_-12px_rgba(255,228,0,.5)] ${
+              className={`flex-none w-[240px] md:w-[260px] rounded-2xl border-[1.5px] border-volt p-[32px_26px] md:p-[36px_30px] relative transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-1 hover:border-volt-deep hover:shadow-[0_0_0_1px_var(--color-volt),0_16px_34px_-12px_rgba(255,228,0,.5)] ${
                 p.popular ? "bg-ink-card-2" : "bg-ink-card"
               }`}
             >
               {p.popular && (
-                <span className="absolute -top-3 left-[22px] rounded-full bg-volt text-volt-ink text-[11px] font-extrabold uppercase tracking-wide px-3 py-1.5">
+                <span className="absolute -top-3 left-[26px] rounded-full bg-volt text-volt-ink text-[11px] font-extrabold uppercase tracking-wide px-3 py-1.5">
                   Populiariausia
                 </span>
               )}
-              <p className="text-[13px] font-bold uppercase tracking-wide text-smoke-2 mb-3.5">{p.players}</p>
-              <p className="font-display font-normal text-4xl text-white leading-none">
+              <p className="text-[14px] font-bold uppercase tracking-wide text-smoke-2 mb-4">{p.players}</p>
+              <p className="font-display font-normal text-[52px] md:text-[58px] text-white leading-none">
                 {p.price}
-                <span className="font-body text-sm font-semibold text-smoke-2">{p.unit}</span>
+                <span className="font-body text-base font-semibold text-smoke-2 ml-0.5">{p.unit}</span>
               </p>
-              <p className="mt-2 text-[13px] text-smoke">{p.per}</p>
+              <p className="mt-3 text-[14px] text-smoke">{p.per}</p>
             </div>
           ))}
         </RevealOnScroll>

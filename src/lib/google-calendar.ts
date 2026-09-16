@@ -132,10 +132,9 @@ function eventBody(b: BookingRow) {
     `Nr.: ${b.merchant_reference}`,
   ].filter(Boolean);
 
-  // Google Calendar spalvos pagal rezervacijos tipą.
-  // 10 = Basil (žalia) — gimtadienis; 9 = Blueberry (mėlyna) — pabėgimo kambarys;
-  // 6 = Tangerine (oranžinė) — VR veiksmo žaidimai.
-  const colorId = isParty ? "10" : isGame ? "6" : "9";
+  // Visos rezervacijos — geltona (Banana, colorId 5). Vienoda spalva visiems tipams,
+  // tipą greitai atskiria emoji summary pradžioje (🥽/🎮/🎂).
+  const colorId = "5";
 
   return {
     summary,
@@ -165,9 +164,23 @@ export async function syncBookingEvent(b: BookingRow): Promise<string | null> {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body,
     });
-    if (res.ok) return b.gcal_event_id;
-    if (res.status !== 404) throw new Error(`Google Calendar PATCH ${res.status}: ${await res.text().catch(() => "")}`);
-    // 404 — įvykis dingęs; sukuriame naują (kris žemiau).
+    if (res.ok) {
+      // Google kartais grąžina 200 net kai įvykis buvo ištrintas — atsakyme
+      // matysime status:"cancelled". Tokiu atveju treat'inam kaip 404 ir
+      // POST'inam naują, nes „resurrect" iš tokios būsenos nepavyktų.
+      const bodyText = await res.text().catch(() => "");
+      try {
+        const parsed = JSON.parse(bodyText) as { status?: string };
+        if (parsed.status !== "cancelled") return b.gcal_event_id;
+      } catch {
+        return b.gcal_event_id; // parse nepavyko — laikom sėkme
+      }
+      // krentam žemiau į POST — sukurti naują įvykį
+    } else if (res.status !== 404 && res.status !== 410) {
+      // 410 Gone = įvykis ištrintas ir šiukšliadėžėje; laikom kaip 404 — kuriam naują.
+      throw new Error(`Google Calendar PATCH ${res.status}: ${await res.text().catch(() => "")}`);
+    }
+    // 404 / 410 / cancelled — įvykis dingęs; sukuriame naują (kris žemiau).
   }
 
   const res = await fetch(base, {
@@ -273,8 +286,8 @@ export async function fetchCalendarBusyForDate(
       if (!s || !e) continue;
 
       // Perkėlimas per naktį — apkarpom į norimą dieną
-      let startMin = s.date === date ? s.min : s.date < date ? 0 : -1;
-      let endMin = e.date === date ? e.min : e.date > date ? 24 * 60 : -1;
+      const startMin = s.date === date ? s.min : s.date < date ? 0 : -1;
+      const endMin = e.date === date ? e.min : e.date > date ? 24 * 60 : -1;
       if (startMin < 0 || endMin < 0 || endMin <= startMin) continue;
       // Kartais end ties pat vidurnakčiu — tokį ignoruojam
       if (endMin === 0) continue;

@@ -1,4 +1,5 @@
 import Footer from "@/components/gimt/Footer";
+import BookingConversionTracker from "@/components/booking/BookingConversionTracker";
 import { formatEur } from "@/lib/booking/pricing";
 import { getPartyPackage } from "@/lib/booking/packages";
 import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/confirm";
@@ -50,6 +51,11 @@ export default async function Page({ searchParams }) {
         <div className="gimt-conf">
           {status === "paid" && booking && (
             <>
+              <BookingConversionTracker
+                transactionId={booking.merchant_reference}
+                value={Number(booking.deposit_eur)}
+                email={booking.customer_email}
+              />
               <div className="gimt-conf-check" aria-hidden="true">✓</div>
               <h1 className="gimt-conf-title">Rezervacija patvirtinta!</h1>
               <p className="gimt-conf-lead">

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import ChooserReviewsSlider from "@/components/shared/ChooserReviewsSlider";
 
 export const metadata: Metadata = {
   title: "BALA VR Klaipėda — pasirinkite savo pramogą",
@@ -41,37 +42,47 @@ export default function ChooserPage() {
   return (
     <main className="min-h-[100svh] flex flex-col bg-ink text-white">
       {/* Header */}
-      <header className="flex flex-col items-center text-center px-6 pt-8 pb-4 md:pt-10 md:pb-7">
+      <header className="flex flex-col items-center text-center px-6 pt-10 pb-8 md:pt-16 md:pb-12">
         <Image
           src="/assets/logo-bala-vr-wordmark.png"
           alt="BALA VR"
-          width={264}
-          height={48}
-          className="h-[26px] md:h-[32px] w-auto"
+          width={288}
+          height={52}
+          className="h-[30px] md:h-[38px] w-auto"
           priority
         />
-        <span className="mt-2 whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.24em] leading-none text-white animate-hero-in">
+        <span className="mt-4 md:mt-5 whitespace-nowrap text-[11px] md:text-[12px] font-bold uppercase tracking-[0.28em] leading-none text-white/80 animate-hero-in">
           Virtualios realybės erdvė
         </span>
-        <h1 className="mt-6 md:mt-4 font-display uppercase leading-[1.02] tracking-[-.01em] text-[clamp(28px,4.8vw,48px)] animate-hero-in [animation-delay:80ms]">
+        <h1 className="mt-6 md:mt-8 font-display uppercase leading-[1.02] tracking-[-.01em] text-[clamp(30px,5.2vw,54px)] animate-hero-in [animation-delay:80ms]">
           Rinkitės savo <span className="text-volt">nuotykį</span>
         </h1>
-        <p className="mt-3 max-w-[640px] text-[14px] md:text-[16px] leading-[1.45] text-white/85 animate-hero-in [animation-delay:160ms]">
+        <p className="mt-4 md:mt-5 max-w-[640px] text-[15px] md:text-[17px] leading-[1.55] text-white/85 animate-hero-in [animation-delay:160ms]">
           Privati virtualios realybės erdvė — gimtadieniams, draugams ir komandoms.
         </p>
-        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-3.5 py-1.5 animate-hero-in [animation-delay:240ms]">
+        <a
+          href="https://share.google/tPHRV6QUCNXzb2KPV"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="147 Google atsiliepimai — 5 iš 5 žvaigždučių"
+          className="mt-6 md:mt-7 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 px-3.5 py-1.5 animate-hero-in [animation-delay:240ms] transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 48 48" aria-hidden className="flex-none">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+          </svg>
           <span className="text-[13px] tracking-[0.02em] text-[#ffd54a]" aria-hidden>
             ★★★★★
           </span>
           <span className="text-[12px] md:text-[13px] font-semibold text-white">
-            4.9
+            147
           </span>
-          <span className="text-[12px] md:text-[13px] text-white/60">·</span>
-          <span className="text-[12px] md:text-[13px] text-white/85">
-            8000+ lankytojų
+          <span className="text-[12px] md:text-[13px] text-white/75">
+            Google atsiliepimų
           </span>
-        </div>
-        <div className="mt-2 h-2 md:mt-4 md:h-[16px]" aria-hidden />
+        </a>
       </header>
 
       {/* Three choices */}
@@ -80,7 +91,7 @@ export default function ChooserPage() {
           {/* VR pabėgimo kambariai */}
           <Link
             href="/pabegimo-kambariai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.5)] hover:border-volt transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 animate-hero-in-scale [animation-fill-mode:backwards] max-[899px]:scale-[0.98] min-[900px]:translate-y-3 min-[900px]:-rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:scale-100 hover:shadow-[0_20px_40px_-15px_rgba(255,228,0,0.35)]"
+            className="card-mobile-reveal group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.5)] hover:border-volt transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 min-[900px]:animate-hero-in-scale min-[900px]:[animation-fill-mode:backwards] max-[899px]:scale-[0.98] min-[900px]:translate-y-3 min-[900px]:-rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:scale-100 hover:shadow-[0_20px_40px_-15px_rgba(255,228,0,0.35)]"
           >
             <div className="absolute inset-0 animate-ken-a will-change-transform motion-reduce:animate-none">
               <Image
@@ -126,7 +137,7 @@ export default function ChooserPage() {
           {/* Gimtadienių paketai — featured */}
           <Link
             href="/gimtadieniai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border-2 border-[rgba(240,165,0,0.55)] hover:border-[#f0a500] transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#0d2b35] animate-hero-in-scale [animation-delay:70ms] [animation-fill-mode:backwards] max-[899px]:scale-[1.01] min-[900px]:-translate-y-2 min-[900px]:scale-[1.03] hover:-translate-y-3 hover:shadow-[0_28px_50px_-15px_rgba(240,165,0,0.5)] z-10"
+            className="card-mobile-reveal group relative flex flex-col overflow-hidden rounded-3xl border-2 border-[rgba(240,165,0,0.55)] hover:border-[#f0a500] transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#0d2b35] min-[900px]:animate-hero-in-scale min-[900px]:[animation-delay:70ms] min-[900px]:[animation-fill-mode:backwards] max-[899px]:scale-[1.01] min-[900px]:-translate-y-2 min-[900px]:scale-[1.03] hover:-translate-y-3 hover:shadow-[0_28px_50px_-15px_rgba(240,165,0,0.5)] z-10"
           >
             <div className="absolute inset-0 animate-ken-c will-change-transform motion-reduce:animate-none">
               <Image
@@ -144,7 +155,7 @@ export default function ChooserPage() {
                 Privati šventė · nuo 7 m.
               </p>
               <h2 className="mt-2 font-display uppercase text-white whitespace-nowrap text-[clamp(22px,2.5vw,30px)] leading-[1.06]">
-                Gimtadienių kainos
+                Gimtadieniai
               </h2>
               <p className="mt-3 text-[16.5px] md:text-[16px] leading-[1.45] md:leading-[1.4] text-white font-medium">
                 Visa 220 m² erdvė tik jūsų kompanijai. VR, arkados ir vieta tortui.
@@ -174,7 +185,7 @@ export default function ChooserPage() {
           {/* VR veiksmo žaidimai */}
           <Link
             href="/komandiniai-vr-zaidimai"
-            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#07242a] animate-hero-in-scale [animation-delay:140ms] [animation-fill-mode:backwards] max-[899px]:scale-[0.98] min-[900px]:translate-y-4 min-[900px]:rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:scale-100 hover:shadow-[0_20px_40px_-15px_rgba(52,209,224,0.35)]"
+            className="card-mobile-reveal group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#07242a] min-[900px]:animate-hero-in-scale min-[900px]:[animation-delay:140ms] min-[900px]:[animation-fill-mode:backwards] max-[899px]:scale-[0.98] min-[900px]:translate-y-4 min-[900px]:rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:scale-100 hover:shadow-[0_20px_40px_-15px_rgba(52,209,224,0.35)]"
           >
             <div className="absolute inset-0 animate-ken-b will-change-transform motion-reduce:animate-none">
               <Image
@@ -219,6 +230,7 @@ export default function ChooserPage() {
             </div>
           </Link>
         </div>
+        <ChooserReviewsSlider />
       </div>
 
       {/* About BALA VR Klaipėda */}

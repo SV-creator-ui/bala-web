@@ -15,6 +15,7 @@ import {
 } from "./store";
 import { generateVoucherPdf } from "./pdf";
 import { sendVoucherEmails } from "./email";
+import { sendCapiPurchase } from "@/lib/meta-capi";
 
 /**
  * Aktyvuoja kuponą (jei dar pending) ir vieną kartą išsiunčia PDF pirkėjui.
@@ -25,8 +26,21 @@ export async function fulfillVoucherByRef(ref: string): Promise<VoucherRow | nul
     const existing = await getVoucherByRef(ref);
     if (!existing) return null;
 
-    const v = existing.status === "pending" ? (await issueVoucher(existing.id)) ?? existing : existing;
+    const wasPending = existing.status === "pending";
+    const v = wasPending ? (await issueVoucher(existing.id)) ?? existing : existing;
     if (v.status !== "active") return v; // atšauktas / jau panaudotas — nesiunčiam
+
+    // Meta Conversions API — Purchase siunčiam TIK kai kuponas ką tik aktyvuotas
+    // (kad nedubliuotum eventų iš atsarginio kelio patvirtinimo puslapyje).
+    if (wasPending) {
+      await sendCapiPurchase({
+        eventId: v.merchant_reference,
+        value: Number(v.amount_eur),
+        contentName: "gift_card",
+        email: v.buyer_email,
+        eventSourceUrl: "https://bala.lt/pabegimo-kambariai/dovanu-kuponas/patvirtinta",
+      });
+    }
 
     // Atominis claim — kad nesusidubliuotų laiškai. Tik pirmas kviesėjas siunčia.
     if (emailConfigured() && (await claimVoucherEmail(v.id))) {
