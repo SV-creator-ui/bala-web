@@ -39,7 +39,7 @@ export const BOOKING = {
   /** Kiek grupių gali žaisti tuo pačiu metu (1 = vienas seansas vienu metu) */
   slotCapacity: 1,
   /** Kiek minučių laikoma "pending" rezervacija, kol nesumokėtas avansas */
-  pendingHoldMin: 30,
+  pendingHoldMin: 15,
   /**
    * Mažiausias išankstinis laikas iki seanso pradžios (minutėmis). Šiandienos
    * dienai laikai, prasidedantys anksčiau nei „dabar + tiek", neberodomi.

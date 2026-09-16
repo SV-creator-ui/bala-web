@@ -61,9 +61,9 @@ try {
   const reset = () => db.query('truncate public.bookings');
   const age = async ref => {
     // Only the isolated fixture bypasses the immutable hold-start trigger to
-    // simulate time passing without waiting 30 minutes. Constraints stay active.
+    // simulate time passing without waiting 15 minutes. Constraints stay active.
     await db.query("set session_replication_role = replica");
-    try { await db.query("update public.bookings set created_at = clock_timestamp() - interval '31 minutes' where merchant_reference=$1", [ref]); }
+    try { await db.query("update public.bookings set created_at = clock_timestamp() - interval '16 minutes' where merchant_reference=$1", [ref]); }
     finally { await db.query('set session_replication_role = origin'); }
   };
   async function waitForLock(client) {
@@ -154,7 +154,7 @@ try {
 
   // Compare SQL constraint mathematics with unchanged TypeScript business rules.
   const { activeInterval, conflictsWithGap } = loadTs('src/lib/booking/window.ts');
-  assert.equal(loadTs('src/lib/booking/config.ts').BOOKING.pendingHoldMin, 30);
+  assert.equal(loadTs('src/lib/booking/config.ts').BOOKING.pendingHoldMin, 15);
   const variants = [{ type: 'room' }, { type: 'game' }, ...['maksi','vip','gold'].flatMap(pkg => [{ type: 'party', pkg }, { type: 'party', pkg, addons: ['extratime'] }])];
   let comparisons = 0;
   for (const x of variants) for (const y of variants) for (const time of ['10:00','10:30','11:00','12:00','12:15','12:30','12:45','13:00','13:15','13:30','14:00']) {

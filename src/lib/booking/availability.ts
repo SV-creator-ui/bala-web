@@ -61,7 +61,7 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
   const leadCutoffMin = date === nowV.date ? nowV.min + BOOKING.bookingLeadMin : -1;
 
   const [{ data: bookings, error: bookingsError }, { data: blackouts, error: blackoutsError }, calendarBusyRaw] = await Promise.all([
-    // DB clock defines the same 30-minute hold boundary as atomic writes.
+    // DB clock defines the same 15-minute hold boundary as atomic writes.
     supabase.rpc("active_bookings_for_date", { p_date: date }),
     supabase.from("blackouts").select("time").eq("date", date),
     // Google Calendar išoriniai įvykiai (Moizmo paveldas ar rankiniai įrašai).
