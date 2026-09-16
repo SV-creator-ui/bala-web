@@ -80,7 +80,8 @@ const SECTIONS: Section[] = [
       "**Paysera** (UAB „EVP International“) — mokėjimų vykdymas.",
       "**Supabase** — rezervacijų duomenų bazės saugojimas.",
       "**Vercel** — svetainės priegloba (hostingas).",
-      "**Google** — patvirtinimo laiškų siuntimas ir rezervacijų kalendorius.",
+      "**Google** — patvirtinimo laiškų siuntimas, rezervacijų kalendorius ir, gavus jūsų sutikimą, reklamos konversijų matavimas.",
+      "**Meta** — gavus jūsų sutikimą, reklamos konversijų matavimas naudojant Meta Pixel.",
       "Duomenys taip pat gali būti pateikti kompetentingoms institucijoms, kai to reikalauja teisės aktai.",
     ],
   },
@@ -97,7 +98,7 @@ const SECTIONS: Section[] = [
     emoji: "🍪",
     title: "Slapukai",
     body: [
-      "Svetainė naudoja tik būtinuosius techninius slapukus, reikalingus jos veikimui (pvz. rezervacijos ir sesijos palaikymui). Rinkodaros ar sekimo slapukų be jūsų sutikimo nenaudojame. Slapukus galite valdyti ar ištrinti savo naršyklės nustatymuose.",
+      "Svetainė naudoja būtinuosius techninius duomenis, reikalingus jos veikimui ir jūsų pasirinkimui išsaugoti. Google Ads ir Meta Pixel reklamos matavimas įkeliamas tik gavus jūsų sutikimą. Pasirinkimą galite panaikinti ištrindami svetainės duomenis savo naršyklės nustatymuose.",
     ],
   },
   {
