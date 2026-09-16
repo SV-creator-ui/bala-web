@@ -48,6 +48,8 @@ export type BookingRow = {
   emails_sent_at: string | null; // kada išsiųsti patvirtinimo laiškai (null = dar ne)
   voucher_code: string | null; // panaudoto dovanų kupono kodas (jei buvo)
   voucher_discount_eur: number; // kiek kuponas padengė šioje rezervacijoje (EUR)
+  promo_code: string | null;
+  promo_discount_eur: number;
   // Gimtadienio kvietimas svečiams (tik type = "party"); žr. migration_006
   invitation_type: "personalized" | "plain" | null; // null = kvietimo nereikia
   invitation_lang: "lt" | "ru" | "both" | null; // "both" = 2 kvietimai (LT + RU)

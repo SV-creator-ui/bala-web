@@ -4,7 +4,8 @@
  * kodas dar reikalauja, kad ankstesnių apmokėtų room/game vizitų būtų ≥ 2.
  */
 import type { BookingRow } from "@/lib/supabase/server";
-import { findPromoByCode, updatePromoCode, countPaidRoomGameVisits, normalizeEmail } from "./storage";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { findPromoByCode, countPaidRoomGameVisits, normalizeEmail } from "./storage";
 import type { PromoCode } from "./storage";
 
 export type PromoValidation =
@@ -82,20 +83,17 @@ export function computeDiscount(promo: PromoCode, total: number): number {
   return Math.min(promo.discount_value, total);
 }
 
-/** Pažymi kodą kaip panaudotą po sėkmingo apmokėjimo. Palaikoma daugkartinių panaudojimų. */
+/**
+ * Idempotentiškai patvirtina DB jau atomiškai susietą promo panaudojimą.
+ * Pats skaitiklis keičiamas DB transakcijoje kartu su booking statusu.
+ */
 export async function settlePromoForBooking(
   code: string, booking: Pick<BookingRow, "id" | "merchant_reference">,
 ): Promise<void> {
-  const promo = await findPromoByCode(code);
-  if (!promo) return;
-  const usedCount = Number(promo.used_count ?? (promo.used_at ? 1 : 0));
-  const maxUses = Number(promo.max_uses ?? 1);
-  if (maxUses > 0 && usedCount >= maxUses) return; // jau išnaudotas
-  await updatePromoCode({
-    ...promo,
-    used_at: new Date().toISOString(), // paskutinio panaudojimo laikas
-    used_booking_id: booking.id, // paskutinės rezervacijos id
-    used_booking_ref: booking.merchant_reference,
-    used_count: usedCount + 1,
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.rpc("settle_booking_promo_guarded", {
+    p_booking_id: booking.id,
+    p_promo_code: code,
   });
+  if (error) throw error;
 }

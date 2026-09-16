@@ -9,7 +9,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { isSlotAvailable } from "@/lib/booking/availability";
-import { isBookingOverlap } from "@/lib/booking/conflict";
+import { isBookingOverlap, isDiscountClaimConflict } from "@/lib/booking/conflict";
 import { grandTotal, gamesPrice } from "@/lib/booking/pricing";
 import { BOOKING, ADDONS, generateSlotsForDate, dayHours, depositFor, type BookingType } from "@/lib/booking/config";
 import { bookingWindowHHMM } from "@/lib/booking/window";
@@ -35,8 +35,7 @@ import { createPayseraPayment, payseraConfigured, bookingTestMode } from "@/lib/
 import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 import { notifyBookingPaid } from "@/lib/booking/notify";
 import { applyVoucherToBooking } from "@/lib/voucher/redeem";
-import { settleVoucherForBooking } from "@/lib/voucher/store";
-import { validatePromoForBooking, settlePromoForBooking } from "@/lib/promo/redeem";
+import { validatePromoForBooking } from "@/lib/promo/redeem";
 
 export const dynamic = "force-dynamic";
 
@@ -230,18 +229,30 @@ export async function POST(req: Request) {
         customer_phone: phone.trim(),
         customer_email: email.trim(),
         note: buildBookingNote({ testMode, base: note, promoCode, promoDiscountEur }),
-        total_eur: effectiveTotal,
-        deposit_eur: onlineDue, // realiai internetu mokama suma (po kupono)
+        // DB pakartoja nuolaidos validaciją, atominiu būdu rezervuoja jos
+        // panaudojimą ir grąžina galutines mokėjimo sumas.
+        base_total_eur: total,
+        base_deposit_eur: deposit,
+        total_eur: effectiveTotal, // suderinamumui migracijos diegimo metu
+        deposit_eur: onlineDue,
         status: immediatePaid ? "paid" : "pending",
         merchant_reference: merchantReference,
         voucher_code: voucherCode,
         voucher_discount_eur: voucherDiscount,
+        promo_code: promoCode,
+        promo_discount_eur: promoDiscountEur,
         invitation_type: invitationType,
         invitation_lang: invitationLang,
         celebrant_name: celebrantName,
         celebrant_age: celebrantAge,
       } })
-      .single<{ id: string }>();
+      .single<{
+        id: string;
+        total_eur: number;
+        deposit_eur: number;
+        voucher_discount_eur: number;
+        promo_discount_eur: number;
+      }>();
 
     if (insErr) throw insErr;
 
@@ -254,8 +265,6 @@ export async function POST(req: Request) {
 
     // --- Iškart apmokėta (test režimas arba kuponas padengė avansą) ---
     if (immediatePaid) {
-      if (voucherCode) await settleVoucherForBooking(voucherCode, merchantReference); // nurašom kuponą
-      if (promoCode) await settlePromoForBooking(promoCode, { id: inserted.id, merchant_reference: merchantReference });
       await syncBookingCalendar(inserted.id); // į Google Calendar (jei sukonfigūruota)
       await notifyBookingPaid(inserted.id); // patvirtinimo laiškai (jei sukonfigūruota)
       const testSuffix = !paymentReady ? "&test=1" : "";
@@ -275,7 +284,7 @@ export async function POST(req: Request) {
       : `BALA VR pabėgimo kambario avansas — ${date} ${time}`;
     const pay = await createPayseraPayment({
       merchantReference,
-      amount: onlineDue,
+      amount: Number(inserted.deposit_eur),
       acceptUrl: `${base}${confirmPath}?ref=${encodeURIComponent(merchantReference)}`,
       cancelUrl: `${base}${confirmPath}?ref=${encodeURIComponent(merchantReference)}&cancel=1`,
       callbackUrl: `${base}/api/paysera/callback`,
@@ -287,6 +296,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ paymentUrl: pay.paymentUrl, merchantReference });
   } catch (e) {
+    if (isDiscountClaimConflict(e)) {
+      return NextResponse.json(
+        { error: "Dovanų kuponas arba promo kodas nebegalioja, jau panaudotas arba rezervuotas." },
+        { status: 400 },
+      );
+    }
     if (isBookingOverlap(e)) {
       return NextResponse.json(
         { error: "Deja, šis laikas ką tik užimtas. Pasirinkite kitą." },
