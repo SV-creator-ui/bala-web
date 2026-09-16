@@ -84,6 +84,10 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const [time, setTime] = useState<string | null>(null);
   const [slots, setSlots] = useState<SlotStatus[] | null>(null);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  // FAIL-CLOSED: kai availability patikra nepavyksta, neleidžiam klientui
+  // matyti laikų kaip laisvų — vietoje jų rodom klaidą + retry mygtuką.
+  const [slotsError, setSlotsError] = useState<string | null>(null);
+  const [slotsRetryToken, setSlotsRetryToken] = useState(0);
 
   // Client-side slot cache: raktas „date|type|pkg|addons" → paruošti seansai.
   // Grįžtant prie tos pačios dienos — atsakymas iš atminties, be network round-trip.
@@ -96,7 +100,9 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     return `${d}|${t}|${pkg ?? ""}|${addonsCsv}`;
   }
 
-  /** Prefetch dienos slots'us fone (hover ant kalendoriaus). Naudoja tą patį cache. */
+  /** Prefetch dienos slots'us fone (hover ant kalendoriaus). Naudoja tą patį cache.
+   *  FAIL-CLOSED: klaidos atveju NECACHINAM — kad user'iui spragtelėjus datą,
+   *  būtų atliktas šviežias fetch, o ne pateiktas tuščias masyvas kaip „nėra laikų". */
   function prefetchSlots(d: string, t: BookingType, pkg: string | null, addonsCsv: string) {
     const key = slotKey(d, t, pkg, addonsCsv);
     const hit = slotCacheRef.current.get(key);
@@ -105,10 +111,11 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     if (pkg) params.set("pkg", pkg);
     if (addonsCsv) params.set("addons", addonsCsv);
     fetch(`/api/availability?${params.toString()}`)
-      .then((r) => r.json())
-      .then((data) => {
-        const list: SlotStatus[] = data.slots ?? [];
-        slotCacheRef.current.set(key, { slots: list, ts: Date.now() });
+      .then(async (r) => {
+        if (!r.ok) return; // NECACHINAM klaidos — retry įvyks kai user pasirinks datą
+        const data = await r.json();
+        if (!Array.isArray(data?.slots)) return;
+        slotCacheRef.current.set(key, { slots: data.slots as SlotStatus[], ts: Date.now() });
       })
       .catch(() => {});
   }
@@ -175,6 +182,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     if (cached && Date.now() - cached.ts < SLOT_TTL_MS) {
       // Instant path — jokių loading spinnerių, jokio fetch.
       setSlots(cached.slots);
+      setSlotsError(null);
       setSlotsLoading(false);
       setTime((t) => (t && cached.slots.some((s) => s.time === t && s.available) ? t : null));
       return;
@@ -187,28 +195,45 @@ export default function BookingFlow({ initialType, initialPkgId }: {
 
     setSlotsLoading(true);
     setSlots(null);
+    setSlotsError(null);
     const params = new URLSearchParams({ date, type });
     if (type === "party" && pkgId) params.set("pkg", pkgId);
     if (addonsKey) params.set("addons", addonsKey);
+    // FAIL-CLOSED: tikrinam r.ok; klaidos atveju rodom klaidą, o NE tuščią sąrašą
+    // (kad user'is neklaidingai nemanytų „šią dieną laisvų laikų nėra").
     fetch(`/api/availability?${params.toString()}`, { signal: ctrl.signal })
-      .then((r) => r.json())
-      .then((d) => {
+      .then(async (r) => {
         if (ctrl.signal.aborted) return;
-        const list: SlotStatus[] = d.slots ?? [];
+        if (!r.ok) {
+          setSlots(null);
+          setSlotsError("Nepavyko patikrinti užimtumo. Bandykite dar kartą.");
+          setTime(null);
+          return;
+        }
+        const d = await r.json();
+        if (!Array.isArray(d?.slots)) {
+          setSlots(null);
+          setSlotsError("Nepavyko patikrinti užimtumo. Bandykite dar kartą.");
+          setTime(null);
+          return;
+        }
+        const list = d.slots as SlotStatus[];
         slotCacheRef.current.set(key, { slots: list, ts: Date.now() });
         setSlots(list);
         setTime((t) => (t && list.some((s) => s.time === t && s.available) ? t : null));
       })
       .catch((err) => {
         if (ctrl.signal.aborted || err?.name === "AbortError") return;
-        setSlots([]);
+        setSlots(null);
+        setSlotsError("Nepavyko patikrinti užimtumo. Bandykite dar kartą.");
+        setTime(null);
       })
       .finally(() => {
         if (!ctrl.signal.aborted) setSlotsLoading(false);
       });
 
     return () => { ctrl.abort(); };
-  }, [date, type, pkgId, addonsKey]);
+  }, [date, type, pkgId, addonsKey, slotsRetryToken]);
 
   // Kainos. „rooms" — kaina už patį žaidimą (kambarys arba komandiniai žaidimai).
   const deposit = type ? depositFor(type) : 0;
@@ -306,7 +331,9 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   function canProceed(): boolean {
     switch (phase) {
       case "type": return type === "room" || type === "game" || (type === "party" && !!pkgId);
-      case "date": return !!(date && time);
+      // FAIL-CLOSED: negalim tęsti kol availability patikra nepatvirtinta
+      // (slotsError !== null → user matys retry mygtuką, o ne Toliau).
+      case "date": return !!(date && time) && !slotsError && slots !== null;
       case "players": return players >= 1;
       case "contact": return validName(name) && validPhone(phone) && validEmail(email) && inviteReady();
       case "payment": return agreed;
@@ -436,6 +463,8 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               setTime={setTime}
               slots={slots}
               slotsLoading={slotsLoading}
+              slotsError={slotsError}
+              onRetrySlots={() => setSlotsRetryToken((n) => n + 1)}
               type={type!}
               pkg={pkg}
               onHoverDay={(iso) => {
@@ -743,11 +772,12 @@ function TypeCard({ active, onClick, emoji, title, desc }: {
 }
 
 /* ---------------- Step 2: Date + Time ---------------- */
-function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime, slots, slotsLoading, type, pkg, block, onHoverDay }: {
+function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime, slots, slotsLoading, slotsError, onRetrySlots, type, pkg, block, onHoverDay }: {
   today: Date; viewMonth: Date; setViewMonth: (d: Date) => void;
   date: string | null; setDate: (d: string) => void;
   time: string | null; setTime: (t: string) => void;
   slots: SlotStatus[] | null; slotsLoading: boolean;
+  slotsError: string | null; onRetrySlots: () => void;
   type: BookingType; pkg: ReturnType<typeof getPartyPackage>;
   block: { start: string; end: string } | null;
   onHoverDay?: (iso: string) => void;
@@ -846,7 +876,19 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
               <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-volt" /> Kraunama…
             </p>
           )}
-          {date && !slotsLoading && slots && (
+          {date && !slotsLoading && slotsError && (
+            <div className="rounded-lg border border-genre-pink/50 bg-genre-pink/[.08] px-3 py-3 text-sm text-white">
+              <p className="mb-2">{slotsError}</p>
+              <button
+                type="button"
+                onClick={onRetrySlots}
+                className="rounded-lg border border-genre-pink px-3 py-1.5 text-[13px] font-semibold text-genre-pink hover:bg-genre-pink/10"
+              >
+                Bandyti dar kartą
+              </button>
+            </div>
+          )}
+          {date && !slotsLoading && !slotsError && slots && (
             <div className="grid grid-cols-3 gap-2">
               {slots.map((s) => (
                 <button
@@ -866,7 +908,7 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
               ))}
             </div>
           )}
-          {date && !slotsLoading && slots && slots.every((s) => !s.available) && (
+          {date && !slotsLoading && !slotsError && slots && slots.every((s) => !s.available) && (
             <p className="mt-3 rounded-lg border border-line bg-ink-card/60 px-3 py-2.5 text-sm text-smoke">
               Šią dieną laisvų laikų nėra. Pasirink kitą dieną.
             </p>

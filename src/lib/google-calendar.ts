@@ -231,11 +231,18 @@ function toVilniusDateAndMin(iso: string): { date: string; min: number } | null 
  * Grąžina užimtus intervalus konkrečiai datai iš Google Calendar.
  * `excludeEventIds` — savų (jau `bookings` lentelėje esančių) įvykių ID'ai,
  * kad išvengtume dvigubo skaičiavimo.
- * Klaidos — nefatališkos: grąžinam tuščią sąrašą.
+ *
+ * `opts.throwOnError` — default false: klaidos loginamos, grąžinamas tuščias
+ * sąrašas (backward-compat, naudinga diagnostikos endpoint'ams).
+ * `true` — meta klaidą aukštyn (availability srautas: fail-closed, kad klientas
+ * negalėtų rezervuoti laiko, kurį iš tiesų užima išorinis Calendar įvykis).
+ * Kalendoriaus nekonfigūracija (`googleCalendarConfigured() === false`) NĖRA
+ * klaida — abu režimai grąžina `[]`.
  */
 export async function fetchCalendarBusyForDate(
   date: string,
   excludeEventIds: Set<string>,
+  opts: { throwOnError?: boolean } = {},
 ): Promise<CalendarBusyInterval[]> {
   if (!googleCalendarConfigured()) return [];
   try {
@@ -260,7 +267,9 @@ export async function fetchCalendarBusyForDate(
       next: { revalidate: 30 },
     });
     if (!res.ok) {
-      console.error(`Calendar events fetch ${res.status}`);
+      const msg = `Calendar events fetch ${res.status}`;
+      console.error(msg);
+      if (opts.throwOnError) throw new Error(msg);
       return [];
     }
     const data = (await res.json()) as {
@@ -302,6 +311,7 @@ export async function fetchCalendarBusyForDate(
     return out;
   } catch (e) {
     console.error("fetchCalendarBusyForDate error:", e);
+    if (opts.throwOnError) throw e;
     return [];
   }
 }

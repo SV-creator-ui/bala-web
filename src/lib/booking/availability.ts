@@ -66,8 +66,10 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
     supabase.from("blackouts").select("time").eq("date", date),
     // Google Calendar išoriniai įvykiai (Moizmo paveldas ar rankiniai įrašai).
     // Fetch'inam BE filtro, po to žemiau išmetam savo pačių įvykius pagal
-    // gcal_event_id (kad nebūtų dvigubo skaičiavimo). Klaidos → tuščias sąrašas.
-    fetchCalendarBusyForDate(date, new Set()),
+    // gcal_event_id (kad nebūtų dvigubo skaičiavimo).
+    // FAIL-CLOSED: Calendar API klaida meta iki API route'o (500) — neleidžiam
+    // klientui matyti laikų kaip laisvų, kai išorinis Calendar nepasiekiamas.
+    fetchCalendarBusyForDate(date, new Set(), { throwOnError: true }),
   ]);
   if (bookingsError) throw bookingsError;
   if (blackoutsError) throw blackoutsError;
