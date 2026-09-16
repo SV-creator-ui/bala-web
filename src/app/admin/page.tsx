@@ -21,8 +21,8 @@ export default async function AdminPage() {
         <div className="mx-auto max-w-[520px] px-6 py-24 text-center">
           <h1 className="font-display text-3xl uppercase mb-3">Admin užrakinta</h1>
           <p className="text-smoke">
-            Duomenų bazė sukonfigūruota, bet nenustatytas <code className="text-volt">ADMIN_PASSWORD</code>.
-            Pridėkite jį aplinkos kintamuosiuose ir perkraukite.
+            Patikrinkite <code className="text-volt">ADMIN_PASSWORD</code> ir <code className="text-volt">ADMIN_SESSION_SECRET</code> aplinkos kintamuosius.
+            Sesijos raktas turi būti atskiras, kriptografiškai atsitiktinis ir bent 32 UTF-8 baitų ilgio, be tarpų pradžioje ar pabaigoje.
           </p>
         </div>
       ) : authed ? (

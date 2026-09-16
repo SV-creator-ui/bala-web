@@ -10,8 +10,8 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   if (adminLocked()) {
     return NextResponse.json(
-      { error: "Admin prieiga užrakinta. Nustatykite ADMIN_PASSWORD aplinkos kintamąjį." },
-      { status: 403 },
+      { error: "Admin prieiga užrakinta. Patikrinkite ADMIN_PASSWORD ir ADMIN_SESSION_SECRET konfigūraciją." },
+      { status: 401 },
     );
   }
   let body: { password?: string };
@@ -36,7 +36,9 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE() {
-  const res = NextResponse.json({ ok: true });
+  const res = adminLocked()
+    ? NextResponse.json({ error: "Neautorizuota" }, { status: 401 })
+    : NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
   return res;
 }

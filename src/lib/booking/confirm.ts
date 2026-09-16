@@ -29,10 +29,11 @@ export async function resolveByRef(ref: string | undefined): Promise<ResolveResu
     const { data } = await supabase.from("bookings").select("*").eq("merchant_reference", ref).single();
     let booking = data as BookingRow | null;
     if (!booking) return { status: "error" };
+    if (booking.payment_conflict_at && booking.status !== "paid") return { status: "error" };
 
-    // Atsarginis patvirtinimas: jei dar „pending", pasitikrinam Paysera būseną
+    // Atsarginis patvirtinimas: „pending“ / „expired“ tikriname Paysera būseną
     // (webhook'as gali vėluoti). montonio_uuid saugo Paysera order id.
-    if (booking.status === "pending" && booking.montonio_uuid && payseraConfigured()) {
+    if ((booking.status === "pending" || booking.status === "expired") && booking.montonio_uuid && payseraConfigured()) {
       const st = await getPayseraOrderStatus(booking.montonio_uuid);
       if (isPaidStatus(st)) {
         await markPaidByRef(ref);

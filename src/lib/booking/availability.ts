@@ -60,27 +60,24 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
   const nowV = venueNow();
   const leadCutoffMin = date === nowV.date ? nowV.min + BOOKING.bookingLeadMin : -1;
 
-  const holdCutoff = new Date(Date.now() - BOOKING.pendingHoldMin * 60_000).toISOString();
-
-  const [{ data: bookings }, { data: blackouts }, calendarBusyRaw] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select("id,time,status,created_at,type,package_id,block_start,block_end,addons,gcal_event_id")
-      .eq("date", date)
-      .in("status", ["paid", "pending"]),
+  const [{ data: bookings, error: bookingsError }, { data: blackouts, error: blackoutsError }, calendarBusyRaw] = await Promise.all([
+    // DB clock defines the same 30-minute hold boundary as atomic writes.
+    supabase.rpc("active_bookings_for_date", { p_date: date }),
     supabase.from("blackouts").select("time").eq("date", date),
     // Google Calendar išoriniai įvykiai (Moizmo paveldas ar rankiniai įrašai).
     // Fetch'inam BE filtro, po to žemiau išmetam savo pačių įvykius pagal
     // gcal_event_id (kad nebūtų dvigubo skaičiavimo). Klaidos → tuščias sąrašas.
     fetchCalendarBusyForDate(date, new Set()),
   ]);
+  if (bookingsError) throw bookingsError;
+  if (blackoutsError) throw blackoutsError;
 
   // Išmetam iš kalendoriaus tuos įvykius, kuriuos patys sukūrėme (jų laikai
   // jau įskaityti per `bookings` lentelę).
   const ownGcalIds = new Set(
     (bookings || [])
-      .map((b) => (b as { gcal_event_id?: string | null }).gcal_event_id)
-      .filter((id): id is string => !!id),
+      .map((b: { gcal_event_id?: string | null }) => b.gcal_event_id)
+      .filter((id: string | null | undefined): id is string => !!id),
   );
   const calendarBusy = calendarBusyRaw.filter((ev) => !ownGcalIds.has(ev.eventId));
 
@@ -97,7 +94,6 @@ export async function getAvailability(date: string, query: AvailabilityQuery): P
   const busy: TypedInterval[] = [];
   for (const b of bookings || []) {
     if (query.excludeId && b.id === query.excludeId) continue; // ji pati (perkeliama)
-    if (b.status === "pending" && b.created_at < holdCutoff) continue; // nustojęs galioti holdas
     busy.push(existingActive(b));
   }
 

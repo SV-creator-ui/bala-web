@@ -41,6 +41,7 @@ export type BookingRow = {
   total_eur: number;
   deposit_eur: number;
   status: "pending" | "paid" | "cancelled" | "expired";
+  payment_conflict_at?: string | null; // paid money, no slot: manual review required
   montonio_uuid: string | null;
   merchant_reference: string;
   gcal_event_id: string | null; // Google Calendar įvykio id (jei sukurtas)

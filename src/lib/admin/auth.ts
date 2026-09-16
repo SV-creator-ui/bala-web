@@ -1,9 +1,11 @@
 /**
  * Admin skydelio autentifikacija.
  * - Slaptažodis iš aplinkos: ADMIN_PASSWORD.
- * - Jei DB nesukonfigūruota (nėra Supabase) — DEMO režimas, slaptažodis "demo".
- * - Jei DB yra, bet ADMIN_PASSWORD nenustatytas — prieiga UŽRAKINTA
- *   (kad realūs duomenys neliktų prieinami su numatytu slaptažodžiu).
+ * - ADMIN_PASSWORD ir ADMIN_SESSION_SECRET būtini visuose režimuose.
+ * - JWT raktas: atskiras kriptografiškai atsitiktinis ADMIN_SESSION_SECRET
+ *   (bent 32 UTF-8 baitai; atsitiktinumą užtikrina rakto generavimas).
+ * - Jei autentifikacijos konfigūracijos nėra — prieiga UŽRAKINTA.
+ * - Numatytojo slaptažodžio ar atsarginio JWT rakto nėra.
  *
  * Sesija — pasirašytas JWT httpOnly slapuke.
  */
@@ -21,40 +23,44 @@ export function demoMode(): boolean {
   return !dbConfigured();
 }
 
-/** Laukiamas slaptažodis, arba null jei prieiga užrakinta */
-function expectedPassword(): string | null {
-  if (process.env.ADMIN_PASSWORD) return process.env.ADMIN_PASSWORD;
-  if (demoMode()) return "demo";
-  return null; // DB yra, bet slaptažodžio nėra -> užrakinta
+/** Vienintelė admin autentifikacijos konfigūracijos patikros vieta. */
+function authConfig(): { password: string; secret: Uint8Array } | null {
+  const password = process.env.ADMIN_PASSWORD;
+  const sessionSecret = process.env.ADMIN_SESSION_SECRET;
+  if (!password?.trim() || !sessionSecret?.trim()) return null;
+  if (sessionSecret !== sessionSecret.trim() || sessionSecret === password) return null;
+  const secret = new TextEncoder().encode(sessionSecret);
+  if (secret.byteLength < 32) return null;
+  return { password, secret };
 }
 
 export function adminLocked(): boolean {
-  return expectedPassword() === null;
+  return authConfig() === null;
 }
 
 export function checkPassword(input: string): boolean {
-  const pw = expectedPassword();
-  return pw !== null && input === pw;
-}
-
-function secret(): Uint8Array {
-  return new TextEncoder().encode(process.env.ADMIN_PASSWORD || "bala-demo-admin-secret-v1");
+  const config = authConfig();
+  return config !== null && input === config.password;
 }
 
 export async function createSessionToken(): Promise<string> {
+  const config = authConfig();
+  if (!config) throw new Error("Admin autentifikacija nesukonfigūruota");
   return await new SignJWT({ role: "admin" })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(secret());
+    .sign(config.secret);
 }
 
 /** Ar dabartinis vartotojas prisijungęs (tikrina slapuką) */
 export async function isAuthed(): Promise<boolean> {
+  const config = authConfig();
+  if (!config) return false;
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return false;
   try {
-    await jwtVerify(token, secret(), { algorithms: ["HS256"] });
+    await jwtVerify(token, config.secret, { algorithms: ["HS256"] });
     return true;
   } catch {
     return false;

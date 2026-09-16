@@ -4,12 +4,30 @@
  * būtų galima iškart pamatyti ir išbandyti be DB).
  */
 import { getSupabaseAdmin, type BookingRow } from "@/lib/supabase/server";
-import { bookingWindowHHMM } from "@/lib/booking/window";
-import { dayHours } from "@/lib/booking/config";
+import { activeInterval, bookingWindowHHMM, conflictsWithGap, type TypedInterval } from "@/lib/booking/window";
+import { dayHours, type BookingType } from "@/lib/booking/config";
 import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 import { notifyBookingPaid } from "@/lib/booking/notify";
 import { settleBookingVoucher } from "@/lib/voucher/redeem";
 import { dbConfigured } from "./auth";
+
+/** Konflikto klaida — mestama, kai patvirtinimas paid dubliuotų jau esantį apmokėtą laiką. */
+export class BookingConflictError extends Error {
+  constructor(public conflicting: Pick<BookingRow, "id" | "date" | "time" | "customer_name" | "merchant_reference">) {
+    super("BOOKING_CONFLICT");
+    this.name = "BookingConflictError";
+  }
+}
+
+function toBookingType(t: string | null | undefined): BookingType {
+  return t === "party" ? "party" : t === "game" ? "game" : "room";
+}
+
+function toTypedInterval(b: Pick<BookingRow, "type" | "time" | "package_id" | "addons">): TypedInterval {
+  const type = toBookingType(b.type);
+  const addons = Array.isArray(b.addons) ? (b.addons as unknown[]).map(String) : [];
+  return { ...activeInterval(type, b.time, b.package_id ?? null, addons), type };
+}
 
 export type Blackout = { id: string; date: string; time: string | null; reason: string | null };
 export type BookingStatus = BookingRow["status"];
@@ -91,6 +109,20 @@ function mkParty(
 
 /* ============ VIEŠOS FUNKCIJOS ============ */
 
+/**
+ * Pažymi „pending" eilutes, senesnes nei BOOKING.pendingHoldMin, kaip „expired".
+ * Idempotentiška, saugu kviesti pakartotinai. Užkerta kelią dubliams: kai
+ * klientas paliko Paysera'ą ir po valandos vėl rezervavo tą patį laiką (ir
+ * apmokėjo), sena pending eilutė nebeatrodo kaip „laukianti" — jos admin
+ * atsitiktinai nepatvirtins į paid.
+ */
+export async function expireStalePendings(): Promise<void> {
+  if (!dbConfigured()) return;
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.rpc("expire_pending_bookings");
+  if (error) throw error;
+}
+
 export async function listBookings(filter: BookingsFilter = {}): Promise<BookingRow[]> {
   if (!dbConfigured()) {
     return demoBookings
@@ -99,6 +131,7 @@ export async function listBookings(filter: BookingsFilter = {}): Promise<Booking
       .filter((b) => (filter.status && filter.status !== "all" ? b.status === filter.status : true))
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
   }
+  await expireStalePendings();
   const supabase = getSupabaseAdmin();
   let q = supabase.from("bookings").select("*");
   if (filter.from) q = q.gte("date", filter.from);
@@ -109,10 +142,42 @@ export async function listBookings(filter: BookingsFilter = {}): Promise<Booking
   return (data ?? []) as BookingRow[];
 }
 
+/**
+ * Ar egzistuoja KITA apmokėta rezervacija, dengiančio dato/laiko langą su duota?
+ * Grąžina konfliktuojančią eilutę arba null. Naudojama prieš patvirtinant
+ * pending → paid, kad admin negalėtų sukurti dviejų paid tam pačiam laiko langui.
+ */
+export async function findConflictingPaidBooking(target: BookingRow): Promise<BookingRow | null> {
+  if (!dbConfigured()) return null;
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("*")
+    .eq("date", target.date)
+    .eq("status", "paid")
+    .neq("id", target.id);
+  if (error) return null;
+  const mine = toTypedInterval(target);
+  for (const row of (data ?? []) as BookingRow[]) {
+    if (conflictsWithGap(mine, toTypedInterval(row))) return row;
+  }
+  return null;
+}
+
 export async function updateBookingStatus(id: string, status: BookingStatus): Promise<void> {
   if (!dbConfigured()) {
     demoBookings = demoBookings.map((b) => (b.id === id ? { ...b, status } : b));
     return;
+  }
+  // Prieš patvirtinant paid — įsitikinam, kad nėra kito paid įrašo, dengiančio tą patį laiko langą.
+  // Kitaip admin per klaidą sukurtų dublį (dažniausias scenarijus: klientas paliko
+  // Paysera'ą, vėliau rezervavo naujai ir apmokėjo — sena pending vis dar sąraše).
+  if (status === "paid") {
+    const target = await getBooking(id);
+    if (target && target.status !== "paid") {
+      const clash = await findConflictingPaidBooking(target);
+      if (clash) throw new BookingConflictError(clash);
+    }
   }
   const supabase = getSupabaseAdmin();
   const { error } = await supabase.from("bookings").update({ status }).eq("id", id);

@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { isSlotAvailable } from "@/lib/booking/availability";
+import { isBookingOverlap } from "@/lib/booking/conflict";
 import { grandTotal, gamesPrice } from "@/lib/booking/pricing";
 import { BOOKING, ADDONS, generateSlotsForDate, dayHours, depositFor, type BookingType } from "@/lib/booking/config";
 import { bookingWindowHHMM } from "@/lib/booking/window";
@@ -216,8 +217,7 @@ export async function POST(req: Request) {
     const immediatePaid = !paymentReady || onlineDue <= 0;
 
     const { data: inserted, error: insErr } = await supabase
-      .from("bookings")
-      .insert({
+      .rpc("create_booking_guarded", { p_booking: {
         type,
         package_id: type === "party" ? packageId : null,
         date,
@@ -240,9 +240,8 @@ export async function POST(req: Request) {
         invitation_lang: invitationLang,
         celebrant_name: celebrantName,
         celebrant_age: celebrantAge,
-      })
-      .select("id")
-      .single();
+      } })
+      .single<{ id: string }>();
 
     if (insErr) throw insErr;
 
@@ -288,6 +287,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ paymentUrl: pay.paymentUrl, merchantReference });
   } catch (e) {
+    if (isBookingOverlap(e)) {
+      return NextResponse.json(
+        { error: "Deja, šis laikas ką tik užimtas. Pasirinkite kitą." },
+        { status: 409 },
+      );
+    }
     console.error("booking error:", e);
     return NextResponse.json(
       { error: "Nepavyko sukurti rezervacijos. Bandykite dar kartą." },

@@ -37,7 +37,7 @@ export default function AdminLogin({ demo }: { demo: boolean }) {
       <h1 className="font-display text-3xl uppercase mb-2">Prisijungimas</h1>
       {demo && (
         <p className="mb-5 rounded-lg border border-volt/40 bg-volt/10 px-4 py-3 text-sm text-smoke">
-          <b className="text-volt">DEMO režimas</b> — duomenų bazė dar nesukonfigūruota. Slaptažodis: <code className="text-white">demo</code>. Duomenys pavyzdiniai.
+          <b className="text-volt">DEMO režimas</b> — duomenų bazė dar nesukonfigūruota. Prisijunkite su nustatytu administratoriaus slaptažodžiu. Duomenys pavyzdiniai.
         </p>
       )}
       <form onSubmit={submit} className="flex flex-col gap-3">

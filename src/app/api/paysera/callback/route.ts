@@ -14,6 +14,7 @@ import {
   isPaidStatus,
 } from "@/lib/paysera";
 import { markPaidByRef } from "@/lib/booking/settle";
+import { BookingPaymentConflictError } from "@/lib/booking/conflict";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +50,10 @@ export async function POST(req: Request) {
     await markPaidByRef(hook.merchantReference);
     return text(200, "OK");
   } catch (e) {
+    if (e instanceof BookingPaymentConflictError) {
+      console.error("paysera booking conflict: manual review required", hook.merchantReference);
+      return text(409, "booking conflict: payment requires manual review");
+    }
     console.error("paysera callback error:", e);
     return text(500, "server error"); // Paysera pakartos
   }

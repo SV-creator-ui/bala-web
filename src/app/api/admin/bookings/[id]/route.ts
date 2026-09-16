@@ -5,10 +5,11 @@
  */
 import { NextResponse } from "next/server";
 import { isAuthed } from "@/lib/admin/auth";
-import { updateBookingStatus, rescheduleBooking, getBooking, type BookingStatus } from "@/lib/admin/data";
+import { updateBookingStatus, rescheduleBooking, getBooking, BookingConflictError, type BookingStatus } from "@/lib/admin/data";
 import { getAvailability } from "@/lib/booking/availability";
 import { generateSlotsForDate } from "@/lib/booking/config";
 import { validFutureDate } from "@/lib/booking/validation";
+import { isBookingOverlap } from "@/lib/booking/conflict";
 import { resendBookingEmails } from "@/lib/booking/resend";
 import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 import { googleCalendarConfigured } from "@/lib/google-calendar";
@@ -85,6 +86,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       await rescheduleBooking(id, date, time);
       return NextResponse.json({ ok: true });
     } catch (e) {
+      if (isBookingOverlap(e)) return NextResponse.json({ error: "Šis laikas jau užimtas." }, { status: 409 });
       console.error("admin reschedule error:", e);
       return NextResponse.json({ error: "Nepavyko perkelti" }, { status: 500 });
     }
@@ -99,6 +101,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     await updateBookingStatus(id, status);
     return NextResponse.json({ ok: true });
   } catch (e) {
+    if (isBookingOverlap(e)) return NextResponse.json({ error: "Šis laikas jau užimtas kitos galiojančios rezervacijos." }, { status: 409 });
+    if (e instanceof BookingConflictError) {
+      const c = e.conflicting;
+      return NextResponse.json(
+        {
+          error: `Šis laikas (${c.date} ${c.time}) jau turi apmokėtą rezervaciją: ${c.customer_name} (${c.merchant_reference}). Patikrinkite, ar tai ne tas pats klientas — jei taip, atšaukite šitą pending rezervaciją.`,
+          conflictingId: c.id,
+        },
+        { status: 409 },
+      );
+    }
     console.error("admin update booking error:", e);
     return NextResponse.json({ error: "Nepavyko atnaujinti" }, { status: 500 });
   }
