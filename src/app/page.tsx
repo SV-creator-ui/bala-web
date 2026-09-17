@@ -230,6 +230,17 @@ export default function ChooserPage() {
             </div>
           </Link>
         </div>
+
+        {/* Dovanų kuponas — secondary CTA */}
+        <div className="mt-6 md:mt-8 flex justify-center">
+          <Link
+            href="/pabegimo-kambariai/dovanu-kuponas"
+            className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-white/[0.03] px-5 py-3 text-[14px] md:text-[14.5px] font-semibold text-smoke transition-colors hover:border-volt/50 hover:bg-white/[0.06] hover:text-white"
+          >
+            Ieškai dovanos? Padovanok VR nuotykį <span aria-hidden>→</span>
+          </Link>
+        </div>
+
         <ChooserReviewsSlider />
       </div>
 
