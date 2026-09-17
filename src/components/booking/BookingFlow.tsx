@@ -253,9 +253,38 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const onlineDue = Math.min(deposit, effectiveTotal);
   const onSite = effectiveTotal - onlineDue;
 
+  // FIX #1 — Auto-clear promo state kai keičiasi kaina ar promo eligibility inputai.
+  // Frontend'e cache'inta discount reikšmė iš /api/promo/validate tampa stale, kai
+  // total/type/voucherCode/email pasikeičia po pritaikymo — serveris re-validuos
+  // su naujom reikšmėm ir gali skaičiuoti kitą discount (arba atmesti kodą).
+  // Kad klientas nepamatytų klaidingos „online due" sumos prieš Paysera charge,
+  // nuvalom promo state ir reikalaujam pritaikyti iš naujo.
+  //
+  // SVARBU: sąlyginė guard'a `promoCode` reiškia, kad email tipavimas per-simbolis
+  // BE aktyvaus promo NIEKO nedaro (vartotojas gali laisvai rašyti email prieš
+  // pirmą apply). Tik JAU pritaikytas promo išsivalo, kai email keičiasi.
+  //
+  // setTimeout(0) — kad setState nekiltų sinchroniškai iš effect body (React
+  // 19 lint rule set-state-in-effect), o tik po React'o commit'o.
+  useEffect(() => {
+    if (!promoCode) return;
+    const timer = window.setTimeout(() => {
+      setPromoCode(null);
+      setPromoDiscount(0);
+      setPromoMsg({ ok: false, text: "Rezervacijos duomenys pasikeitė — pritaikykite nuolaidos kodą iš naujo." });
+    }, 0);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total, type, voucherCode, email]);
+
   async function applyVoucher() {
     const code = voucherInput.trim();
     if (!code) return;
+    // FIX #2 — voucher ir promo negali būti aktyvūs vienu metu (server + DB atmestų).
+    if (promoCode) {
+      setVoucherMsg({ ok: false, text: "Aktyvus nuolaidos kodas — pirma jį pašalinkite, tada pritaikykite kuponą." });
+      return;
+    }
     setVoucherChecking(true);
     setVoucherMsg(null);
     try {
@@ -290,6 +319,11 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   async function applyPromo() {
     const code = promoInput.trim().toUpperCase();
     if (!code || !type) return;
+    // FIX #2 — voucher ir promo negali būti aktyvūs vienu metu.
+    if (voucherCode) {
+      setPromoMsg({ ok: false, text: "Aktyvus dovanų kuponas — pirma jį pašalinkite, tada pritaikykite nuolaidos kodą." });
+      return;
+    }
     setPromoChecking(true);
     setPromoMsg(null);
     try {
