@@ -12,6 +12,7 @@ import {
   issueVoucher,
   claimVoucherEmail,
   markVoucherEmailsSent,
+  releaseVoucherEmailClaim,
 } from "./store";
 import { generateVoucherPdf } from "./pdf";
 import { sendVoucherEmails } from "./email";
@@ -42,15 +43,18 @@ export async function fulfillVoucherByRef(ref: string): Promise<VoucherRow | nul
       });
     }
 
-    // Atominis claim — kad nesusidubliuotų laiškai. Tik pirmas kviesėjas siunčia.
+    // Atominis lease — kad nesusidubliuotų laiškai. Tik pirmas kviesėjas siunčia.
+    // Po sėkmės žymim `emails_sent_at` (nauja, permanentu) + atlaisvinam claim.
+    // Po klaidos atlaisvinam claim, kad sekantis retry (cron / patvirtinimo
+    // puslapis) galėtų iš naujo bandyti (o ne tyliai prarasti PDF).
     if (emailConfigured() && (await claimVoucherEmail(v.id))) {
       try {
         const pdf = await generateVoucherPdf(v);
         await sendVoucherEmails(v, pdf);
+        await markVoucherEmailsSent(v.id);
       } catch (e) {
         console.error("voucher fulfill send error:", e);
-        // Nepavyko — atlaisvinam, kad būtų galima pakartoti (webhook/patvirtinimas).
-        await markVoucherEmailsSent(v.id).catch(() => {});
+        await releaseVoucherEmailClaim(v.id).catch(() => {});
       }
     }
     return v;

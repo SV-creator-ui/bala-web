@@ -46,6 +46,8 @@ export type BookingRow = {
   merchant_reference: string;
   gcal_event_id: string | null; // Google Calendar įvykio id (jei sukurtas)
   emails_sent_at: string | null; // kada išsiųsti patvirtinimo laiškai (null = dar ne)
+  email_send_claimed_at: string | null; // laikinas claim'as (lease); NULL = laisvas
+
   voucher_code: string | null; // panaudoto dovanų kupono kodas (jei buvo)
   voucher_discount_eur: number; // kiek kuponas padengė šioje rezervacijoje (EUR)
   promo_code: string | null;
@@ -76,4 +78,5 @@ export type VoucherRow = {
   redeemed_at: string | null;
   redeemed_booking_ref: string | null;
   emails_sent_at: string | null;
+  email_send_claimed_at: string | null; // laikinas claim'as (lease); NULL = laisvas
 };

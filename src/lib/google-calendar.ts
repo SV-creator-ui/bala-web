@@ -149,8 +149,80 @@ function eventBody(b: BookingRow) {
 /* ------------------------- Viešos operacijos ------------------------- */
 
 /**
+ * Deterministinas Google Calendar event ID iš booking UUID.
+ * Google reikalavimai (events.insert): base32hex charset (0-9, a-v), 5–1024 chars.
+ * Supabase UUID'as naudoja tik 0-9 a-f (subset iš a-v) — validus.
+ * Naudojam kaip idempotency raktą: pakartotinis POST tuo pačiu ID → 409 Conflict.
+ */
+function bookingEventId(b: BookingRow): string {
+  return b.id.replace(/-/g, "");
+}
+
+/** Bandom „resurrect" cancelled event'ą per PATCH { status: "confirmed", ...body }. */
+async function tryRestoreCancelled(
+  token: string,
+  base: string,
+  eventId: string,
+  b: BookingRow,
+): Promise<boolean> {
+  const res = await fetch(`${base}/${encodeURIComponent(eventId)}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ ...eventBody(b), status: "confirmed" }),
+  });
+  return res.ok;
+}
+
+/**
+ * Apdoroja 409 Conflict iš POST'o su deterministic ID.
+ * GET'iname event'ą pagal ID ir sprendžiam:
+ *  • 200 confirmed → grąžina ID (idempotent success)
+ *  • 200 cancelled → PATCH restore → grąžina ID
+ *  • 404/410 → tombstone (Google saugo ~30 d.) → fallback: POST be `id` (Google priskirs)
+ * Fallback išsaugo admin `force-recreate-calendar` veikimą po hard-delete'o.
+ */
+async function handleDuplicateEventId(
+  token: string,
+  base: string,
+  eventId: string,
+  b: BookingRow,
+): Promise<string> {
+  const getRes = await fetch(`${base}/${encodeURIComponent(eventId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (getRes.ok) {
+    const existing = (await getRes.json().catch(() => ({}))) as { status?: string };
+    if (existing.status !== "cancelled") return eventId; // egzistuoja + aktyvus
+    // Cancelled — bandom resurrect'inti
+    if (await tryRestoreCancelled(token, base, eventId, b)) return eventId;
+    console.warn(`Calendar restore cancelled event ${eventId} failed, using fallback POST`);
+  } else if (getRes.status !== 404 && getRes.status !== 410) {
+    throw new Error(`Google Calendar GET on 409 conflict returned ${getRes.status}`);
+  } else {
+    // 404 / 410 = tombstone; deterministic ID nepanaudojamas iki tombstone period pabaigos
+    console.warn(`Calendar deterministic ID ${eventId} tombstoned (${getRes.status}), using Google-assigned ID`);
+  }
+  // Fallback: POST BE `id` — Google pati priskiria naują (skirtingą) ID
+  const res = await fetch(base, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(eventBody(b)),
+  });
+  if (!res.ok) {
+    throw new Error(`Google Calendar POST fallback ${res.status}: ${await res.text().catch(() => "")}`);
+  }
+  const data = (await res.json()) as { id: string };
+  return data.id;
+}
+
+/**
  * Sukuria (arba atnaujina, jei `b.gcal_event_id` yra) kalendoriaus įvykį.
- * Grąžina įvykio id arba null (jei nesukonfigūruota / klaida).
+ * Grąžina įvykio id arba null (jei nesukonfigūruota).
+ *
+ * IDEMPOTENCY: CREATE kelias POST'ina su deterministic ID iš booking UUID.
+ * Pakartotinis kvietimas (webhook + patvirtinimo puslapis + cron + admin
+ * force-recreate) tuo pačiu ID → 409 Conflict → GET verifikuoja + grąžina
+ * tą patį ID. Vieno booking'o kalendoriuje visada egzistuoja tik VIENAS event'as.
  */
 export async function syncBookingEvent(b: BookingRow): Promise<string | null> {
   if (!googleCalendarConfigured()) return null;
@@ -175,7 +247,7 @@ export async function syncBookingEvent(b: BookingRow): Promise<string | null> {
       } catch {
         return b.gcal_event_id; // parse nepavyko — laikom sėkme
       }
-      // krentam žemiau į POST — sukurti naują įvykį
+      // krentam žemiau į POST — sukurti naują įvykį (deterministic ID keliu)
     } else if (res.status !== 404 && res.status !== 410) {
       // 410 Gone = įvykis ištrintas ir šiukšliadėžėje; laikom kaip 404 — kuriam naują.
       throw new Error(`Google Calendar PATCH ${res.status}: ${await res.text().catch(() => "")}`);
@@ -183,14 +255,22 @@ export async function syncBookingEvent(b: BookingRow): Promise<string | null> {
     // 404 / 410 / cancelled — įvykis dingęs; sukuriame naują (kris žemiau).
   }
 
+  // CREATE: POST su deterministic ID → idempotent (concurrent + retry-safe).
+  const eventId = bookingEventId(b);
+  const bodyWithId = JSON.stringify({ ...eventBody(b), id: eventId });
   const res = await fetch(base, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body,
+    body: bodyWithId,
   });
-  if (!res.ok) throw new Error(`Google Calendar POST ${res.status}: ${await res.text().catch(() => "")}`);
-  const data = (await res.json()) as { id: string };
-  return data.id;
+  if (res.ok) {
+    const data = (await res.json()) as { id: string };
+    return data.id;
+  }
+  if (res.status === 409) {
+    return await handleDuplicateEventId(token, base, eventId, b);
+  }
+  throw new Error(`Google Calendar POST ${res.status}: ${await res.text().catch(() => "")}`);
 }
 
 /* ------------------------- Įvykių skaitymas ------------------------- */

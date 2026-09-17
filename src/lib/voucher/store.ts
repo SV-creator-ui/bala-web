@@ -95,24 +95,49 @@ export async function issueVoucher(id: string): Promise<VoucherRow | null> {
   throw new Error("Nepavyko sugeneruoti unikalaus kupono kodo");
 }
 
+/**
+ * Pažymi kaip išsiųstą + atlaisvina claim'ą (po sėkmingo send).
+ * Admin resend kelias irgi juo naudojasi (žr. resendVoucherEmail).
+ */
 export async function markVoucherEmailsSent(id: string): Promise<void> {
   const supabase = getSupabaseAdmin();
-  await supabase.from("vouchers").update({ emails_sent_at: new Date().toISOString() }).eq("id", id);
+  await supabase
+    .from("vouchers")
+    .update({ emails_sent_at: new Date().toISOString(), email_send_claimed_at: null })
+    .eq("id", id);
 }
 
+/** Atlaisvina claim'ą po send klaidos, kad sekantis retry galėtų perimti. */
+export async function releaseVoucherEmailClaim(id: string): Promise<void> {
+  const supabase = getSupabaseAdmin();
+  await supabase.from("vouchers").update({ email_send_claimed_at: null }).eq("id", id);
+}
+
+/** Kiek laiko voucher claim'as galioja iki kito retry gali jį perimti (crash safety). */
+const VOUCHER_CLAIM_STALE_MS = 10 * 60 * 1000;
+
 /**
- * Atominis „claim" laiško siuntimui — kad webhook IR patvirtinimo puslapis
- * nesiųstų dublikato. Grąžina true tik pirmam kviesėjui (kai emails_sent_at
- * dar buvo NULL). Vėlesnis pakartotinis siuntimas admin skydelyje eina per
- * markVoucherEmailsSent, ne per šitą.
+ * Atominis „claim" (lease) laiško siuntimui — kad webhook IR patvirtinimo puslapis
+ * nesiųstų dublikato. Grąžina true tik pirmam kviesėjui.
+ *
+ * DIZAINAS (migration_010_email_send_claim.sql):
+ *  • `email_send_claimed_at` — lease (perimamas jei senesnis nei 10 min)
+ *  • `emails_sent_at`        — nustatomas TIK po sėkmingo send'o
+ *
+ * Iki migration_010 šis metodas naudojo `emails_sent_at` kaip laikiną claim'ą —
+ * turėjo crash-window'ą, kai `emails_sent_at` lieka nustatytas net jei send
+ * niekada neįvyko. Dabar dvi žymos atskirtos: sekantis retry po crash'o
+ * perima stale claim'ą ir bandys iš naujo.
  */
 export async function claimVoucherEmail(id: string): Promise<boolean> {
   const supabase = getSupabaseAdmin();
+  const staleThreshold = new Date(Date.now() - VOUCHER_CLAIM_STALE_MS).toISOString();
   const { data } = await supabase
     .from("vouchers")
-    .update({ emails_sent_at: new Date().toISOString() })
+    .update({ email_send_claimed_at: new Date().toISOString() })
     .eq("id", id)
     .is("emails_sent_at", null)
+    .or(`email_send_claimed_at.is.null,email_send_claimed_at.lt.${staleThreshold}`)
     .select("id");
   return Array.isArray(data) && data.length > 0;
 }
