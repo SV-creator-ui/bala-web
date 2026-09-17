@@ -1,10 +1,27 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default function HeroVideo({ src = "/hero-vr.mp4", quote = null }) {
+export default function HeroVideo({
+  src = "/hero-vr.mp4",
+  poster,
+  quote = null,
+  desktopOnly = false,
+}) {
   const videoRef = useRef(null);
   const [muted, setMuted] = useState(true);
+  const [shouldRender, setShouldRender] = useState(!desktopOnly);
+
+  useEffect(() => {
+    if (!desktopOnly) return;
+
+    const desktopQuery = window.matchMedia("(min-width: 1025px)");
+    const updateVisibility = () => setShouldRender(desktopQuery.matches);
+
+    updateVisibility();
+    desktopQuery.addEventListener("change", updateVisibility);
+    return () => desktopQuery.removeEventListener("change", updateVisibility);
+  }, [desktopOnly]);
 
   const toggleSound = () => {
     const video = videoRef.current;
@@ -18,11 +35,14 @@ export default function HeroVideo({ src = "/hero-vr.mp4", quote = null }) {
     setMuted(next);
   };
 
+  if (!shouldRender) return null;
+
   return (
     <div className="hero-video-phone">
       <video
         ref={videoRef}
         src={src}
+        poster={poster}
         autoPlay
         muted
         loop

@@ -14,10 +14,11 @@ export default function Hero() {
     <section className="hero" id="pradzia">
       <div className="container">
         <div className="hero-inner">
-          <div className="hero-visual">
+          <div className="hero-visual hero-visual-desktop-only">
             <div className="hero-video-wrap">
               <HeroVideo
                 src="/hero-vr.mp4"
+                desktopOnly
                 quote={{
                   text: "„Puiki pramoga tiek suaugusiems, tiek vaikams, tiek šeimai. Nuostabiai praleidom laiką.”",
                   author: "Diana S.",
@@ -51,7 +52,10 @@ export default function Hero() {
           </div>
           <div className="hero-visual">
             <div className="hero-video-wrap">
-              <HeroVideo src="/hero-video.mp4" />
+              <HeroVideo
+                src="/hero-video.mp4"
+                poster="/hero-video-poster.webp"
+              />
             </div>
           </div>
         </div>

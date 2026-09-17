@@ -1,20 +1,49 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import DeferredVideo from "@/components/shared/DeferredVideo";
 
-type Game = { video?: string; img?: string; tag: string };
+type Game = { video?: string; poster?: string; img?: string; tag: string };
 
 // Žaidimų galerija (tie patys failai kaip gimtadienių puslapyje)
 const GAMES: Game[] = [
-  { video: "/games/g-cookdup.mp4", tag: "Nuotykis" },
-  { video: "/games/g-party-ship.mp4", tag: "Veiksmas" },
+  {
+    video: "/games/g-cookdup.mp4",
+    poster: "/games/g-cookdup-poster.webp",
+    tag: "Nuotykis",
+  },
+  {
+    video: "/games/g-party-ship.mp4",
+    poster: "/games/g-party-ship-poster.webp",
+    tag: "Veiksmas",
+  },
   { img: "/games/g-nuotykis-2.webp", tag: "Nuotykis" },
-  { video: "/games/g-cops-robbers.mp4", tag: "Veiksmas" },
-  { video: "/games/g-nuotykis-5.mp4", tag: "Nuotykis" },
-  { video: "/games/g-veiksmas-4.mp4", tag: "Nuotykis" },
+  {
+    video: "/games/g-cops-robbers.mp4",
+    poster: "/games/g-cops-robbers-poster.webp",
+    tag: "Veiksmas",
+  },
+  {
+    video: "/games/g-nuotykis-5.mp4",
+    poster: "/games/g-nuotykis-5-poster.webp",
+    tag: "Nuotykis",
+  },
+  {
+    video: "/games/g-veiksmas-4.mp4",
+    poster: "/games/g-veiksmas-4.webp",
+    tag: "Nuotykis",
+  },
   { img: "/games/g-nuotykis-3.webp", tag: "Nuotykis" },
-  { video: "/games/g-veiksmas-3.mp4", tag: "Veiksmas" },
-  { video: "/games/g-video.mp4", tag: "Nuotykis" },
+  {
+    video: "/games/g-veiksmas-3.mp4",
+    poster: "/games/g-veiksmas-3.webp",
+    tag: "Veiksmas",
+  },
+  {
+    video: "/games/g-video.mp4",
+    poster: "/games/g-video-poster.webp",
+    tag: "Nuotykis",
+  },
 ];
 
 export default function GamesGallery() {
@@ -103,13 +132,10 @@ export default function GamesGallery() {
             className="group relative overflow-hidden rounded-2xl border border-line bg-ink-card aspect-[4/3]"
           >
             {g.video ? (
-              <video
+              <DeferredVideo
                 src={g.video}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
+                poster={g.poster!}
+                alt={`BALA VR žaidimas – ${g.tag}`}
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
             ) : (

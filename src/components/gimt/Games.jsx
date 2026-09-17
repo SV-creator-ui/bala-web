@@ -1,13 +1,43 @@
+import DeferredVideo from "@/components/shared/DeferredVideo";
+
 const games = [
-  { video: "/games/g-cookdup.mp4", tag: "Nuotykis" },
-  { video: "/games/g-party-ship.mp4", tag: "Veiksmas" },
+  {
+    video: "/games/g-cookdup.mp4",
+    poster: "/games/g-cookdup-poster.webp",
+    tag: "Nuotykis",
+  },
+  {
+    video: "/games/g-party-ship.mp4",
+    poster: "/games/g-party-ship-poster.webp",
+    tag: "Veiksmas",
+  },
   { img: "/games/g-nuotykis-2.webp", tag: "Nuotykis" },
-  { video: "/games/g-cops-robbers.mp4", tag: "Veiksmas" },
-  { video: "/games/g-nuotykis-5.mp4", tag: "Nuotykis" },
-  { video: "/games/g-veiksmas-4.mp4", tag: "Nuotykis" },
+  {
+    video: "/games/g-cops-robbers.mp4",
+    poster: "/games/g-cops-robbers-poster.webp",
+    tag: "Veiksmas",
+  },
+  {
+    video: "/games/g-nuotykis-5.mp4",
+    poster: "/games/g-nuotykis-5-poster.webp",
+    tag: "Nuotykis",
+  },
+  {
+    video: "/games/g-veiksmas-4.mp4",
+    poster: "/games/g-veiksmas-4.webp",
+    tag: "Nuotykis",
+  },
   { img: "/games/g-nuotykis-3.webp", tag: "Nuotykis" },
-  { video: "/games/g-veiksmas-3.mp4", tag: "Veiksmas" },
-  { video: "/games/g-video.mp4", tag: "Nuotykis" },
+  {
+    video: "/games/g-veiksmas-3.mp4",
+    poster: "/games/g-veiksmas-3.webp",
+    tag: "Veiksmas",
+  },
+  {
+    video: "/games/g-video.mp4",
+    poster: "/games/g-video-poster.webp",
+    tag: "Nuotykis",
+  },
 ];
 
 export default function Games() {
@@ -20,13 +50,10 @@ export default function Games() {
           {games.map((game, i) => (
             <div className="game-card" key={i}>
               {game.video ? (
-                <video
+                <DeferredVideo
                   src={game.video}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
+                  poster={game.poster}
+                  alt={`BALA VR žaidimas – ${game.tag}`}
                 />
               ) : (
                 <img
