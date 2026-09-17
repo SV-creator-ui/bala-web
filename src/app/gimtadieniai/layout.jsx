@@ -16,9 +16,9 @@ const openSans = Open_Sans({
 });
 
 export const metadata = {
-  title: "Gimtadienis BALA VR | Klaipėda",
+  title: { absolute: "Vaikų gimtadieniai Klaipėdoje | BALA VR" },
   description:
-    "Privati 220 m² BALA VR erdvė vaikų gimtadieniams Klaipėdoje: VR misijos, interaktyvi siena, nemokami arkadiniai žaidimai, instruktoriaus priežiūra ir poilsio zona tėvams.",
+    "Vaikų gimtadieniai Klaipėdoje su VR žaidimais, interaktyvia siena ir kitomis pramogomis. Privati 220 m² erdvė šventei vaikams nuo 7 metų.",
   alternates: { canonical: "/gimtadieniai" },
 };
 
