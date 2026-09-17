@@ -36,6 +36,7 @@ import { syncBookingCalendar } from "@/lib/booking/calendar-sync";
 import { notifyBookingPaid } from "@/lib/booking/notify";
 import { applyVoucherToBooking } from "@/lib/voucher/redeem";
 import { validatePromoForBooking } from "@/lib/promo/redeem";
+import { bookingCreateRateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,10 @@ function buildBookingNote(opts: {
 }
 
 export async function POST(req: Request) {
+  // Spam apsauga — FAIL-OPEN (per Upstash outage'ą klientai turi galėti rezervuoti).
+  const rl = await bookingCreateRateLimit(req);
+  if (!rl.allowed) return tooManyRequestsResponse(rl.retryAfter);
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();

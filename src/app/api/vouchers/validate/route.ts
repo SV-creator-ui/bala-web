@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 import { lookupVoucher } from "@/lib/voucher/store";
 import { normalizeVoucherCode } from "@/lib/voucher/config";
 import { venueNow } from "@/lib/booking/config";
+import { voucherValidateRateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,10 @@ function fmtDateLT(iso: string): string {
 }
 
 export async function POST(req: Request) {
+  // Dictionary attack apsauga — FAIL-OPEN.
+  const rl = await voucherValidateRateLimit(req);
+  if (!rl.allowed) return tooManyRequestsResponse(rl.retryAfter);
+
   let body: { code?: string };
   try {
     body = await req.json();

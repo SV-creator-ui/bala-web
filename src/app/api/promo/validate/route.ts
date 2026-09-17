@@ -7,11 +7,16 @@
  */
 import { NextResponse } from "next/server";
 import { validatePromoForBooking } from "@/lib/promo/redeem";
+import { promoValidateRateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  // Dictionary attack apsauga — FAIL-OPEN.
+  const rl = await promoValidateRateLimit(req);
+  if (!rl.allowed) return tooManyRequestsResponse(rl.retryAfter);
+
   try {
     const body = (await req.json()) as {
       code?: string; email?: string; type?: string; total?: number; hasVoucher?: boolean;

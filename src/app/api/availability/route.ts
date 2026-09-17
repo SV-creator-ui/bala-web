@@ -7,10 +7,15 @@ import { NextResponse } from "next/server";
 import { getAvailability } from "@/lib/booking/availability";
 import { validFutureDate, validBookingType } from "@/lib/booking/validation";
 import type { BookingType } from "@/lib/booking/config";
+import { availabilityRateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  // Enumeracija/spam apsauga — FAIL-OPEN (klientas turi galėti browsintis).
+  const rl = await availabilityRateLimit(req);
+  if (!rl.allowed) return tooManyRequestsResponse(rl.retryAfter);
+
   const { searchParams } = new URL(req.url);
   const date = searchParams.get("date") || "";
   const typeRaw = searchParams.get("type") || "room";

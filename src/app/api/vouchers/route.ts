@@ -12,6 +12,7 @@ import { validVoucherAmount } from "@/lib/voucher/config";
 import { createVoucher, setMontonioUuid } from "@/lib/voucher/store";
 import { fulfillVoucherByRef } from "@/lib/voucher/fulfill";
 import { createPayseraPayment, payseraConfigured, bookingTestMode } from "@/lib/paysera";
+import { voucherCreateRateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,10 @@ function siteUrl(req: Request): string {
 }
 
 export async function POST(req: Request) {
+  // Spam apsauga — FAIL-OPEN.
+  const rl = await voucherCreateRateLimit(req);
+  if (!rl.allowed) return tooManyRequestsResponse(rl.retryAfter);
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();

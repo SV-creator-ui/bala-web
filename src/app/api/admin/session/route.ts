@@ -4,10 +4,15 @@
  */
 import { NextResponse } from "next/server";
 import { checkPassword, createSessionToken, adminLocked, SESSION_COOKIE } from "@/lib/admin/auth";
+import { adminLoginRateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  // Brute-force apsauga — FAIL-CLOSED (jei Upstash negali patvirtinti, atmeta).
+  const rl = await adminLoginRateLimit(req);
+  if (!rl.allowed) return tooManyRequestsResponse(rl.retryAfter);
+
   if (adminLocked()) {
     return NextResponse.json(
       { error: "Admin prieiga užrakinta. Patikrinkite ADMIN_PASSWORD ir ADMIN_SESSION_SECRET konfigūraciją." },
