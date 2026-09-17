@@ -18,12 +18,13 @@ type DeferredVideoProps = {
 };
 
 const MOBILE_QUERY = "(max-width: 768px), (pointer: coarse)";
+const MANUAL_VIDEO_PLAY_EVENT = "bala:manual-video-play";
 
 function getConnection() {
   return (navigator as NavigatorWithConnection).connection;
 }
 
-function preferStaticMedia() {
+function requiresManualPlayback() {
   return window.matchMedia(MOBILE_QUERY).matches || Boolean(getConnection()?.saveData);
 }
 
@@ -48,14 +49,20 @@ export default function DeferredVideo({
 }: DeferredVideoProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const instanceIdRef = useRef(Symbol("deferred-video"));
   const [isNearViewport, setIsNearViewport] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const prefersStatic = useSyncExternalStore(
+  const [wasManuallyActivated, setWasManuallyActivated] = useState(false);
+  const [manualPlayRequested, setManualPlayRequested] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const manualPlaybackRequired = useSyncExternalStore(
     subscribeToStaticPreference,
-    preferStaticMedia,
-    () => true
+    requiresManualPlayback,
+    () => false
   );
-  const shouldAttachVideo = isNearViewport && !prefersStatic;
+  const shouldAttachVideo = manualPlaybackRequired
+    ? wasManuallyActivated
+    : isNearViewport;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -87,18 +94,62 @@ export default function DeferredVideo({
   }, []);
 
   useEffect(() => {
+    if (!manualPlaybackRequired) return;
+
+    const pauseForAnotherVideo = (event: Event) => {
+      const { detail } = event as CustomEvent<symbol>;
+      if (detail === instanceIdRef.current) return;
+
+      setManualPlayRequested(false);
+      videoRef.current?.pause();
+    };
+
+    window.addEventListener(MANUAL_VIDEO_PLAY_EVENT, pauseForAnotherVideo);
+    return () =>
+      window.removeEventListener(MANUAL_VIDEO_PLAY_EVENT, pauseForAnotherVideo);
+  }, [manualPlaybackRequired]);
+
+  useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    if (isVisible) {
+    const shouldPlay = manualPlaybackRequired
+      ? manualPlayRequested
+      : isVisible;
+
+    if (shouldPlay) {
       void video.play().catch(() => {});
     } else {
       video.pause();
     }
-  }, [isVisible, shouldAttachVideo]);
+  }, [isVisible, manualPlaybackRequired, manualPlayRequested, shouldAttachVideo]);
+
+  const requestManualPlay = () => {
+    window.dispatchEvent(
+      new CustomEvent(MANUAL_VIDEO_PLAY_EVENT, {
+        detail: instanceIdRef.current,
+      })
+    );
+    setWasManuallyActivated(true);
+    setManualPlayRequested(true);
+  };
+
+  const toggleManualPlayback = () => {
+    if (!manualPlaybackRequired) return;
+
+    const video = videoRef.current;
+    if (!video || video.paused) {
+      requestManualPlay();
+    } else {
+      setManualPlayRequested(false);
+      video.pause();
+    }
+  };
+
+  const showPlayOverlay = manualPlaybackRequired && !isPlaying;
 
   return (
-    <div ref={containerRef} className="h-full w-full">
+    <div ref={containerRef} className="relative h-full w-full">
       {shouldAttachVideo ? (
         <video
           ref={videoRef}
@@ -108,10 +159,33 @@ export default function DeferredVideo({
           loop
           playsInline
           preload="none"
-          aria-label={alt}
+          aria-label={
+            manualPlaybackRequired
+              ? isPlaying
+                ? "Pristabdyti video"
+                : "Žiūrėti video"
+              : alt
+          }
+          role={manualPlaybackRequired ? "button" : undefined}
+          tabIndex={manualPlaybackRequired ? 0 : undefined}
           className={className}
+          onClick={toggleManualPlayback}
+          onKeyDown={(event) => {
+            if (
+              manualPlaybackRequired &&
+              (event.key === "Enter" || event.key === " ")
+            ) {
+              event.preventDefault();
+              toggleManualPlayback();
+            }
+          }}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
           onCanPlay={() => {
-            if (isVisible) void videoRef.current?.play().catch(() => {});
+            const shouldPlay = manualPlaybackRequired
+              ? manualPlayRequested
+              : isVisible;
+            if (shouldPlay) void videoRef.current?.play().catch(() => {});
           }}
         />
       ) : (
@@ -123,6 +197,25 @@ export default function DeferredVideo({
           decoding="async"
           className={className}
         />
+      )}
+      {showPlayOverlay && (
+        <button
+          type="button"
+          aria-label="Žiūrėti video"
+          onClick={requestManualPlay}
+          className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-white/30 bg-black/75 px-4 py-3 text-white shadow-lg backdrop-blur-sm transition-transform active:scale-95"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="h-5 w-5 fill-current"
+          >
+            <path d="M8 5.5v13l10-6.5-10-6.5Z" />
+          </svg>
+          <span className="text-xs font-bold uppercase tracking-wide">
+            Žiūrėti video
+          </span>
+        </button>
       )}
     </div>
   );
