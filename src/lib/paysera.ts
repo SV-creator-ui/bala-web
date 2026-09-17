@@ -197,16 +197,32 @@ export function parsePayseraWebhook(rawBody: string): PayseraWebhook | null {
     // Įvykio duomenys gali būti body.order arba body.data (gynybinis skaitymas).
     const order = (body.order ?? body.data ?? body) as Record<string, unknown>;
     const purchase = (order.purchase ?? {}) as Record<string, unknown>;
-    // reference gali būti top-level (GET formatas) arba purchase.reference (CREATE formatas).
-    const reference = String(order.reference ?? purchase.reference ?? "");
+    // Paysera Modern webhook naudoja `merchant_order_id`; GET /orders atsakyme
+    // reference būna top-level (`reference`); CREATE atsakyme — `purchase.reference`.
+    const reference = String(
+      order.merchant_order_id ?? order.reference ?? purchase.reference ?? "",
+    );
     const status = String(order.status ?? "");
-    // id gali būti `id` (GET) arba `order_id` (CREATE/link).
-    const orderId = order.id ? String(order.id) : order.order_id ? String(order.order_id) : null;
+    // Paysera Modern webhook naudoja `paysera_order_id`; kiti formatai — `id`
+    // (GET) arba `order_id` (CREATE/link).
+    const orderId = order.paysera_order_id
+      ? String(order.paysera_order_id)
+      : order.id
+      ? String(order.id)
+      : order.order_id
+      ? String(order.order_id)
+      : null;
+    const amount = typeof order.amount === "number" ? (order.amount as number) : null;
     const balanceDue = typeof order.balance_due === "number" ? (order.balance_due as number) : null;
     const amountPaid = typeof order.amount_paid === "number" ? (order.amount_paid as number) : null;
+    // „paid" — pagrindinis kelias per status. Papildomi fallback'ai suderinami
+    // su `getPayseraOrderStatus`: (a) balance_due<=0 ir amount_paid>0 (GET
+    // formatas); (b) amount_paid>=amount (webhook formatas, kai balance_due
+    // nepridedamas — kaip realiame `amount_paid_updated` payload'e).
     const paid =
       status === "paid" ||
-      (balanceDue !== null && balanceDue <= 0 && (amountPaid ?? 0) > 0);
+      (balanceDue !== null && balanceDue <= 0 && (amountPaid ?? 0) > 0) ||
+      (amount !== null && amountPaid !== null && amount > 0 && amountPaid >= amount);
     if (!reference) return null;
     return { merchantReference: reference, paid, orderId };
   } catch {

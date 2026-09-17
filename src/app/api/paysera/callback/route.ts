@@ -32,7 +32,33 @@ export async function POST(req: Request) {
   }
 
   const hook = parsePayseraWebhook(raw);
-  if (!hook) return text(200, "OK"); // negalime nuskaityti — patvirtinam gavimą
+  if (!hook) {
+    // Parse gedimas turėtų būti retas — logam TIK saugią metainformaciją
+    // (be raw body, be parašo). Padeda nustatyti naujus Paysera webhook
+    // formatus, kurių parseris neatpažįsta.
+    let eventType = "";
+    let eventName = "";
+    let hasOrder = false;
+    let hasMerchantOrderId = false;
+    try {
+      const body = JSON.parse(raw) as Record<string, unknown>;
+      const event = (body.event ?? {}) as Record<string, unknown>;
+      eventType = String(event.type ?? "");
+      eventName = String(event.name ?? "");
+      hasOrder = typeof body.order === "object" && body.order !== null;
+      const order = (body.order ?? body.data ?? {}) as Record<string, unknown>;
+      hasMerchantOrderId = typeof order.merchant_order_id === "string";
+    } catch {
+      // ne-JSON body — palikame numatytas reikšmes.
+    }
+    console.warn("Paysera callback could not be parsed", {
+      eventType,
+      eventName,
+      hasOrder,
+      hasMerchantOrderId,
+    });
+    return text(200, "OK"); // negalime nuskaityti — patvirtinam gavimą
+  }
 
   // Autoritetingas patikrinimas: „Checkout Modern" siunčia kelis webhook'us
   // skirtinguose mokėjimo etapuose (authorized/processing/paid). Kad
