@@ -3,9 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { BUSINESS } from "@/lib/bala-data";
 import GamesGallery from "@/components/GamesGallery";
+import BreadcrumbJsonLd from "@/components/bala/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
-  title: "VR veiksmo žaidimai Klaipėdoje — BALA VR",
+  title: { absolute: "VR veiksmo žaidimai Klaipėdoje | BALA VR" },
   description:
     "VR veiksmo žaidimai be pabėgimo scenarijaus: 3 žaidimai (~45 min.) nuo €50 ir arkadiniai žaidimai nuo €8. BALA VR Klaipėdoje.",
   alternates: { canonical: "/komandiniai-vr-zaidimai" },
@@ -39,6 +40,12 @@ const VR_ROWS = [
 export default function LaisvasZaidimasPage() {
   return (
     <main className="min-h-[100svh] flex flex-col bg-ink text-white">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Pradžia", url: "https://bala.lt" },
+          { name: "VR veiksmo žaidimai", url: "https://bala.lt/komandiniai-vr-zaidimai" },
+        ]}
+      />
       {/* Header */}
       <header className="mx-auto w-full max-w-[1080px] px-6 md:px-10 pt-7 pb-2 flex items-center justify-between gap-4">
         <Link href="/" aria-label="BALA VR — pasirinkti pramogą" className="flex flex-col items-center justify-center">

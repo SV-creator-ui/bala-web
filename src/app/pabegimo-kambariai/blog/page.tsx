@@ -5,9 +5,10 @@ import Nav from "@/components/bala/Nav";
 import Footer from "@/components/bala/Footer";
 import RevealOnScroll from "@/components/shared/RevealOnScroll";
 import { CtaBandSection } from "@/components/bala/Sections";
+import BreadcrumbJsonLd from "@/components/bala/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
-  title: "VR blogas — pramogos ir laisvalaikis Klaipėdoje | Bala VR",
+  title: { absolute: "VR blogas — pramogos ir laisvalaikis Klaipėdoje | BALA VR" },
   description:
     "Bala VR blogas: idėjos laisvalaikiui Klaipėdoje, VR pabėgimo kambarių patarimai ir pramogos visai komandai, šeimai bei gimtadieniui.",
   alternates: { canonical: "/pabegimo-kambariai/blog" },
@@ -51,6 +52,13 @@ export default function BlogIndex() {
 
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Pradžia", url: "https://bala.lt" },
+          { name: "Pabėgimo kambariai", url: "https://bala.lt/pabegimo-kambariai" },
+          { name: "Blogas", url: "https://bala.lt/pabegimo-kambariai/blog" },
+        ]}
+      />
       <Nav />
       <main>
         <header className="relative pt-[150px] pb-14 overflow-hidden bg-[radial-gradient(120%_70%_at_100%_0%,rgba(255,228,0,.08),transparent_60%)] bg-ink">

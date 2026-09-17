@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { BUSINESS } from "@/lib/bala-data";
+import BreadcrumbJsonLd from "@/components/bala/BreadcrumbJsonLd";
 
 const COVER = "/assets/vr-pabegimo-kambarys-bala-vr-klaipedoje.jpg";
 const SLUG = "/pabegimo-kambariai/blog/kas-yra-vr-pabegimo-kambarys";
 
 export const metadata: Metadata = {
-  title: "Kas yra VR pabėgimo kambarys? Išsamus gidas | Bala VR",
+  title: { absolute: "Kas yra VR pabėgimo kambarys? Išsamus gidas | BALA VR" },
   description:
     "Kas yra VR pabėgimo kambarys ir kaip jis veikia? Paaiškiname technologiją, laisvą judėjimą ir kuo jis skiriasi nuo įprasto pabėgimo kambario.",
   alternates: { canonical: SLUG },
@@ -43,6 +44,14 @@ export default function BlogPost() {
   return (
     <div className="bg-ink text-white min-h-screen font-body">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Pradžia", url: "https://bala.lt" },
+          { name: "Pabėgimo kambariai", url: "https://bala.lt/pabegimo-kambariai" },
+          { name: "Blogas", url: "https://bala.lt/pabegimo-kambariai/blog" },
+          { name: "Kas yra VR pabėgimo kambarys?", url: `${BUSINESS.url}${SLUG}` },
+        ]}
+      />
 
       <div className="sticky top-0 z-50 bg-ink border-b-2 border-volt flex items-center justify-between px-7 py-3.5">
         <Link href="/pabegimo-kambariai" className="inline-flex items-baseline gap-1.5 no-underline">

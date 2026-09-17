@@ -1,3 +1,4 @@
+import BreadcrumbJsonLd from "@/components/bala/BreadcrumbJsonLd";
 import Nav from "@/components/gimt/Nav";
 import Hero from "@/components/gimt/Hero";
 import HowItWorks from "@/components/gimt/HowItWorks";
@@ -16,6 +17,12 @@ import ScrollReveal from "@/components/gimt/ScrollReveal";
 export default function Home() {
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Pradžia", url: "https://bala.lt" },
+          { name: "Gimtadieniai", url: "https://bala.lt/gimtadieniai" },
+        ]}
+      />
       <Nav />
       <main>
         <Hero />

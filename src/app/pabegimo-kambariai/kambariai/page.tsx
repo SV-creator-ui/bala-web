@@ -6,9 +6,10 @@ import GameCard from "@/components/bala/GameCard";
 import RevealOnScroll from "@/components/shared/RevealOnScroll";
 import { GAMES } from "@/lib/bala-data";
 import { CtaBandSection } from "@/components/bala/Sections";
+import BreadcrumbJsonLd from "@/components/bala/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
-  title: "Visi VR pabėgimo kambariai — Bala VR Klaipėda",
+  title: { absolute: "VR pabėgimo kambarių scenarijai Klaipėdoje | BALA VR" },
   description:
     "Visi 9 Bala VR pabėgimo kambariai Klaipėdoje — nuo drakonų pilies iki nevaldomo traukinio. Iki 45 min., 2–6 žaidėjai, bet kokio patyrimo lygio.",
   alternates: { canonical: "/pabegimo-kambariai/kambariai" },
@@ -17,6 +18,13 @@ export const metadata: Metadata = {
 export default function KambariaiPage() {
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Pradžia", url: "https://bala.lt" },
+          { name: "Pabėgimo kambariai", url: "https://bala.lt/pabegimo-kambariai" },
+          { name: "Scenarijai", url: "https://bala.lt/pabegimo-kambariai/kambariai" },
+        ]}
+      />
       <Nav />
       <main>
         <header className="relative pt-[150px] pb-14 overflow-hidden bg-[radial-gradient(120%_70%_at_100%_0%,rgba(255,228,0,.08),transparent_60%)] bg-ink">

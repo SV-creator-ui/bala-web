@@ -1,6 +1,12 @@
 import { FacebookIcon, LocationIcon, ClockIcon, PhoneIcon } from "./icons";
 import { BUSINESS } from "@/lib/bala-data";
 
+const PRAMOGOS_LINKS = [
+  { href: "/gimtadieniai", label: "Gimtadieniai" },
+  { href: "/pabegimo-kambariai", label: "Pabėgimo kambariai" },
+  { href: "/komandiniai-vr-zaidimai", label: "VR veiksmo žaidimai" },
+];
+
 const PAGE_LINKS = [
   { href: "/pabegimo-kambariai/kambariai", label: "Visi kambariai" },
   { href: "/pabegimo-kambariai#scenarijai", label: "Scenarijai" },
@@ -22,7 +28,18 @@ export default function Footer() {
 
       <div className="relative mx-auto max-w-[1280px] px-6 md:px-10 min-[1200px]:px-14 pt-16 md:pt-20 pb-8">
         {/* Stulpeliai */}
-        <div className="grid gap-10 pb-14 sm:grid-cols-2 md:grid-cols-4">
+        <div className="grid gap-10 pb-14 sm:grid-cols-2 md:grid-cols-5">
+          <div>
+            <h4 className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-smoke-2">Pramogos</h4>
+            <div className="flex flex-col gap-0.5">
+              {PRAMOGOS_LINKS.map((l) => (
+                <a key={l.href} href={l.href} className="py-1 text-[14.5px] text-smoke transition-colors hover:text-white">
+                  {l.label}
+                </a>
+              ))}
+            </div>
+          </div>
+
           <div>
             <h4 className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-smoke-2">Puslapis</h4>
             <div className="flex flex-col gap-0.5">

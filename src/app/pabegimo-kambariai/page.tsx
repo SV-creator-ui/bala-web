@@ -4,6 +4,7 @@ import Hero from "@/components/bala/Hero";
 import Footer from "@/components/bala/Footer";
 import HashScroll from "@/components/bala/HashScroll";
 import FaqJsonLd from "@/components/bala/FaqJsonLd";
+import BreadcrumbJsonLd from "@/components/bala/BreadcrumbJsonLd";
 import {
   AtsiliepimaiSection,
   ComparisonSection,
@@ -44,6 +45,12 @@ export default function Home() {
   return (
     <>
       <FaqJsonLd />
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Pradžia", url: "https://bala.lt" },
+          { name: "Pabėgimo kambariai", url: "https://bala.lt/pabegimo-kambariai" },
+        ]}
+      />
       <HashScroll />
       <Nav />
       <main>

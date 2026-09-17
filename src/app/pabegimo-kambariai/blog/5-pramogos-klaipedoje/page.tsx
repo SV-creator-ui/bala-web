@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import BreadcrumbJsonLd from "@/components/bala/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
-  title: "5 pramogos Klaipėdoje, kurias verta išbandyti | Bala VR blogas",
+  title: { absolute: "5 pramogos Klaipėdoje, kurias verta išbandyti | BALA VR" },
   description:
     "Ką veikti Klaipėdoje? 5 geriausios pramogos Klaipėdoje visai komandai: VR pabėgimo kambariai, boulingas, kartingas, laser tag ir jūrų muziejus. Idėjos laisvalaikiui, gimtadieniui ir komandos formavimui.",
   alternates: { canonical: "/pabegimo-kambariai/blog/5-pramogos-klaipedoje" },
@@ -26,6 +27,14 @@ const CheckItem = ({ children }: { children: React.ReactNode }) => (
 export default function BlogPost() {
   return (
     <div className="bg-ink text-white min-h-screen font-body">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Pradžia", url: "https://bala.lt" },
+          { name: "Pabėgimo kambariai", url: "https://bala.lt/pabegimo-kambariai" },
+          { name: "Blogas", url: "https://bala.lt/pabegimo-kambariai/blog" },
+          { name: "5 pramogos Klaipėdoje, kurias verta išbandyti", url: "https://bala.lt/pabegimo-kambariai/blog/5-pramogos-klaipedoje" },
+        ]}
+      />
       <div className="sticky top-0 z-50 bg-ink border-b-2 border-volt flex items-center justify-between px-7 py-3.5">
         <Link href="/pabegimo-kambariai" className="inline-flex items-baseline gap-1.5 no-underline">
           <b className="font-display text-2xl text-white tracking-[-.02em] normal-case">BALA</b>
