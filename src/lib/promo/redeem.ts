@@ -5,6 +5,7 @@
  */
 import type { BookingRow } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { venueNow } from "@/lib/booking/config";
 import { findPromoByCode, countPaidRoomGameVisits, normalizeEmail } from "./storage";
 import type { PromoCode } from "./storage";
 
@@ -34,7 +35,7 @@ export async function validatePromoForBooking(input: PromoCheckInput): Promise<P
   const usedCount = Number(promo.used_count ?? (promo.used_at ? 1 : 0));
   if (maxUses > 0 && usedCount >= maxUses) return { ok: false, error: "Kodas jau panaudotas" };
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = venueNow().date;
   if (today < promo.valid_from) return { ok: false, error: "Kodas dar negalioja" };
   if (today > promo.valid_until) return { ok: false, error: "Kodo galiojimas pasibaigė" };
 
