@@ -126,7 +126,7 @@ export async function createPayseraPayment(p: CreateOrderParams): Promise<Create
     body: JSON.stringify({
       order_id: orderId,
       name: p.description || `BALA VR ${p.merchantReference}`,
-      lifetime: 3600,
+      lifetime: 900,
       experience: { language: "lt", payment_flow: "paysera_checkout" },
       purchase: { amount: cents },
       ...(p.email ? { payer_information: { email: p.email } } : {}),

@@ -14,7 +14,7 @@ import ts from "typescript";
 const nodeRequire = createRequire(import.meta.url);
 const root = path.resolve(import.meta.dirname, "..");
 
-function loadTs(relativePath, mocks = {}) {
+function loadTs(relativePath, mocks = {}, extraGlobals = {}) {
   const filename = path.join(root, relativePath);
   const source = fs.readFileSync(filename, "utf8");
   const output = ts.transpileModule(source, {
@@ -39,6 +39,7 @@ function loadTs(relativePath, mocks = {}) {
       __dirname: path.dirname(filename),
       __filename: filename,
       console,
+      ...extraGlobals,
     },
     { filename },
   );
@@ -188,4 +189,68 @@ console.log("PASS: missing reference returns null");
 assert.equal(parsePayseraWebhook("not-json"), null);
 console.log("PASS: invalid JSON returns null");
 
-console.log("ALL PASS: 8 scenarios");
+// -----------------------------------------------------------------------------
+// 9) createPayseraPayment siunčia lifetime: 900 (turi sutapti su 15 min hold)
+// -----------------------------------------------------------------------------
+{
+  const capturedRequests = [];
+  const stubFetch = async (url, init) => {
+    capturedRequests.push({ url, init });
+    if (url.includes("/openid-connect/token")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ access_token: "test-token", expires_in: 300 }),
+        text: async () => "",
+      };
+    }
+    if (url.includes("/merchant-order/integration/v1/orders")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ order_id: "test-order-id" }),
+        text: async () => "",
+      };
+    }
+    if (url.includes("/checkout-payment-link/integration/v1/payment-links")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ payment_URL: "https://paysera.test/pay/xyz" }),
+        text: async () => "",
+      };
+    }
+    throw new Error(`Unexpected fetch: ${url}`);
+  };
+  const stubProcess = { env: { PAYSERA_CLIENT_ID: "cid", PAYSERA_CLIENT_SECRET: "csecret" } };
+  const { createPayseraPayment } = loadTs("src/lib/paysera.ts", {}, {
+    fetch: stubFetch,
+    process: stubProcess,
+    URLSearchParams,
+    Buffer,
+    Date,
+  });
+  const result = await createPayseraPayment({
+    merchantReference: "BALA-LIFETIME-TEST",
+    amount: 50,
+    acceptUrl: "https://bala.lt/ok",
+    cancelUrl: "https://bala.lt/cancel",
+    callbackUrl: "https://bala.lt/api/paysera/callback",
+    description: "test",
+  });
+  assert.equal(result.paymentUrl, "https://paysera.test/pay/xyz");
+  assert.equal(result.orderId, "test-order-id");
+  const linkRequest = capturedRequests.find((r) =>
+    r.url.includes("/checkout-payment-link/integration/v1/payment-links"),
+  );
+  assert.ok(linkRequest, "payment-links request must be sent");
+  const linkBody = JSON.parse(linkRequest.init.body);
+  assert.equal(
+    linkBody.lifetime,
+    900,
+    "payment link lifetime must be 900s (15 min) — must match pendingHoldMin",
+  );
+  console.log("PASS: createPayseraPayment sends lifetime: 900 (matches 15 min hold)");
+}
+
+console.log("ALL PASS: 9 scenarios");
