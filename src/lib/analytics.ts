@@ -16,6 +16,9 @@ export const GA4_ID = "";
 /** Meta (Facebook) Pixel ID iš Meta Business Manager. Tuščia = išjungta. */
 export const META_PIXEL_ID = "1260643318410268";
 
+/** OpenAI (ChatGPT Ads) Pixel ID. Tuščia = išjungta. */
+export const OPENAI_PIXEL_ID = "EJBqoM6MUdCK8ANcGqGafL";
+
 /**
  * Google Ads konversijų label'iai — pilnas `AW-XXXX/label` iš Ads konversijos
  * veiksmo „Event snippet" (`send_to` reikšmė). Tuščia = neaktyvi.
@@ -38,6 +41,7 @@ declare global {
     dataLayer?: unknown[];
     fbq?: (...args: unknown[]) => void;
     _fbq?: unknown;
+    oaiq?: (...args: unknown[]) => void;
   }
 }
 
@@ -65,6 +69,22 @@ export function trackAdsConversion(
     currency: "EUR",
     transaction_id: transactionId,
   });
+  return true;
+}
+
+/**
+ * Siunčia OpenAI (ChatGPT Ads) `order_created` konversiją per Pixel.
+ * ChatGPT Ads konversijos „create an order" formatas — kaip nurodyta panelėje.
+ * Server-side CAPI atskirai siunčia tą patį eventą su `id = transactionId` dedupe'ui.
+ */
+export function trackOpenAiPurchase(
+  _transactionId: string,
+  _value: number,
+  _contentName?: string,
+): boolean {
+  if (!OPENAI_PIXEL_ID) return false;
+  if (typeof window === "undefined" || typeof window.oaiq !== "function") return false;
+  window.oaiq("measure", "order_created", { type: "contents" });
   return true;
 }
 

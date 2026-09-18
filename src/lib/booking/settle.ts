@@ -11,6 +11,7 @@ import { settleBookingVoucher } from "@/lib/voucher/redeem";
 import { fulfillVoucherByRef } from "@/lib/voucher/fulfill";
 import { settlePromoForBooking } from "@/lib/promo/redeem";
 import { sendCapiPurchase } from "@/lib/meta-capi";
+import { sendOpenAiCapiOrder } from "@/lib/openai-capi";
 
 /** Ištraukia promo kodą iš booking.note žymos „[PROMO:CODE:-XX.XX€]", jei ji yra. */
 function extractPromoCode(note: string | null): string | null {
@@ -76,6 +77,11 @@ export async function markPaidByRef(ref: string): Promise<void> {
     contentName: "booking",
     email: row.customer_email,
     phone: row.customer_phone,
+    eventSourceUrl: getConfirmUrl(row.type),
+  });
+  // OpenAI (ChatGPT Ads) Conversions API — server-side order_created (dedupe per id=ref)
+  await sendOpenAiCapiOrder({
+    eventId: ref,
     eventSourceUrl: getConfirmUrl(row.type),
   });
 }

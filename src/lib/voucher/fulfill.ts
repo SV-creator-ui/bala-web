@@ -17,6 +17,7 @@ import {
 import { generateVoucherPdf } from "./pdf";
 import { sendVoucherEmails } from "./email";
 import { sendCapiPurchase } from "@/lib/meta-capi";
+import { sendOpenAiCapiOrder } from "@/lib/openai-capi";
 
 /**
  * Aktyvuoja kuponą (jei dar pending) ir vieną kartą išsiunčia PDF pirkėjui.
@@ -39,6 +40,10 @@ export async function fulfillVoucherByRef(ref: string): Promise<VoucherRow | nul
         value: Number(v.amount_eur),
         contentName: "gift_card",
         email: v.buyer_email,
+        eventSourceUrl: "https://bala.lt/pabegimo-kambariai/dovanu-kuponas/patvirtinta",
+      });
+      await sendOpenAiCapiOrder({
+        eventId: v.merchant_reference,
         eventSourceUrl: "https://bala.lt/pabegimo-kambariai/dovanu-kuponas/patvirtinta",
       });
     }

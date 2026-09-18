@@ -7,6 +7,7 @@ import {
   ADS_CONVERSION_GIFT_CARD,
   trackAdsConversion,
   trackMetaPurchase,
+  trackOpenAiPurchase,
 } from "@/lib/analytics";
 
 type Props = {
@@ -21,6 +22,7 @@ type Props = {
  * puslapis rodo sėkmingą būseną (paid/active). Vienu metu siunčia:
  *  - Google Ads konversiją (sendTo label — booking arba gift_card)
  *  - Meta Pixel Purchase eventą (content_name = booking/gift_card)
+ *  - OpenAI (ChatGPT Ads) Pixel Purchase eventą (event_id = transactionId)
  * Naudojamas:
  *  - rezervacijų `patvirtinta` puslapiuose (sendTo = ADS_CONVERSION_BOOKING)
  *  - dovanų kuponų `patvirtinta` puslapyje (sendTo = ADS_CONVERSION_GIFT_CARD)
@@ -34,6 +36,7 @@ export default function BookingConversionTracker({
 }: Props) {
   const adsFiredRef = useRef(false);
   const metaFiredRef = useRef(false);
+  const openAiFiredRef = useRef(false);
 
   useEffect(() => {
     if (!transactionId) return;
@@ -46,6 +49,9 @@ export default function BookingConversionTracker({
       }
       if (!metaFiredRef.current) {
         metaFiredRef.current = trackMetaPurchase(transactionId, value, contentName);
+      }
+      if (!openAiFiredRef.current) {
+        openAiFiredRef.current = trackOpenAiPurchase(transactionId, value, contentName);
       }
     };
 

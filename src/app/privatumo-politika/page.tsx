@@ -82,6 +82,7 @@ const SECTIONS: Section[] = [
       "**Vercel** — svetainės priegloba (hostingas).",
       "**Google** — patvirtinimo laiškų siuntimas, rezervacijų kalendorius ir, gavus jūsų sutikimą, reklamos konversijų matavimas.",
       "**Meta** — gavus jūsų sutikimą, reklamos konversijų matavimas naudojant Meta Pixel.",
+      "**OpenAI** — gavus jūsų sutikimą, ChatGPT reklamos konversijų matavimas naudojant OpenAI Pixel.",
       "Duomenys taip pat gali būti pateikti kompetentingoms institucijoms, kai to reikalauja teisės aktai.",
     ],
   },
@@ -98,7 +99,7 @@ const SECTIONS: Section[] = [
     emoji: "🍪",
     title: "Slapukai",
     body: [
-      "Svetainė naudoja būtinuosius techninius duomenis, reikalingus jos veikimui ir jūsų pasirinkimui išsaugoti. Google Ads ir Meta Pixel reklamos matavimas įkeliamas tik gavus jūsų sutikimą. Pasirinkimą galite panaikinti ištrindami svetainės duomenis savo naršyklės nustatymuose.",
+      "Svetainė naudoja būtinuosius techninius duomenis, reikalingus jos veikimui ir jūsų pasirinkimui išsaugoti. Google Ads, Meta Pixel ir OpenAI (ChatGPT) reklamos matavimas įkeliamas tik gavus jūsų sutikimą. Pasirinkimą galite panaikinti ištrindami svetainės duomenis savo naršyklės nustatymuose.",
     ],
   },
   {

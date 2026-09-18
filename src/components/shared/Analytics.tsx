@@ -10,6 +10,7 @@ import {
   GOOGLE_ADS_ID,
   GTAG_LOADER_ID,
   META_PIXEL_ID,
+  OPENAI_PIXEL_ID,
 } from "@/lib/analytics";
 
 /* Inline consent init — ES5 sintakse, kad veiktų senesnėse naršyklėse.
@@ -55,6 +56,14 @@ fbq('init', '${META_PIXEL_ID}');
 fbq('consent', 'grant');
 fbq('track', 'PageView');
 window.dispatchEvent(new Event('${ANALYTICS_READY_EVENT}'));
+`
+  : "";
+
+/* OpenAI (ChatGPT Ads) Pixel — kraunama tik po sutikimo. */
+const openAiPixelInit = OPENAI_PIXEL_ID
+  ? `
+!function(w,d,s,u){if(w.oaiq)return;var q=function(){q.q.push(arguments)};q.q=[];w.oaiq=q;var j=d.createElement(s);j.async=1;j.src=u;var f=d.getElementsByTagName(s)[0];f.parentNode.insertBefore(j,f)}(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");
+oaiq("init",{pixelId:"${OPENAI_PIXEL_ID}",debug:true});
 `
   : "";
 
@@ -138,7 +147,7 @@ export default function Analytics() {
     setConsent(next);
   };
 
-  if (!GTAG_LOADER_ID && !META_PIXEL_ID) return null;
+  if (!GTAG_LOADER_ID && !META_PIXEL_ID && !OPENAI_PIXEL_ID) return null;
   const granted = consent === "granted";
   return (
     <>
@@ -156,6 +165,11 @@ export default function Analytics() {
       {granted && META_PIXEL_ID && (
         <Script id="meta-pixel-init" strategy="afterInteractive">
           {metaPixelInit}
+        </Script>
+      )}
+      {granted && OPENAI_PIXEL_ID && (
+        <Script id="openai-pixel-init" strategy="afterInteractive">
+          {openAiPixelInit}
         </Script>
       )}
       {consent === "unset" && <CookieBanner onChoose={choose} />}
