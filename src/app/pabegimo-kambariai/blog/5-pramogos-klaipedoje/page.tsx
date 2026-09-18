@@ -119,8 +119,8 @@ export default function BlogPost() {
               Vienas žaidimas trunka apie 45 minutes, o kaina – nuo 20 € žmogui. Rasite mus adresu Pajūrio g. 5B, Klaipėdoje.
             </p>
             <div className="flex gap-3 flex-wrap mt-6">
-              <Link href="/rezervacija" className="inline-flex items-center rounded-md bg-volt px-6 py-3.5 text-[13px] font-extrabold uppercase tracking-wide text-black hover:brightness-105 transition">
-                Rezervuoti dabar
+              <Link href="/pabegimo-kambariai" className="inline-flex items-center rounded-md bg-volt px-6 py-3.5 text-[13px] font-extrabold uppercase tracking-wide text-black hover:brightness-105 transition">
+                Sužinoti apie VR pabėgimo kambarius
               </Link>
               <Link
                 href="/pabegimo-kambariai#scenarijai"
