@@ -232,10 +232,10 @@ export function FirstTimeSection() {
             Nereikia nieko išmanyti apie technologijas. Ateini, užsidedi akinius – ir viskas prasideda savaime.
           </p>
           <a
-            href="/rezervacija"
+            href="/pabegimo-kambariai#kaip-vyksta"
             className="inline-flex items-center justify-center rounded-full bg-ink text-white px-[30px] py-4 text-[15px] font-bold transition-transform hover:-translate-y-0.5 hover:bg-black"
           >
-            Rezervuoti dabar
+            Kaip viskas vyksta
           </a>
         </RevealOnScroll>
         <RevealOnScroll className="flex flex-col gap-3.5">
