@@ -1312,6 +1312,9 @@
   color: var(--white-68);
   line-height: 1.35;
 }
+.price-block {
+  display: flex; flex-direction: column; gap: 6px;
+}
 .price-amount {
   display: flex; align-items: baseline; gap: 6px;
 }
@@ -1336,12 +1339,15 @@
   opacity: 0.92;
   min-height: 66px; /* suvienodina aukštį, kad kainos būtų vienoje linijoje */
 }
-.price-subtagline {
+.price-weekday {
   font-family: var(--font-body);
   font-size: 13.5px;
+  color: var(--white-45);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+.price-weekday-num {
   color: var(--amber);
-  line-height: 1.45;
-  margin-top: 6px;
   font-weight: 600;
 }
 .vr-flow-note {

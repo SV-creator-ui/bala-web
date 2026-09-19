@@ -10,16 +10,17 @@ const packages = [
     pkgId: "maksi",
     deco: "balloon",
     sub: "2 val. šventė · iki 14 žaidėjų",
-    tagline: "Dinamiška šventė su komandiniu VR ir veiklomis visai kompanijai.",
+    tagline: "Dinamiška šventė su VR ir veiklomis visai kompanijai.",
     price: "€239",
+    weekdayPrice: "€219",
     features: [
       "2 val. privati šventė",
       "Iki 14 žaidėjų",
       "Komandiniai VR žaidimai",
       "Interaktyvi siena",
       "Arkadiniai ir stalo žaidimai",
-      "VR instruktoriaus priežiūra",
-      "Privati 220 m² BALA VR erdvė",
+      "Instruktoriaus priežiūra",
+      "Privati BALA VR erdvė",
       "30 min. vaišėms",
     ],
     featured: false,
@@ -30,9 +31,9 @@ const packages = [
     pkgId: "vip",
     deco: "heart",
     sub: "2,5 val. šventė · iki 15 žaidėjų",
-    tagline: "Daugiau laiko, mažiau skubėjimo.",
-    subtagline: "Geriausias pasirinkimas 10–15 žaidėjų kompanijai.",
+    tagline: "Daugiau laiko VR, vaišėms ir ramesnei šventės eigai.",
     price: "€289",
+    weekdayPrice: "€269",
     features: [
       "2,5 val. privati šventė",
       "Iki 15 žaidėjų",
@@ -40,9 +41,9 @@ const packages = [
       "Interaktyvi siena",
       "Arkadiniai ir stalo žaidimai",
       "Daugiau laiko VR ir vaišėms",
-      "Kava ir arbata lydintiems suaugusiesiems",
-      "VR instruktoriaus priežiūra",
-      "Privati 220 m² BALA VR erdvė",
+      "Kava ir arbata tėvams",
+      "Instruktoriaus priežiūra",
+      "Privati BALA VR erdvė",
       "30 min. vaišėms",
     ],
     featured: true,
@@ -53,9 +54,9 @@ const packages = [
     pkgId: "gold",
     deco: "cake",
     sub: "3 val. šventė · iki 16 žaidėjų",
-    tagline: "Daugiausia laiko visai šventės patirčiai.",
-    subtagline: "Geriausias pasirinkimas 14–16 žaidėjų kompanijai.",
+    tagline: "Daugiausia laiko VR ir visai šventės patirčiai.",
     price: "€359",
+    weekdayPrice: "€339",
     features: [
       "3 val. privati šventė",
       "Iki 16 žaidėjų",
@@ -64,9 +65,9 @@ const packages = [
       "Arkadiniai ir stalo žaidimai",
       "Daugiau laiko VR",
       "Laisvesnis šventės tempas",
-      "Kava ir arbata lydintiems suaugusiesiems",
-      "VR instruktoriaus priežiūra",
-      "Privati 220 m² BALA VR erdvė",
+      "Kava ir arbata tėvams",
+      "Instruktoriaus priežiūra",
+      "Privati BALA VR erdvė",
       "30 min. vaišėms",
     ],
     featured: false,
@@ -231,13 +232,18 @@ export default function Packages() {
                     <div className="price-sub">{pkg.sub}</div>
                   </div>
                   <div className="price-tagline">{pkg.tagline}</div>
-                  {pkg.subtagline && (
-                    <div className="price-subtagline">{pkg.subtagline}</div>
-                  )}
                 </div>
-                <div className="price-amount">
-                  <span className="price-num">{pkg.price}</span>
-                  <span className="price-period">visa šventė</span>
+                <div className="price-block">
+                  <div className="price-amount">
+                    <span className="price-num">{pkg.price}</span>
+                    <span className="price-period">visa šventė</span>
+                  </div>
+                  {pkg.weekdayPrice && (
+                    <div className="price-weekday">
+                      I–IV:{" "}
+                      <span className="price-weekday-num">{pkg.weekdayPrice}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="price-divider"></div>
                 <ul className="price-features">
@@ -259,18 +265,6 @@ export default function Packages() {
             </div>
           ))}
         </div>
-        <p
-          style={{
-            textAlign: "center",
-            marginTop: "var(--space-6)",
-            fontFamily: "var(--font-body)",
-            fontSize: "var(--fs-body)",
-            color: "var(--white-45)",
-          }}
-        >
-          20€ NUOLAIDA I–IV dieniais
-        </p>
-
         {/* ── KAIP VYKSTA VR ── */}
         <div className="vr-flow-note">
           <h3 className="vr-flow-title">Kaip vyksta VR žaidimai?</h3>
