@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     q: "Ar tėvai taip pat gali žaisti VR?",
-    a: "Tėvai gali išbandyti VR veiksmo žaidimus, jei lieka laisva vieta. Jei norima žaisti be pertraukų – reikia užsakyti „Daugiau VR\" papildymą: trumpiname suplanuotas pertraukas ir daugiau šventės laiko skiriame VR žaidimams.",
+    a: "Tėvai gali išbandyti VR veiksmo žaidimus, jei lieka laisva vieta. Jei norima intensyvesnio VR tempo – galima pasirinkti VR MAX (+25 €): trumpesnės pauzės tarp VR sesijų ir daugiau šventės laiko žaidimams.",
   },
   {
     q: "Ar galime atsivežti tortą ir dekoracijas?",
@@ -24,8 +24,8 @@ const faqs = [
     a: "Kiekvienos šventės metu dirba mūsų instruktorius — jis padeda užsidėti VR akinius, paaiškina žaidimo taisykles ir seka laiką. Už vaikų taisyklių laikymąsi atsako tėvai.",
   },
   {
-    q: "Ką daryti, jei vaikų bus daugiau nei planuota?",
-    a: "Rekomenduojame laikytis nurodyto žaidėjų skaičiaus, jog žaidėjams netektų ilgai laukti savo eilės. Taip pat galima užsakyti papildomus VR akinius. Papildomas VR akinių komplektas – 20 €.",
+    q: "Ką daryti, jei norisi intensyvesnio VR tempo?",
+    a: "Galite pasirinkti VR MAX (+25 €) — intensyvesnį VR tempą su trumpesnėmis pauzėmis ir daugiau žaidimo laiko. Dalyvių limitas išlieka pagal paketą (MAKSI 14, VIP 15, GOLD 16 žaidėjų).",
   },
 ];
 

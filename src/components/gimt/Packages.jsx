@@ -9,16 +9,18 @@ const packages = [
     name: "MAKSI",
     pkgId: "maksi",
     deco: "balloon",
-    sub: "2 val. šventė iki 12 žaidėjų",
-    tagline: "Populiariausias pasirinkimas 10–12 vaikų gimtadieniui.",
+    sub: "2 val. šventė · iki 14 žaidėjų",
+    tagline: "Dinamiška šventė su komandiniu VR ir veiklomis visai kompanijai.",
     price: "€239",
     features: [
-      "2 val. apsilankymas",
-      "Įtraukta 30 min. vaišėms",
-      "6 VR akiniai",
-      "Arkadiniai žaidimai",
+      "2 val. privati šventė",
+      "Iki 14 žaidėjų",
+      "Komandiniai VR žaidimai",
+      "Interaktyvi siena",
+      "Arkadiniai ir stalo žaidimai",
       "VR instruktoriaus priežiūra",
-      "Privati BALA VR erdvė",
+      "Privati 220 m² BALA VR erdvė",
+      "30 min. vaišėms",
     ],
     featured: false,
     cta: "btn-secondary",
@@ -27,18 +29,21 @@ const packages = [
     name: "VIP",
     pkgId: "vip",
     deco: "heart",
-    sub: "2,5 val. šventė iki 14 žaidėjų",
-    tagline: "Daugiau VR, daugiau laiko vaišėms ir mažiau skubėjimo.",
+    sub: "2,5 val. šventė · iki 15 žaidėjų",
+    tagline: "Daugiau laiko, mažiau skubėjimo.",
+    subtagline: "Geriausias pasirinkimas 10–15 žaidėjų kompanijai.",
     price: "€289",
     features: [
-      "2,5 val. apsilankymas",
-      "Įtraukta 30 min. vaišėms",
-      "7 VR akiniai",
-      "Arkadiniai žaidimai",
+      "2,5 val. privati šventė",
+      "Iki 15 žaidėjų",
+      "Komandiniai VR žaidimai",
       "Interaktyvi siena",
-      "Kava ir arbata tėvams",
+      "Arkadiniai ir stalo žaidimai",
+      "Daugiau laiko VR ir vaišėms",
+      "Kava ir arbata lydintiems suaugusiesiems",
       "VR instruktoriaus priežiūra",
-      "Privati BALA VR erdvė",
+      "Privati 220 m² BALA VR erdvė",
+      "30 min. vaišėms",
     ],
     featured: true,
     cta: "btn-primary",
@@ -47,18 +52,22 @@ const packages = [
     name: "GOLD",
     pkgId: "gold",
     deco: "cake",
-    sub: "3 val. šventė iki 16 žaidėjų",
-    tagline: "Ilgiausia šventė didesnei kompanijai.",
+    sub: "3 val. šventė · iki 16 žaidėjų",
+    tagline: "Daugiausia laiko visai šventės patirčiai.",
+    subtagline: "Geriausias pasirinkimas 14–16 žaidėjų kompanijai.",
     price: "€359",
     features: [
-      "3 val. apsilankymas",
-      "Įtraukta 30 min. vaišėms",
-      "8 VR akiniai",
-      "Arkadiniai žaidimai",
+      "3 val. privati šventė",
+      "Iki 16 žaidėjų",
+      "Komandiniai VR žaidimai",
       "Interaktyvi siena",
-      "Kava ir arbata tėvams",
+      "Arkadiniai ir stalo žaidimai",
+      "Daugiau laiko VR",
+      "Laisvesnis šventės tempas",
+      "Kava ir arbata lydintiems suaugusiesiems",
       "VR instruktoriaus priežiūra",
-      "Privati BALA VR erdvė",
+      "Privati 220 m² BALA VR erdvė",
+      "30 min. vaišėms",
     ],
     featured: false,
     cta: "btn-secondary",
@@ -222,6 +231,9 @@ export default function Packages() {
                     <div className="price-sub">{pkg.sub}</div>
                   </div>
                   <div className="price-tagline">{pkg.tagline}</div>
+                  {pkg.subtagline && (
+                    <div className="price-subtagline">{pkg.subtagline}</div>
+                  )}
                 </div>
                 <div className="price-amount">
                   <span className="price-num">{pkg.price}</span>
@@ -259,6 +271,16 @@ export default function Packages() {
           20€ NUOLAIDA I–IV dieniais
         </p>
 
+        {/* ── KAIP VYKSTA VR ── */}
+        <div className="vr-flow-note">
+          <h3 className="vr-flow-title">Kaip vyksta VR žaidimai?</h3>
+          <p className="vr-flow-text">
+            VR žaidžiama komandomis ir rotuojantis. Kol viena komanda žaidžia
+            VR, kiti dalyviai turi kitas veiklas — interaktyvią sieną,
+            arkadinius ir stalo žaidimus.
+          </p>
+        </div>
+
         {/* ── EXTRAS ── */}
         <div style={{ marginTop: "var(--space-12)" }}>
           <div className="label extras-label">Papildymai</div>
@@ -275,16 +297,16 @@ export default function Packages() {
             Padarykite šventę dar ypatingesnę
           </h3>
           <div className="extras-grid">
-            {/* Daugiau VR */}
+            {/* VR MAX */}
             <div className="extra-card">
               <div className="extra-icon">
                 <EyeIcon />
               </div>
-              <div className="extra-name">Daugiau VR</div>
+              <div className="extra-name">VR MAX</div>
               <div className="extra-desc">
-                Žaidėjams, kuriems VR – svarbiausia šventės dalis. Trumpiname suplanuotas pertraukas ir daugiau šventės laiko skiriame VR žaidimams.
+                Intensyvesnis VR tempas, trumpesnės pauzės ir daugiau žaidimo laiko.
               </div>
-              <div className="extra-price">nuo €29</div>
+              <div className="extra-price">+25 €</div>
             </div>
 
             {/* 3. Papildomas laikas */}
