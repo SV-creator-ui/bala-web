@@ -19,10 +19,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const CYAN_THEME = {
-  "--color-volt": "#34d1e0",
-  "--color-volt-deep": "#26c0d0",
-  "--color-volt-ink": "#04252b",
+// Perrašom Tailwind „volt" temą į aqua tokenus, kad BookingFlow-atspindinčios
+// klasės (bg-volt, text-volt-ink, …) persidažytų žydra. Reikšmės nurodo į
+// `--color-aqua*` (globals.css) — hex hardcode šalinamas.
+const AQUA_THEME = {
+  "--color-volt": "var(--color-aqua)",
+  "--color-volt-deep": "var(--color-aqua-deep)",
+  "--color-volt-ink": "var(--color-aqua-ink)",
 } as CSSProperties;
 
 const MONTHS = ["sausio","vasario","kovo","balandžio","gegužės","birželio","liepos","rugpjūčio","rugsėjo","spalio","lapkričio","gruodžio"];
@@ -37,7 +40,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
   const { status, booking } = token ? await resolveBooking(token) : await resolveByRef(ref);
 
   return (
-    <div className="min-h-[100svh] flex flex-col bg-ink text-white" style={CYAN_THEME}>
+    <div className="min-h-[100svh] flex flex-col bg-ink text-white" style={AQUA_THEME}>
       <header className="mx-auto w-full max-w-[1100px] px-6 md:px-10 pt-7 pb-2 flex items-center justify-between gap-4">
         <Link href="/" aria-label="BALA VR — pasirinkti pramogą" className="flex flex-col items-center justify-center">
           <Image src="/assets/logo-bala-vr-wordmark.png" alt="BALA VR" width={220} height={40} className="h-[24px] w-auto" priority />

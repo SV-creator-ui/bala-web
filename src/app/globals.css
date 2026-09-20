@@ -16,6 +16,11 @@
   --color-volt: #FFE400;
   --color-volt-deep: #E4CB00;
   --color-volt-ink: #161200;
+  /* Aqua – komandinių VR žaidimų akcentas (buvęs #34d1e0 hardcoded) */
+  --color-aqua: #34d1e0;
+  --color-aqua-hi: #5be6dc;
+  --color-aqua-deep: #26c0d0;
+  --color-aqua-ink: #04252b;
   --color-genre-green: #5FD068;
   --color-genre-blue: #2EBEF0;
   --color-genre-pink: #FF4D6D;

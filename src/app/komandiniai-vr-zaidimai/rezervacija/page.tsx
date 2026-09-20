@@ -12,18 +12,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "/komandiniai-vr-zaidimai/rezervacija" },
 };
 
-// Komandinių žaidimų puslapio akcentas (žydras). Perrašom Tailwind „volt" temos
+// Komandinių žaidimų puslapio akcentas (aqua/žydras). Perrašom Tailwind „volt" temos
 // kintamuosius šioje šakoje — taip visas BookingFlow persidažo be atskiro kodo.
-const CYAN_THEME = {
-  "--color-volt": "#34d1e0",
-  "--color-volt-deep": "#26c0d0",
-  "--color-volt-ink": "#04252b",
-  "--btn-glow": "rgba(52,209,224,.35)",
+// Reikšmės nurodo į `--color-aqua*` tokenus (globals.css), kad hex nekartotųsi.
+// Pastaba: BookingFlow refaktorinimas į temai neutralų komponentą yra atskiro etapo darbas.
+const AQUA_THEME = {
+  "--color-volt": "var(--color-aqua)",
+  "--color-volt-deep": "var(--color-aqua-deep)",
+  "--color-volt-ink": "var(--color-aqua-ink)",
+  "--btn-glow": "color-mix(in srgb, var(--color-aqua) 35%, transparent)",
 } as CSSProperties;
 
 export default function Page() {
   return (
-    <div className="min-h-[100svh] flex flex-col bg-ink text-white" style={CYAN_THEME}>
+    <div className="min-h-[100svh] flex flex-col bg-ink text-white" style={AQUA_THEME}>
       <header className="mx-auto w-full max-w-[1100px] px-6 md:px-10 pt-7 pb-2 flex items-center justify-between gap-4">
         <Link href="/" aria-label="BALA VR — pasirinkti pramogą" className="flex flex-col items-center justify-center">
           <Image src="/assets/logo-bala-vr-wordmark.png" alt="BALA VR" width={220} height={40} className="h-[24px] w-auto" priority />
