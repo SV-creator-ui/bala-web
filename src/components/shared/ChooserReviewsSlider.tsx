@@ -64,12 +64,24 @@ export default function ChooserReviewsSlider() {
       aria-label="Google 5 žvaigždučių atsiliepimai"
       aria-roledescription="marquee"
     >
-      <ul className="flex gap-4 w-max py-1 animate-review-marquee group-hover:[animation-play-state:paused] motion-reduce:animate-none">
+      {/* Hover scale — tik desktop pointer'iui; touch device'ai neturi lipnaus hover state. */}
+      <style>{`
+        @media not all and (hover: hover), not all and (pointer: fine) {
+          [data-review-card]:hover {
+            scale: 1 !important;
+            z-index: auto !important;
+            box-shadow: none !important;
+            border-color: rgb(255 255 255 / 0.1) !important;
+          }
+        }
+      `}</style>
+      <ul className="flex gap-4 w-max py-3 animate-review-marquee group-hover:[animation-play-state:paused] motion-reduce:animate-none">
         {loop.map((r, i) => (
           <li
             key={i}
+            data-review-card
             aria-hidden={i >= REVIEWS.length ? true : undefined}
-            className="flex-none w-[300px] sm:w-[340px] rounded-2xl border border-white/10 bg-white/[0.035] backdrop-blur-sm px-4 py-3.5 text-left flex flex-col"
+            className="relative flex-none w-[300px] sm:w-[340px] rounded-2xl border border-white/10 bg-white/[0.035] backdrop-blur-sm px-4 py-3.5 text-left flex flex-col transition-[transform,box-shadow,border-color] duration-200 ease-out motion-reduce:transition-none hover:scale-[1.05] hover:z-10 hover:border-white/25 hover:shadow-[0_16px_36px_-14px_rgba(255,213,74,0.22)] motion-reduce:hover:transform-none"
           >
             <div className="flex items-center justify-between gap-3">
               <div className="inline-flex items-center gap-2 min-w-0">
