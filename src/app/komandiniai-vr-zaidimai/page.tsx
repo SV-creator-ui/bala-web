@@ -104,7 +104,7 @@ export default function LaisvasZaidimasPage() {
 
             <Link
               href="/komandiniai-vr-zaidimai/rezervacija"
-              className="mt-7 inline-flex items-center justify-center gap-2 rounded-full font-bold text-[16px] px-7 py-4 text-aqua-ink bg-gradient-to-b from-aqua-hi to-aqua transition-transform duration-150 ease-[cubic-bezier(.16,.84,.32,1)] hover:-translate-y-0.5 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua"
+              className="mt-7 inline-flex items-center justify-center gap-2 rounded-full font-bold text-[16px] px-7 py-4 text-aqua-ink bg-gradient-to-b from-aqua-hi to-aqua transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out-premium)] hover:-translate-y-0.5 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua"
             >
               Rezervuoti
               <Arrow />
@@ -134,7 +134,7 @@ export default function LaisvasZaidimasPage() {
 
             <a
               href={BUSINESS.phoneHref}
-              className="mt-auto pt-7 inline-flex items-center justify-center gap-2 rounded-full border border-line-strong font-bold text-[16px] px-7 py-4 text-white transition-[color,border-color,transform] duration-150 ease-[cubic-bezier(.16,.84,.32,1)] hover:border-aqua hover:text-aqua active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua"
+              className="mt-auto pt-7 inline-flex items-center justify-center gap-2 rounded-full border border-line-strong font-bold text-[16px] px-7 py-4 text-white transition-[color,border-color,transform] duration-[var(--duration-fast)] ease-[var(--ease-out-premium)] hover:border-aqua hover:text-aqua active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aqua"
             >
               Skambinti {BUSINESS.phoneDisplay}
             </a>

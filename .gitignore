@@ -46,6 +46,10 @@ next-env.d.ts
 # scratch/deploy logai
 _*.log
 
+# video compression temp folders
+/public-compressed/
+/public-originals-backup/
+
 # vercel-labs agent skill scaffolding (dev-only)
 .agents/
 .claude/skills/

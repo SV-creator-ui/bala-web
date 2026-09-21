@@ -80,7 +80,7 @@ export default function Nav() {
               <a
                 key={l.href}
                 href={l.href}
-                className="relative py-1.5 text-sm font-semibold text-white hover:text-white transition-colors after:content-[''] after:absolute after:left-0 after:right-full after:bottom-0 after:h-[2px] after:bg-volt after:transition-[right] after:duration-200 hover:after:right-0"
+                className="relative py-1.5 text-sm font-semibold text-white hover:text-white transition-colors after:content-[''] after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-volt after:origin-left after:scale-x-0 after:transition-transform after:duration-200 after:ease-[var(--ease-out-premium)] hover:after:scale-x-100 focus-visible:after:scale-x-100"
               >
                 {l.label}
               </a>

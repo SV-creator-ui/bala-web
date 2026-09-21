@@ -1,6 +1,14 @@
 @import "tailwindcss";
 
 @theme {
+  /* --- Motion tokens ---------------------------------------------------
+     Premium easing (Bala VR kreivė): pradeda greitai, švelniai užsibaigia.
+     Naudojama visuose reikšmingose UI perkėlimuose ir hero animacijose. */
+  --ease-out-premium: cubic-bezier(0.16, 0.84, 0.32, 1);
+  --duration-fast: 150ms;   /* hover, spalvos, greitas feedback */
+  --duration-base: 300ms;   /* accordions, kortelės, nav */
+  --duration-slow: 500ms;   /* scroll reveal, dideli paviršiai */
+
   /* Bala VR (Klaipėda) tokens */
   --color-ink: #0B0B0B;
   --color-ink-soft: #141414;
@@ -29,9 +37,9 @@
   --font-display: var(--font-anton), 'Archivo Black', Impact, sans-serif;
   --font-body: var(--font-archivo), -apple-system, BlinkMacSystemFont, sans-serif;
 
-  --animate-hero-in: heroIn 320ms cubic-bezier(.16,.84,.32,1) both;
-  --animate-hero-in-scale: heroInScale 600ms cubic-bezier(.16,.84,.32,1) both;
-  --animate-bob: bob 2.4s cubic-bezier(.16,.84,.32,1) infinite;
+  --animate-hero-in: heroIn 320ms var(--ease-out-premium) both;
+  --animate-hero-in-scale: heroInScale 600ms var(--ease-out-premium) both;
+  --animate-bob: bob 2.4s var(--ease-out-premium) infinite;
 
   /* Hero fono efektai */
   --animate-fx-grid: fxGrid 5.5s linear infinite;
@@ -148,13 +156,24 @@
     /* Papildoma apsauga — kad ir body neleisdintų elastic bounce'o */
     overscroll-behavior-y: none;
   }
+  /* Reduced motion — švelnesnis nei bendra „nulis animacijų" praktika.
+     - Loop'ai / dekoratyvinės keyframe animacijos (marquee, Ken Burns, hero orbs,
+       CTA glow, fx-sweep) — nutraukiamos (animation-duration → 0.01ms).
+     - Positional transition'ai (transform, translate, scale, rotate) — pašalinami
+       iš transition-property sąrašo, kad nebūtų judesio pojūčio.
+     - Color / opacity / background / border / box-shadow / fill / stroke — LIEKA:
+       tai state feedback, o ne judėjimas. Neturėtų dingti.
+     Šis požiūris atitinka WCAG „reduce, not eliminate" gairę. */
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     *, *::before, *::after {
-      animation-duration: .001ms !important;
+      animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
-      transition-duration: .001ms !important;
       scroll-behavior: auto !important;
+    }
+    *, *::before, *::after {
+      transition-property: color, background-color, border-color, opacity, box-shadow, fill, stroke !important;
+      transition-duration: 200ms !important;
     }
   }
   /* Mobile — išjungiam smooth scroll'ą, nes iOS Safari su smooth kartais

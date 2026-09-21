@@ -36,11 +36,16 @@ export default function FaqAccordion() {
                 />
               </span>
             </button>
+            {/* Grid-template-rows 0fr→1fr trick — atsakymas niekada nenukerpamas,
+                nereikia spėti aukščio, animacija ta pati kaip anksčiau.
+                Palaikoma Chrome 117+, Firefox 133+, Safari 18+ (kitur — akimirksniu). */}
             <div
-              className="overflow-hidden transition-[max-height] duration-300 ease-[cubic-bezier(.16,.84,.32,1)]"
-              style={{ maxHeight: open ? "300px" : "0px" }}
+              className="grid transition-[grid-template-rows] duration-[var(--duration-base)] ease-[var(--ease-out-premium)]"
+              style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
             >
-              <p className="px-1 pb-6 text-[15px] leading-[1.65] text-smoke max-w-[640px]">{item.a}</p>
+              <div className="overflow-hidden">
+                <p className="px-1 pb-6 text-[15px] leading-[1.65] text-smoke max-w-[640px]">{item.a}</p>
+              </div>
             </div>
           </div>
         );

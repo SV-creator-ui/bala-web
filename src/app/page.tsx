@@ -91,7 +91,7 @@ export default function ChooserPage() {
           {/* VR pabėgimo kambariai */}
           <Link
             href="/pabegimo-kambariai"
-            className="card-mobile-reveal group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.5)] hover:border-volt transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 min-[900px]:animate-hero-in-scale min-[900px]:[animation-fill-mode:backwards] max-[899px]:scale-[0.98] min-[900px]:translate-y-3 min-[900px]:-rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:scale-100 hover:shadow-[0_20px_40px_-15px_rgba(255,228,0,0.35)]"
+            className="card-mobile-reveal group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(255,228,0,0.5)] hover:border-volt transition-[transform,border-color,box-shadow] duration-[var(--duration-base)] ease-[var(--ease-out-premium)] active:scale-[0.98] md:min-h-0 min-[900px]:animate-hero-in-scale min-[900px]:[animation-fill-mode:backwards] max-[899px]:scale-[0.98] min-[900px]:translate-y-3 min-[900px]:-rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:scale-100 hover:shadow-[0_20px_40px_-15px_rgba(255,228,0,0.35)]"
           >
             <div className="absolute inset-0 animate-ken-a will-change-transform motion-reduce:animate-none">
               <Image
@@ -137,7 +137,7 @@ export default function ChooserPage() {
           {/* Gimtadienių paketai — featured */}
           <Link
             href="/gimtadieniai"
-            className="card-mobile-reveal group relative flex flex-col overflow-hidden rounded-3xl border-2 border-[rgba(240,165,0,0.55)] hover:border-[#f0a500] transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#0d2b35] min-[900px]:animate-hero-in-scale min-[900px]:[animation-delay:70ms] min-[900px]:[animation-fill-mode:backwards] max-[899px]:scale-[1.01] min-[900px]:-translate-y-2 min-[900px]:scale-[1.03] hover:-translate-y-3 hover:shadow-[0_28px_50px_-15px_rgba(240,165,0,0.5)] z-10"
+            className="card-mobile-reveal group relative flex flex-col overflow-hidden rounded-3xl border-2 border-[rgba(240,165,0,0.55)] hover:border-[#f0a500] transition-[transform,border-color,box-shadow] duration-[var(--duration-base)] ease-[var(--ease-out-premium)] active:scale-[0.98] md:min-h-0 bg-[#0d2b35] min-[900px]:animate-hero-in-scale min-[900px]:[animation-delay:70ms] min-[900px]:[animation-fill-mode:backwards] max-[899px]:scale-[1.01] min-[900px]:-translate-y-2 min-[900px]:scale-[1.03] hover:-translate-y-3 hover:shadow-[0_28px_50px_-15px_rgba(240,165,0,0.5)] z-10"
           >
             <div className="absolute inset-0 animate-ken-c will-change-transform motion-reduce:animate-none">
               <Image
@@ -185,7 +185,7 @@ export default function ChooserPage() {
           {/* VR veiksmo žaidimai */}
           <Link
             href="/komandiniai-vr-zaidimai"
-            className="card-mobile-reveal group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-all duration-300 ease-[cubic-bezier(.16,.84,.32,1)] active:scale-[0.98] md:min-h-0 bg-[#07242a] min-[900px]:animate-hero-in-scale min-[900px]:[animation-delay:140ms] min-[900px]:[animation-fill-mode:backwards] max-[899px]:scale-[0.98] min-[900px]:translate-y-4 min-[900px]:rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:scale-100 hover:shadow-[0_20px_40px_-15px_rgba(52,209,224,0.35)]"
+            className="card-mobile-reveal group relative flex flex-col overflow-hidden rounded-3xl border border-[rgba(52,209,224,0.32)] hover:border-[#34d1e0] transition-[transform,border-color,box-shadow] duration-[var(--duration-base)] ease-[var(--ease-out-premium)] active:scale-[0.98] md:min-h-0 bg-[#07242a] min-[900px]:animate-hero-in-scale min-[900px]:[animation-delay:140ms] min-[900px]:[animation-fill-mode:backwards] max-[899px]:scale-[0.98] min-[900px]:translate-y-4 min-[900px]:rotate-[0.7deg] hover:-translate-y-1 hover:rotate-0 hover:scale-100 hover:shadow-[0_20px_40px_-15px_rgba(52,209,224,0.35)]"
           >
             <div className="absolute inset-0 animate-ken-b will-change-transform motion-reduce:animate-none">
               <Image

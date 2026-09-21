@@ -37,7 +37,7 @@ export default function RevealOnScroll({
   return (
     <div
       ref={ref}
-      className={`transition-all duration-500 ease-[cubic-bezier(.16,.84,.32,1)] ${
+      className={`transition-[opacity,transform] duration-[var(--duration-slow)] ease-[var(--ease-out-premium)] ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-7"
       } ${className}`}
     >
