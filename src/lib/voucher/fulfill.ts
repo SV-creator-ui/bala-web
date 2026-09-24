@@ -41,6 +41,7 @@ export async function fulfillVoucherByRef(ref: string): Promise<VoucherRow | nul
         contentName: "gift_card",
         email: v.buyer_email,
         eventSourceUrl: "https://bala.lt/pabegimo-kambariai/dovanu-kuponas/patvirtinta",
+        attribution: v.attribution,
       });
       await sendOpenAiCapiOrder({
         eventId: v.merchant_reference,

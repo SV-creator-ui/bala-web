@@ -15,6 +15,7 @@
  */
 import { createHash } from "node:crypto";
 import { META_PIXEL_ID } from "./analytics";
+import type { Attribution } from "./attribution";
 
 const CAPI_ACCESS_TOKEN = process.env.META_CAPI_ACCESS_TOKEN ?? "";
 const CAPI_TEST_EVENT_CODE = process.env.META_CAPI_TEST_EVENT_CODE ?? "";
@@ -40,6 +41,9 @@ export type CapiPurchaseInput = {
   email?: string;
   phone?: string;
   eventSourceUrl?: string; // pvz. https://bala.lt/rezervacija/patvirtinta
+  // Iš užsakymo metu išsaugotos atribucijos (tik su slapukų sutikimu) —
+  // leidžia Meta susieti pirkimą su konkrečiu reklamos paspaudimu.
+  attribution?: Pick<Attribution, "fbc" | "fbp" | "client_ip" | "client_ua"> | null;
 };
 
 /**
@@ -51,12 +55,17 @@ export async function sendCapiPurchase(input: CapiPurchaseInput): Promise<void> 
   if (!CAPI_ACCESS_TOKEN) return; // CAPI disabled kol env nenustatytas
   if (!META_PIXEL_ID) return;
 
-  const user_data: Record<string, string[]> = {};
+  const user_data: Record<string, string | string[]> = {};
   if (input.email) user_data.em = [sha256(input.email)];
   if (input.phone) {
     const p = normalizePhone(input.phone);
     if (p) user_data.ph = [sha256(p)];
   }
+  const a = input.attribution;
+  if (a?.fbc) user_data.fbc = a.fbc;
+  if (a?.fbp) user_data.fbp = a.fbp;
+  if (a?.client_ip) user_data.client_ip_address = a.client_ip;
+  if (a?.client_ua) user_data.client_user_agent = a.client_ua;
 
   const payload = {
     data: [

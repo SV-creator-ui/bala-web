@@ -19,6 +19,7 @@ import { isClosedHoliday } from "@/lib/booking/holidays";
 import { validName, validPhone, validEmail } from "@/lib/booking/validation";
 import { validCelebrantAge, ALL_INVITATION_LANGS } from "@/lib/booking/invitation";
 import { BUSINESS } from "@/lib/bala-data";
+import { getAttributionForSubmit } from "@/lib/attribution";
 
 type SlotStatus = { time: string; available: boolean };
 
@@ -395,6 +396,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
                 celebrantAge: inviteAge,
               }
             : {}),
+          attribution: getAttributionForSubmit(),
         }),
       });
       const data = await res.json();

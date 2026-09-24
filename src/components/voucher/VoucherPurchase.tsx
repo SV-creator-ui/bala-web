@@ -9,6 +9,7 @@ import { useState } from "react";
 import { VOUCHER_PRESETS, VOUCHER_MIN, VOUCHER_MAX } from "@/lib/voucher/config";
 import { validName, validEmail } from "@/lib/booking/validation";
 import { formatEur } from "@/lib/booking/pricing";
+import { getAttributionForSubmit } from "@/lib/attribution";
 
 export default function VoucherPurchase() {
   const [preset, setPreset] = useState<number | "custom">(VOUCHER_PRESETS[1]); // 50 €
@@ -45,6 +46,7 @@ export default function VoucherPurchase() {
           recipientName: gift ? recipientName : null,
           fromName: gift ? fromName : null,
           message: gift ? message : null,
+          attribution: getAttributionForSubmit(),
         }),
       });
       const data = await res.json();

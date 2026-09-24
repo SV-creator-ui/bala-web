@@ -78,6 +78,7 @@ export async function markPaidByRef(ref: string): Promise<void> {
     email: row.customer_email,
     phone: row.customer_phone,
     eventSourceUrl: getConfirmUrl(row.type),
+    attribution: row.attribution,
   });
   // OpenAI (ChatGPT Ads) Conversions API — server-side order_created (dedupe per id=ref)
   await sendOpenAiCapiOrder({

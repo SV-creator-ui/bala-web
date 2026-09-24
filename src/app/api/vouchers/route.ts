@@ -13,6 +13,8 @@ import { createVoucher, setMontonioUuid } from "@/lib/voucher/store";
 import { fulfillVoucherByRef } from "@/lib/voucher/fulfill";
 import { createPayseraPayment, payseraConfigured, bookingTestMode } from "@/lib/paysera";
 import { voucherCreateRateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
+import { sanitizeAttribution } from "@/lib/attribution";
+import { saveAttribution } from "@/lib/attribution-store";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +75,7 @@ export async function POST(req: Request) {
       merchantReference,
       paidImmediately: !paymentReady, // testavimo režimas — iškart aktyvus
     });
+    await saveAttribution("vouchers", voucher.id, sanitizeAttribution(body.attribution, req));
 
     // --- Testavimo režimas: praleidžiam mokėjimą, iškart aktyvuojam + siunčiam ---
     if (!paymentReady) {

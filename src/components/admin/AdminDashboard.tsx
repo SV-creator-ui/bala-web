@@ -24,7 +24,15 @@ type Booking = {
   merchant_reference: string;
   invitation_type?: string | null;
   montonio_uuid?: string | null;
+  attribution?: { source?: string; campaign?: string; content?: string } | null;
 };
+
+/** „meta · kampanija · reklama" — iš kur atėjo klientas (tuščia = tiesiogiai). */
+function sourceLabel(b: Booking): string | null {
+  const a = b.attribution;
+  if (!a?.source) return null;
+  return [a.source, a.campaign, a.content].filter(Boolean).join(" · ");
+}
 
 function serviceLabel(b: Booking): string {
   if (b.type === "party") {
@@ -298,6 +306,9 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
                     <div className="text-smoke-2 text-[13px]">{b.customer_phone}</div>
                     <div className="text-smoke-2 text-[13px]">{b.customer_email}</div>
                     {b.note && <div className="mt-1 text-[12.5px] italic text-smoke-2">„{b.note}“</div>}
+                    {sourceLabel(b) && (
+                      <div className="mt-1 text-[11.5px] text-smoke-2">Šaltinis: {sourceLabel(b)}</div>
+                    )}
                   </td>
                   <td className="px-4 py-3 font-mono">{b.players}</td>
                   <td className="px-4 py-3 whitespace-nowrap font-mono">

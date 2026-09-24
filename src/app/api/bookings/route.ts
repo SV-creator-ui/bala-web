@@ -37,6 +37,8 @@ import { notifyBookingPaid } from "@/lib/booking/notify";
 import { applyVoucherToBooking } from "@/lib/voucher/redeem";
 import { validatePromoForBooking } from "@/lib/promo/redeem";
 import { bookingCreateRateLimit, tooManyRequestsResponse } from "@/lib/rate-limit";
+import { sanitizeAttribution } from "@/lib/attribution";
+import { saveAttribution } from "@/lib/attribution-store";
 
 export const dynamic = "force-dynamic";
 
@@ -260,6 +262,7 @@ export async function POST(req: Request) {
       }>();
 
     if (insErr) throw insErr;
+    await saveAttribution("bookings", inserted.id, sanitizeAttribution(body.attribution, req));
 
     // Gimtadienių paketai turi savo dizaino patvirtinimo puslapį.
     const confirmPath = type === "party"

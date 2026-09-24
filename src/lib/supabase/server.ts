@@ -4,6 +4,7 @@
  * yra slaptas. Naudojamas tik API route'uose.
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Attribution } from "@/lib/attribution";
 
 let cached: SupabaseClient | null = null;
 
@@ -57,6 +58,7 @@ export type BookingRow = {
   invitation_lang: "lt" | "ru" | "both" | null; // "both" = 2 kvietimai (LT + RU)
   celebrant_name: string | null; // tik "personalized"
   celebrant_age: number | null; // tik "personalized"
+  attribution?: Attribution | null; // reklamos šaltinis + CAPI signalai; žr. migration_012
 };
 
 /** Dovanų kupono įrašo tipas (atitinka lentelę `vouchers`) */
@@ -79,4 +81,5 @@ export type VoucherRow = {
   redeemed_booking_ref: string | null;
   emails_sent_at: string | null;
   email_send_claimed_at: string | null; // laikinas claim'as (lease); NULL = laisvas
+  attribution?: Attribution | null; // žr. migration_012
 };

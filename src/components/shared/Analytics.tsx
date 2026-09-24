@@ -12,6 +12,7 @@ import {
   META_PIXEL_ID,
   OPENAI_PIXEL_ID,
 } from "@/lib/analytics";
+import { captureAttribution, onAdConsentGranted } from "@/lib/attribution";
 
 /* Inline consent init — ES5 sintakse, kad veiktų senesnėse naršyklėse.
    Consent Mode v2: kol nesutikta, ad_storage/analytics_storage denied. */
@@ -128,6 +129,7 @@ export default function Analytics() {
   const [consent, setConsent] = useState<"loading" | "unset" | "granted" | "denied">("loading");
 
   useEffect(() => {
+    captureAttribution(); // UTM / reklamos paspaudimas — žr. lib/attribution.ts
     const timer = window.setTimeout(() => {
       try {
         const saved = localStorage.getItem(CONSENT_KEY);
@@ -144,6 +146,7 @@ export default function Analytics() {
     try {
       localStorage.setItem(CONSENT_KEY, next);
     } catch {}
+    if (granted) onAdConsentGranted();
     setConsent(next);
   };
 
