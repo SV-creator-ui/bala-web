@@ -282,11 +282,20 @@ export function getGame(slug: string) {
   return { ...game, ...detail };
 }
 
+// Kainos turi sutapti su roomsPrice() (@/lib/booking/pricing).
+// phoneOnly — internetu rezervuojama tik iki BOOKING.maxOnlinePlayers (6), didesnės grupės skambina.
 export const PRICING = [
-  { players: "2 žaidėjai", price: "25", unit: "€/asm.", per: "50 € grupei", popular: false },
-  { players: "3 žaidėjai", price: "21", unit: "€/asm.", per: "63 € grupei", popular: false },
-  { players: "4–6 žaidėjai", price: "20", unit: "€/asm.", per: "Viena komanda", popular: true },
-  { players: "7–10 žaidėjų", price: "20", unit: "€/asm.", per: "Dvi komandos vienu metu", popular: false },
+  { players: "2 žaidėjai", price: "25", unit: "€/asm.", total: "50 € grupei", note: "", popular: false, phoneOnly: false },
+  { players: "3 žaidėjai", price: "21", unit: "€/asm.", total: "63 € grupei", note: "", popular: false, phoneOnly: false },
+  { players: "4–6 žaidėjai", price: "20", unit: "€/asm.", total: "80–120 € grupei", note: "Viena komanda", popular: true, phoneOnly: false },
+  { players: "7–10 žaidėjų", price: "20", unit: "€/asm.", total: "140–200 € grupei", note: "Dvi komandos vienu metu", popular: false, phoneOnly: true },
+];
+
+export const PRICING_INCLUDES = [
+  "Iki 50 min. VR nuotykis",
+  "Instruktorius viską paaiškins",
+  "9 scenarijai",
+  "Jokios VR patirties nereikia",
 ];
 
 export const REVIEWS = [

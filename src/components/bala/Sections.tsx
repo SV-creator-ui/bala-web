@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import RevealOnScroll from "@/components/shared/RevealOnScroll";
-import { AUDIENCES, BUSINESS, FEATURED_SLUGS, GAMES, PRICING } from "@/lib/bala-data";
+import { AUDIENCES, BUSINESS, FEATURED_SLUGS, GAMES, PRICING, PRICING_INCLUDES } from "@/lib/bala-data";
+import { BOOKING } from "@/lib/booking/config";
 import GameCard from "./GameCard";
 import ProcessCarousel from "./ProcessCarousel";
 import ReviewsCarousel from "./ReviewsCarousel";
@@ -141,35 +142,69 @@ export function KainosSection() {
         </RevealOnScroll>
       </div>
       <div className="mx-auto max-w-[1280px] px-6 md:px-10 min-[1200px]:px-14">
-        <RevealOnScroll className="flex gap-4 overflow-x-auto no-scrollbar pt-1.5 pb-5.5 [justify-content:safe_center]">
+        <RevealOnScroll className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 pt-3 lg:items-center">
+          {/* Mobile: kompaktiška 2 stulpelių kortelė (kaina dešinėje); nuo sm — vertikali */}
           {PRICING.map((p) => (
             <div
               key={p.players}
-              className={`flex-none w-[240px] md:w-[260px] rounded-2xl border-[1.5px] border-volt p-[32px_26px] md:p-[36px_30px] relative transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-1 hover:border-volt-deep hover:shadow-[0_0_0_1px_var(--color-volt),0_16px_34px_-12px_rgba(255,228,0,.5)] ${
-                p.popular ? "bg-ink-card-2" : "bg-ink-card"
+              className={`relative grid grid-cols-[1fr_auto] gap-x-4 rounded-2xl p-5 sm:flex sm:flex-col sm:p-6 md:p-7 ${
+                p.popular
+                  ? "bg-volt text-volt-ink shadow-[0_18px_44px_-18px_var(--color-volt)] pt-6 lg:py-10"
+                  : "border border-line-strong bg-ink-card text-white"
               }`}
             >
               {p.popular && (
-                <span className="absolute -top-3 left-[26px] rounded-full bg-volt text-volt-ink text-[11px] font-extrabold uppercase tracking-wide px-3 py-1.5">
+                <span className="absolute -top-3 left-5 sm:left-6 md:left-7 rounded-full bg-ink text-volt text-[11px] font-extrabold uppercase tracking-wide px-3 py-1.5">
                   Populiariausia
                 </span>
               )}
-              <p className="text-[14px] font-bold uppercase tracking-wide text-smoke-2 mb-4">{p.players}</p>
-              <p className="font-display font-normal text-[52px] md:text-[58px] text-white leading-none">
-                {p.price}
-                <span className="font-body text-base font-semibold text-smoke-2 ml-0.5">{p.unit}</span>
+              <p className={`col-start-1 row-start-1 text-[14px] font-bold uppercase tracking-wide ${p.popular ? "text-volt-ink/70" : "text-smoke-2"}`}>
+                {p.players}
               </p>
-              <p className="mt-3 text-[14px] text-smoke">{p.per}</p>
+              <p className="col-start-2 row-start-1 row-span-3 self-center sm:self-auto font-display font-normal text-[44px] sm:mt-3 sm:text-[52px] md:text-[58px] leading-none">
+                {p.price}
+                <span className={`font-body text-base font-semibold ml-0.5 ${p.popular ? "text-volt-ink/70" : "text-smoke-2"}`}>
+                  {p.unit}
+                </span>
+              </p>
+              <p className="col-start-1 row-start-2 mt-1.5 sm:mt-3 text-[15px] font-semibold">{p.total}</p>
+              <p className={`col-start-1 row-start-3 mt-0.5 sm:mt-1 sm:min-h-[1.5em] text-[14px] ${p.popular ? "text-volt-ink/70" : "text-smoke"}`}>{p.note}</p>
+              {p.phoneOnly ? (
+                <a
+                  href={BUSINESS.phoneHref}
+                  aria-label={`Skambinti Bala VR telefonu ${BUSINESS.phoneDisplay}, rezervuoti 7–10 žaidėjų`}
+                  className="col-span-2 mt-5 sm:mt-6 inline-flex items-center justify-center gap-2 rounded-full border-[1.5px] border-white/32 px-5 py-3.5 text-[15px] font-bold text-white transition-[background,border-color] hover:bg-white/8 hover:border-white/50"
+                >
+                  <PhoneIcon className="size-4" />
+                  Rezervuoti telefonu
+                </a>
+              ) : (
+                <a
+                  href="/rezervacija"
+                  className={`col-span-2 mt-5 sm:mt-6 inline-flex items-center justify-center rounded-full px-5 py-3.5 text-[15px] font-bold transition-[background,border-color,transform] hover:-translate-y-0.5 ${
+                    p.popular
+                      ? "bg-ink text-volt hover:bg-ink-soft"
+                      : "border-[1.5px] border-white/32 text-white hover:bg-white/8 hover:border-white/50"
+                  }`}
+                >
+                  Rezervuoti
+                </a>
+              )}
             </div>
           ))}
         </RevealOnScroll>
-        <RevealOnScroll className="flex justify-center mt-9">
-          <a
-            href="/rezervacija"
-            className="inline-flex items-center justify-center rounded-full bg-volt px-[30px] py-4 text-[15px] font-bold text-volt-ink transition-transform hover:-translate-y-0.5 hover:bg-volt-deep"
-          >
-            Rezervuoti dabar
-          </a>
+        <RevealOnScroll className="mt-9 flex flex-col items-center gap-4 text-center">
+          <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2.5">
+            {PRICING_INCLUDES.map((item) => (
+              <li key={item} className="inline-flex items-center gap-2 text-[15px] text-smoke">
+                <CheckIcon className="flex-none text-volt" />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <p className="text-[14px] text-smoke-2">
+            Rezervuojant sumokamas {BOOKING.depositEur} € avansas, likutis — vietoje. Internetu rezervuojama iki {BOOKING.maxOnlinePlayers} žaidėjų.
+          </p>
         </RevealOnScroll>
       </div>
     </section>
