@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -33,6 +33,21 @@ export default function Nav() {
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
   }, [open]);
+
+  // Mobile meniu: kol jis atidarytas, body turi overflow:hidden — iOS Safari tada
+  // neatlieka naršyklės šuolio į #sekciją. Tame pačiame puslapyje slenkame patys,
+  // o po ~0,9 s pataisome poziciją, jei lazy nuotraukos virš sekcijos pakeitė išdėstymą.
+  const onMobileLinkClick = (e: MouseEvent<HTMLAnchorElement>, href: string) => {
+    setOpen(false);
+    const url = new URL(href, window.location.href);
+    if (url.pathname !== window.location.pathname || !url.hash) return;
+    const el = document.getElementById(decodeURIComponent(url.hash.slice(1)));
+    if (!el) return;
+    e.preventDefault();
+    window.history.pushState(null, "", url.hash);
+    requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
+    setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 900);
+  };
 
   return (
     <>
@@ -125,7 +140,7 @@ export default function Nav() {
           <a
             key={l.href}
             href={l.href}
-            onClick={() => setOpen(false)}
+            onClick={(e) => onMobileLinkClick(e, l.href)}
             className="border-b border-line py-3 px-1 font-display text-[clamp(28px,9vw,44px)] uppercase text-white"
           >
             {l.label}

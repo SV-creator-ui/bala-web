@@ -149,26 +149,26 @@ export function KainosSection() {
               key={p.players}
               className={`relative grid grid-cols-[1fr_auto] gap-x-4 rounded-2xl p-5 sm:flex sm:flex-col sm:p-6 md:p-7 ${
                 p.popular
-                  ? "bg-volt text-volt-ink shadow-[0_18px_44px_-18px_var(--color-volt)] pt-6 lg:py-10"
+                  ? "border-[1.5px] border-volt bg-ink-card-2 text-white pt-6 lg:py-10"
                   : "border border-line-strong bg-ink-card text-white"
               }`}
             >
               {p.popular && (
-                <span className="absolute -top-3 left-5 sm:left-6 md:left-7 rounded-full bg-ink text-volt text-[11px] font-extrabold uppercase tracking-wide px-3 py-1.5">
+                <span className="absolute -top-3 left-5 sm:left-6 md:left-7 rounded-full bg-volt text-volt-ink text-[11px] font-extrabold uppercase tracking-wide px-3 py-1.5">
                   Populiariausia
                 </span>
               )}
-              <p className={`col-start-1 row-start-1 text-[14px] font-bold uppercase tracking-wide ${p.popular ? "text-volt-ink/70" : "text-smoke-2"}`}>
+              <p className={`col-start-1 row-start-1 text-[14px] font-bold uppercase tracking-wide text-smoke-2`}>
                 {p.players}
               </p>
               <p className="col-start-2 row-start-1 row-span-3 self-center sm:self-auto font-display font-normal text-[44px] sm:mt-3 sm:text-[52px] md:text-[58px] leading-none">
                 {p.price}
-                <span className={`font-body text-base font-semibold ml-0.5 ${p.popular ? "text-volt-ink/70" : "text-smoke-2"}`}>
+                <span className={`font-body text-base font-semibold ml-0.5 text-smoke-2`}>
                   {p.unit}
                 </span>
               </p>
               <p className="col-start-1 row-start-2 mt-1.5 sm:mt-3 text-[15px] font-semibold">{p.total}</p>
-              <p className={`col-start-1 row-start-3 mt-0.5 sm:mt-1 sm:min-h-[1.5em] text-[14px] ${p.popular ? "text-volt-ink/70" : "text-smoke"}`}>{p.note}</p>
+              <p className={`col-start-1 row-start-3 mt-0.5 sm:mt-1 sm:min-h-[1.5em] text-[14px] text-smoke`}>{p.note}</p>
               {p.phoneOnly ? (
                 <a
                   href={BUSINESS.phoneHref}
@@ -183,7 +183,7 @@ export function KainosSection() {
                   href="/rezervacija"
                   className={`col-span-2 mt-5 sm:mt-6 inline-flex items-center justify-center rounded-full px-5 py-3.5 text-[15px] font-bold transition-[background,border-color,transform] hover:-translate-y-0.5 ${
                     p.popular
-                      ? "bg-ink text-volt hover:bg-ink-soft"
+                      ? "bg-volt text-volt-ink hover:bg-volt-deep"
                       : "border-[1.5px] border-white/32 text-white hover:bg-white/8 hover:border-white/50"
                   }`}
                 >
