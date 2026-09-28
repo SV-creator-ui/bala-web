@@ -1,3 +1,5 @@
+import { BOOKING } from "@/lib/booking/config";
+
 export type Genre = "green" | "blue" | "pink" | "orange";
 
 export type Game = {
@@ -376,7 +378,7 @@ export const PROCESS_STEPS = [
   {
     num: "01",
     title: "Rezervuoji",
-    desc: "Pasirenki datą, laiką ir žaidėjų skaičių internetu arba paskambinęs. Patvirtinimą gauni akimirksniu, jokio išankstinio mokėjimo nereikia.",
+    desc: `Pasirenki datą, laiką ir žaidėjų skaičių internetu arba paskambinęs. Rezervuojant internetu sumokamas ${BOOKING.depositEur} € avansas, likutis — vietoje.`,
     meta: "2 min rezervacija",
     icon: "calendar" as const,
   },
