@@ -13,6 +13,12 @@ import {
 type Props = {
   transactionId: string; // unikalus ID: booking.merchant_reference arba voucher.code
   value: number; // realia sumą EUR (avansas booking'ui, pilna kaina kuponui)
+  /**
+   * Google Ads konversijos vertė, jei skiriasi nuo `value`. Rezervacijoms —
+   * pilna užsakymo suma (ne avansas), kad Google matytų tikras pajamas.
+   * Meta/OpenAI lieka `value` (avansas) — sutampa su server-side CAPI dedupe'ui.
+   */
+  adsValue?: number;
   email?: string; // Enhanced Conversions (klientas Google Ads hash'ins pats)
   sendTo?: string; // konversijos label; default = Rezervacija
 };
@@ -31,6 +37,7 @@ type Props = {
 export default function BookingConversionTracker({
   transactionId,
   value,
+  adsValue,
   email,
   sendTo = ADS_CONVERSION_BOOKING,
 }: Props) {
@@ -45,7 +52,7 @@ export default function BookingConversionTracker({
 
     const attempt = () => {
       if (!adsFiredRef.current) {
-        adsFiredRef.current = trackAdsConversion(sendTo, value, transactionId, email);
+        adsFiredRef.current = trackAdsConversion(sendTo, adsValue ?? value, transactionId, email);
       }
       if (!metaFiredRef.current) {
         metaFiredRef.current = trackMetaPurchase(transactionId, value, contentName);
@@ -58,7 +65,7 @@ export default function BookingConversionTracker({
     attempt();
     window.addEventListener(ANALYTICS_READY_EVENT, attempt);
     return () => window.removeEventListener(ANALYTICS_READY_EVENT, attempt);
-  }, [transactionId, value, email, sendTo]);
+  }, [transactionId, value, adsValue, email, sendTo]);
 
   return null;
 }

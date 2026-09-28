@@ -54,6 +54,7 @@ export default async function Page({ searchParams }) {
               <BookingConversionTracker
                 transactionId={booking.merchant_reference}
                 value={Number(booking.deposit_eur)}
+                adsValue={Number(booking.total_eur)}
                 email={booking.customer_email}
               />
               <div className="gimt-conf-check" aria-hidden="true">✓</div>

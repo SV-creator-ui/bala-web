@@ -57,6 +57,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
               <BookingConversionTracker
                 transactionId={booking.merchant_reference}
                 value={Number(booking.deposit_eur)}
+                adsValue={Number(booking.total_eur)}
                 email={booking.customer_email}
               />
               <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-volt text-volt-ink text-4xl font-extrabold">✓</div>
