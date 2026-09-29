@@ -13,7 +13,7 @@ import { roomsPrice, gamesPrice, grandTotal, formatEur } from "@/lib/booking/pri
 import { WEEKDAY_OFFER } from "@/lib/offers";
 import {
   PARTY_PACKAGES, PARTY_EXTRAS, getPartyPackage,
-  partyTotal, partyDiscount, isDiscountDay, extraPrice, VR_MAX_PRICE_BY_PACKAGE,
+  partyTotal, partyDiscount, isDiscountDay, extraPrice, VR_MAX_PRICE_BY_PACKAGE, PARTY_WEEKDAY_DISCOUNT_EUR,
   type PartyPackageId,
 } from "@/lib/booking/packages";
 import { isClosedHoliday } from "@/lib/booking/holidays";
@@ -756,9 +756,14 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
               );
             })}
           </div>
-          <p className="mt-3 text-[12.5px] text-smoke-2">
-            {WEEKDAY_OFFER.label} (pirmadienį–ketvirtadienį) — pritaikoma pasirinkus datą.
-          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-volt/60 bg-volt/10 px-4 py-3">
+            <span className="font-display text-base uppercase tracking-wide text-volt sm:text-lg">
+              {WEEKDAY_OFFER.label}
+            </span>
+            <span className="text-[13px] text-smoke">
+              (pirmadienį–ketvirtadienį) — pritaikoma pasirinkus datą.
+            </span>
+          </div>
 
           <h3 className="font-display uppercase text-lg mt-8 mb-3">Papildymai <span className="text-smoke-2 text-sm normal-case">(nebūtina)</span></h3>
           <div className="flex flex-col gap-2.5 max-w-[560px]">
@@ -876,20 +881,26 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
                       ? "bg-volt text-volt-ink"
                       : disabled
                       ? `text-smoke-2 opacity-35 cursor-not-allowed ${closed ? "line-through" : ""}`
+                      : discount
+                      ? "bg-volt/15 ring-1 ring-inset ring-volt/40 hover:bg-volt/25"
                       : "hover:bg-white/5"
                   }`}
                   title={closed ? "Kalėdos — uždaryta" : discount ? WEEKDAY_OFFER.label : undefined}
                 >
                   {d}
-                  {isToday && <span className={`absolute bottom-1 h-1 w-1 rounded-full ${selected ? "bg-volt-ink" : "bg-volt"}`} />}
-                  {discount && !selected && <span className="absolute right-1 top-1 h-1 w-1 rounded-full bg-genre-green" />}
+                  {isToday && <span className={`absolute ${discount ? "top-1" : "bottom-1"} h-1 w-1 rounded-full ${selected ? "bg-volt-ink" : "bg-volt"}`} />}
+                  {discount && (
+                    <span className={`absolute bottom-[3px] text-[8px] font-bold leading-none tracking-tight ${selected ? "text-volt-ink" : "text-volt"}`}>
+                      −{PARTY_WEEKDAY_DISCOUNT_EUR} €
+                    </span>
+                  )}
                 </button>
               );
             })}
           </div>
           {type === "party" && (
-            <p className="mt-2 flex items-center gap-1.5 font-mono text-[10.5px] text-smoke-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-genre-green" /> {WEEKDAY_OFFER.label}
+            <p className="mt-3 text-center text-[12px] font-semibold text-volt">
+              NUOLAIDA I–IV dieniais
             </p>
           )}
         </div>
@@ -1400,7 +1411,12 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
           {type === "party" && pkg && (
             <>
               <SumLine label={`${pkg.name} šventė`} value={`${formatEur(pkg.price)} €`} />
-              {discount > 0 && <SumLine label="I–IV nuolaida" value={`−${formatEur(discount)} €`} muted />}
+              {discount > 0 && (
+                <div className="mb-2 flex items-baseline justify-between gap-2.5 text-[13.5px] font-semibold text-volt">
+                  <span>I–IV dienų nuolaida</span>
+                  <span className="text-right font-mono tabular-nums">−{formatEur(discount)} €</span>
+                </div>
+              )}
               {PARTY_EXTRAS.filter((e) => partyExtras.includes(e.id)).map((e) => (
                 <SumLine key={e.id} label={`+ ${e.name}`} value={`${extraPrice(e, pkg.id)} €`} muted />
               ))}
@@ -1414,8 +1430,18 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
           {promoDiscount > 0 && <SumLine label="Nuolaidos kodas" value={`−${formatEur(promoDiscount)} €`} muted />}
           <div className="mt-3 flex items-baseline justify-between border-t border-line pt-4">
             <span className="font-display text-[13px] uppercase tracking-wide text-smoke-2">Viso</span>
-            <span className="font-display text-[32px] leading-none text-white tabular-nums">{formatEur(effectiveTotal)} €</span>
+            <span className="flex items-baseline gap-2">
+              {discount > 0 && (
+                <span className="font-mono text-[14px] text-smoke-2 line-through tabular-nums">{formatEur(effectiveTotal + discount)} €</span>
+              )}
+              <span className="font-display text-[32px] leading-none text-white tabular-nums">{formatEur(effectiveTotal)} €</span>
+            </span>
           </div>
+          {discount > 0 && (
+            <div className="mt-2.5 rounded-lg border border-volt/40 bg-volt/10 px-3 py-2 text-center text-[13px] font-bold uppercase tracking-wide text-volt">
+              Sutaupote {formatEur(discount)} €
+            </div>
+          )}
           <div className="mt-3 rounded-lg border border-volt/20 bg-volt/[.05] px-3 py-2.5">
             <div className="flex items-baseline justify-between gap-2">
               <span className="text-[11px] uppercase tracking-wide text-smoke-2">Avansas dabar</span>
