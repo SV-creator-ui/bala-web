@@ -52,7 +52,7 @@ function shell(inner: string): string {
   <div style="max-width:520px;margin:0 auto;padding:24px">
     <div style="background:#111827;color:#fff;border-radius:14px 14px 0 0;padding:18px 22px;font-weight:700;font-size:18px;letter-spacing:.02em">BALA <span style="color:#4db8cc">VR</span></div>
     <div style="background:#fff;border-radius:0 0 14px 14px;padding:22px;font-size:14px;line-height:1.5">${inner}</div>
-    <p style="text-align:center;color:#9ca3af;font-size:12px;margin:16px 0 0">BALA VR · Pajūrio g. 5B, Klaipėda · +370 684 26686</p>
+    <p style="text-align:center;color:#9ca3af;font-size:12px;margin:16px 0 0">BALA VR · Pajūrio g. 5B, Klaipėda</p>
     <p style="text-align:center;color:#6b7280;font-size:12.5px;margin:10px 0 0">Šį laišką gavote, nes esate BALA VR klientas. Nebenorite gauti pasiūlymų? <a href="{{UNSUB}}" style="color:#374151;text-decoration:underline">Atsisakyti</a></p>
   </div></body></html>`;
 }
