@@ -124,6 +124,16 @@ export async function POST(req: Request) {
       }
     }
 
+    // Kam švenčiama (neprivaloma, ir be kvietimo) — naudojama vėlesniems priminimams.
+    if (celebrantName === null && body.celebrantName) {
+      const nameIn = String(body.celebrantName).trim().slice(0, 40);
+      const ageIn = Number(body.celebrantAge);
+      if (nameIn && validCelebrantAge(ageIn)) {
+        celebrantName = nameIn;
+        celebrantAge = ageIn;
+      }
+    }
+
     if (errors.length) {
       return NextResponse.json({ error: "Netinkami laukai: " + errors.join(", ") }, { status: 400 });
     }

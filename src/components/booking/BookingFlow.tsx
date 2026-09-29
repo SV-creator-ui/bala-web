@@ -396,6 +396,8 @@ export default function BookingFlow({ initialType, initialPkgId }: {
                 celebrantName: celebrantName.trim(),
                 celebrantAge: inviteAge,
               }
+            : type === "party" && celebrantName.trim() && validCelebrantAge(inviteAge)
+            ? { celebrantName: celebrantName.trim(), celebrantAge: inviteAge }
             : {}),
           attribution: getAttributionForSubmit(),
         }),
@@ -1153,7 +1155,22 @@ function StepContact({ name, setName, phone, setPhone, email, setEmail, note, se
             onBlur={() => email.trim() && setTouched({ ...touched, email: true })}
             error={touched.email && !emailOk ? "Netinkamas el. pašto formatas" : ""}
             ok={!!email && emailOk} placeholder="tu@pastas.lt" inputMode="email" />
+          <p className="mt-1.5 text-[12px] text-smoke-2">
+            Kartais atsiųsime asmeninį pasiūlymą ar priminimą. Atsisakyti galite bet kada laiške.
+          </p>
         </div>
+        {isParty && !invite.want && (
+          <>
+            <Field label="Kam švenčiame? Vardas (nebūtina)" value={invite.name} onChange={invite.setName}
+              onBlur={() => {}} error="" ok={false} placeholder="Tomas" />
+            <div>
+              <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Kiek sukanka metų (nebūtina)</label>
+              <input value={invite.age} onChange={(e) => invite.setAge(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                inputMode="numeric" placeholder="11"
+                className="w-full rounded-xl border border-line bg-ink-card px-3.5 py-3 text-white focus:outline-none focus:border-volt" />
+            </div>
+          </>
+        )}
         <div className="sm:col-span-2">
           <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Pastabos (nebūtina)</label>
           <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3}

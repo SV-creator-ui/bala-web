@@ -7,6 +7,11 @@
  *  - LOYALTY_SENT_DATE ('1900-01-06'): time=<normalized_email>, reason=<code>
  *  - PARTY_THANKS_SENT_DATE ('1900-01-07'): time=<booking_id>, reason=<code>
  *  - REMINDER_SENT_DATE ('1900-01-08'): time=<code>, reason=<iso timestamp>
+ *  - VISIT_ONE_THANKS_DATE ('1900-01-10'): time=<normalized_email>, reason=<iso timestamp>
+ *  - ANNIVERSARY_SENT_DATE ('1900-01-11'): time=<email>|<anniversary YYYY-MM-DD>, reason=<code>
+ *  - UNSUBSCRIBED_DATE ('1900-01-12'): time=<normalized_email>, reason=<iso timestamp>
+ *  - HIST_CLIENT_DATE ('1900-01-13'): time=<normalized_email>, reason=<HistClient JSON> (importuoti seni klientai)
+ *  - SECOND_VISIT_SENT_DATE ('1900-01-14'): time=<normalized_email>, reason=<code>
  */
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { dbConfigured } from "@/lib/admin/auth";
@@ -17,8 +22,12 @@ export const LOYALTY_SENT_DATE = "1900-01-06";
 export const PARTY_THANKS_SENT_DATE = "1900-01-07";
 export const REMINDER_SENT_DATE = "1900-01-08";
 export const VISIT_ONE_THANKS_DATE = "1900-01-10";
+export const ANNIVERSARY_SENT_DATE = "1900-01-11";
+export const UNSUBSCRIBED_DATE = "1900-01-12";
+export const HIST_CLIENT_DATE = "1900-01-13";
+export const SECOND_VISIT_SENT_DATE = "1900-01-14";
 
-export type PromoKind = "loyalty" | "party_thanks" | "manual";
+export type PromoKind = "loyalty" | "party_thanks" | "anniversary" | "second_visit" | "manual";
 export type PromoDiscountType = "percent" | "fixed";
 export type PromoAppliesTo = "room" | "game" | "party";
 
@@ -53,7 +62,7 @@ export function normalizeEmail(e: string): string {
 }
 
 /** Sugeneruoja unikalų kodo prefix'ą su random dalim. */
-export function generateCodeString(prefix: "SUGRIZK" | "ACIU"): string {
+export function generateCodeString(prefix: "SUGRIZK" | "ACIU" | "SVENTE" | "KITAS"): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // be I/O/0/1 — vengiam painiavos
   const buf = randomBytes(6);
   let suffix = "";
@@ -226,4 +235,105 @@ export async function countPaidRoomGameVisits(
   const { count, error } = await q;
   if (error) return 0;
   return count ?? 0;
+}
+
+
+/* -------------------- Atsisakymas nuo rinkodaros laiškų -------------------- */
+
+export async function isUnsubscribed(email: string): Promise<boolean> {
+  if (!dbConfigured()) return false;
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("blackouts")
+    .select("time")
+    .eq("date", UNSUBSCRIBED_DATE)
+    .eq("time", normalizeEmail(email))
+    .maybeSingle();
+  return !!data;
+}
+
+/** Idempotentiškai pažymi, kad šis email nebenori rinkodaros laiškų. */
+export async function markUnsubscribed(email: string): Promise<void> {
+  if (!dbConfigured()) throw new Error("DB nesukonfigūruota");
+  if (await isUnsubscribed(email)) return;
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from("blackouts")
+    .insert({ date: UNSUBSCRIBED_DATE, time: normalizeEmail(email), reason: new Date().toISOString() });
+  if (error) throw error;
+}
+
+/** Visi atsisakę email'ai (vienu kreipiniu — cron'ams). */
+export async function listUnsubscribed(): Promise<Set<string>> {
+  if (!dbConfigured()) return new Set();
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase.from("blackouts").select("time").eq("date", UNSUBSCRIBED_DATE);
+  return new Set((data ?? []).map((r) => String(r.time)));
+}
+
+/* -------------------- Metinių priminimų žymos + importuoti seni klientai -------------------- */
+
+export type HistClient = {
+  name: string;
+  /** Paskutinio gimtadienio šventės data (YYYY-MM-DD), įskaitant būsimas. */
+  last_party_date: string;
+  source: string; // pvz. "moizmo"
+};
+
+export async function listHistClients(): Promise<Map<string, HistClient>> {
+  const out = new Map<string, HistClient>();
+  if (!dbConfigured()) return out;
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase.from("blackouts").select("time, reason").eq("date", HIST_CLIENT_DATE);
+  for (const r of data ?? []) {
+    try { out.set(String(r.time), JSON.parse(String(r.reason)) as HistClient); } catch { /* praleidžiam sugadintą */ }
+  }
+  return out;
+}
+
+/** Raktas „šiam email šiai metinių datai" — tik vienas laiškas per metus. */
+export function anniversaryKey(email: string, anniversaryISO: string): string {
+  return `${normalizeEmail(email)}|${anniversaryISO}`;
+}
+
+export async function anniversarySentFor(email: string, anniversaryISO: string): Promise<boolean> {
+  if (!dbConfigured()) return false;
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("blackouts")
+    .select("time")
+    .eq("date", ANNIVERSARY_SENT_DATE)
+    .eq("time", anniversaryKey(email, anniversaryISO))
+    .maybeSingle();
+  return !!data;
+}
+
+export async function markAnniversarySent(email: string, anniversaryISO: string, code: string): Promise<void> {
+  if (!dbConfigured()) throw new Error("DB nesukonfigūruota");
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from("blackouts")
+    .insert({ date: ANNIVERSARY_SENT_DATE, time: anniversaryKey(email, anniversaryISO), reason: code });
+  if (error) throw error;
+}
+
+export async function secondVisitSentTo(email: string): Promise<boolean> {
+  if (!dbConfigured()) return false;
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("blackouts")
+    .select("time")
+    .eq("date", SECOND_VISIT_SENT_DATE)
+    .eq("time", normalizeEmail(email))
+    .maybeSingle();
+  return !!data;
+}
+
+export async function markSecondVisitSent(email: string, code: string): Promise<void> {
+  if (!dbConfigured()) throw new Error("DB nesukonfigūruota");
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from("blackouts")
+    .insert({ date: SECOND_VISIT_SENT_DATE, time: normalizeEmail(email), reason: code });
+  if (error) throw error;
 }

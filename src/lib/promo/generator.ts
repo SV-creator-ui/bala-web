@@ -11,7 +11,7 @@
  *
  *  2. PADĖKA UŽ ŠVENTĘ (ACIU-XXX): 20% nuolaida VR pabėgimo kambariui / veiksmo žaidimams
  *     - Trigger: party rezervacija apmokėta, data buvo prieš 3 dienas, dar be padėkos kodo
- *     - Galioja 45 dienas nuo išsiuntimo
+ *     - Galioja 60 dienų nuo išsiuntimo
  *     - Tinka tik room/game (NE party)
  */
 import type { BookingRow } from "@/lib/supabase/server";
@@ -23,8 +23,11 @@ import {
   partyThanksSentFor, markPartyThanksSent, listPromoCodes,
   reminderSentFor, markReminderSent, normalizeEmail,
   visitOneThanksSentTo, markVisitOneThanksSent,
+  listUnsubscribed, listHistClients, anniversarySentFor, markAnniversarySent,
+  secondVisitSentTo, markSecondVisitSent, countPaidRoomGameVisits,
   type PromoCode,
 } from "./storage";
+import { unsubscribeApiUrl, unsubscribePageUrl } from "./unsubscribe";
 
 /* --------------- Datos --------------- */
 const MONTHS = ["sausio","vasario","kovo","balandžio","gegužės","birželio","liepos","rugpjūčio","rugsėjo","spalio","lapkričio","gruodžio"];
@@ -50,6 +53,7 @@ function shell(inner: string): string {
     <div style="background:#111827;color:#fff;border-radius:14px 14px 0 0;padding:18px 22px;font-weight:700;font-size:18px;letter-spacing:.02em">BALA <span style="color:#4db8cc">VR</span></div>
     <div style="background:#fff;border-radius:0 0 14px 14px;padding:22px;font-size:14px;line-height:1.5">${inner}</div>
     <p style="text-align:center;color:#9ca3af;font-size:12px;margin:16px 0 0">BALA VR · Pajūrio g. 5B, Klaipėda · +370 684 26686</p>
+    <p style="text-align:center;color:#9ca3af;font-size:11.5px;margin:8px 0 0">Šį laišką gavote, nes esate BALA VR klientas. Nebenorite gauti pasiūlymų? <a href="{{UNSUB}}" style="color:#9ca3af">Atsisakyti</a></p>
   </div></body></html>`;
 }
 
@@ -71,7 +75,7 @@ function visitOneThanksEmail(name: string): { subject: string; html: string } {
       `<p style="margin:0 0 6px;font-weight:700;font-size:15px;color:#065f46">🎁 Dovana tik grįžtantiems</p>` +
       `<p style="margin:0;color:#374151;font-size:13.5px">Ateikite dar <b>du kartus</b> per 90 dienų — <b>trečias vizitas su 30% nuolaida</b> VR pabėgimo kambariui ar veiksmo žaidimams.</p>` +
     `</div>` +
-    `<p>Kai grįšite antrą kartą, atsiųsime jums <b>asmeninį nuolaidos kodą</b> — tereikės įvesti rezervuojant.</p>` +
+    `<p>Po maždaug 2 savaičių atsiųsime jums <b>asmeninį kodą su 15% nuolaida</b> kitam vizitui. Kai grįšite antrą kartą, atsiųsime ir kodą trečiam vizitui su 30% nuolaida.</p>` +
     `<p>Iki susitikimo!<br/><b>BALA VR komanda</b></p>` +
     `<p style="color:#6b7280;font-size:12px">Rezervacija: <a href="https://bala.lt" style="color:#0d9488">bala.lt</a> · Skambink: +370 684 26686</p>`,
   );
@@ -95,18 +99,19 @@ function loyaltyEmail(name: string, code: string, validUntil: string): { subject
   return { subject, html };
 }
 
-function partyThanksEmail(name: string, code: string, validUntil: string): { subject: string; html: string } {
+export function partyThanksEmail(name: string, code: string, validUntil: string): { subject: string; html: string } {
   const subject = "Ačiū už šventę BALA VR 🎉";
   const html = shell(
     `<h2 style="margin:0 0 12px;font-size:20px">Ačiū už šventę!</h2>` +
     `<p>Sveiki, ${escapeHtml(name)}!</p>` +
-    `<p>Ačiū, kad šventėte pas mus BALA VR. Tikimės, kad svečiai liko sužavėti.</p>` +
-    `<p>Kaip padėka už apsilankymą, dovanojame jums <b>20% nuolaidą VR pabėgimo kambariui arba veiksmo žaidimams</b>.</p>` +
+    `<p>Ačiū, kad šventėte pas mus BALA VR! ❤️ Mums buvo labai malonu būti Jūsų šventės dalimi.</p>` +
+    `<p>Kaip padėką norime padovanoti Jums <b>20% nuolaidą VR pabėgimo kambariui arba veiksmo žaidimams</b>. Pasikvieskite draugus ar šeimą ir grįžkite dar vienam nuotykiui! 🥽</p>` +
     codeBadge(code) +
     `<p style="text-align:center;margin:0 0 4px;color:#111827"><b>Nuolaida galioja iki ${fmtDateLT(validUntil)}</b></p>` +
-    `<p style="text-align:center;margin:0 0 18px;color:#6b7280;font-size:12.5px">(45 dienos nuo šio laiško)</p>` +
-    `<p>Rezervuok <a href="https://bala.lt" style="color:#0d9488">bala.lt</a> ir įvesk kodą apmokėjimo lange.</p>` +
-    `<p style="color:#6b7280;font-size:12.5px">Kodas išduotas asmeniškai — rezervuok tuo pačiu el. paštu, kuriuo gavai laišką. Nuolaida nesikaupia su dovanų kuponais.</p>` +
+    `<p style="text-align:center;margin:0 0 18px;color:#6b7280;font-size:12.5px">(60 dienų nuo šio laiško)</p>` +
+    `<p>Rezervuokite <a href="https://www.bala.lt" style="color:#0d9488">www.bala.lt</a> ir įveskite nuolaidos kodą apmokėjimo lange.</p>` +
+    `<p style="text-align:center;margin:20px 0"><a href="https://bala.lt/rezervacija?utm_source=email&utm_medium=promo&utm_campaign=aciu" style="display:inline-block;background:#f0a500;color:#0d2b35;font-weight:700;text-decoration:none;padding:12px 26px;border-radius:10px">REZERVUOTI</a></p>` +
+    `<p style="color:#6b7280;font-size:12.5px">Kodas išduotas asmeniškai — rezervuokite tuo pačiu el. paštu, kuriuo gavote laišką. Nuolaida nesisumuoja su dovanų kuponais.</p>` +
     `<p>Iki susitikimo!<br/><b>BALA VR komanda</b></p>`,
   );
   return { subject, html };
@@ -130,6 +135,94 @@ function escapeHtml(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 }
 
+/** Siunčia rinkodaros laišką: įdeda atsisakymo nuorodą ir List-Unsubscribe antraštes. */
+async function sendPromoMail(to: string, subject: string, html: string): Promise<void> {
+  const page = unsubscribePageUrl(to);
+  await getTransporter().sendMail({
+    from: senderAddress(),
+    to,
+    subject,
+    html: html.replace("{{UNSUB}}", page),
+    headers: {
+      "List-Unsubscribe": `<${unsubscribeApiUrl(to)}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
+  });
+}
+
+/** Naujos kampanijos įjungiamos aplinkos kintamuoju (dry-run veikia visada). */
+function flagOn(name: string): boolean {
+  return process.env[name] === "1";
+}
+
+function pad2(n: number): string { return String(n).padStart(2, "0"); }
+function isLeap(y: number): boolean { return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0; }
+function daysBetweenISO(a: string, b: string): number {
+  const [ay, am, ad] = a.split("-").map(Number);
+  const [by, bm, bd] = b.split("-").map(Number);
+  return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 86400000);
+}
+
+/**
+ * Artimiausios metinės PO paskutinės šventės: paskutinė šventės data + N metų (N ≥ 1),
+ * pirmoji, kuri ≥ šiandien. Taip būsima (jau užsakyta) šventė kitų metų laiško neiššaukia
+ * anksčiau laiko. Vasario 29 d. metinėms nenuosekliais metais — vasario 28 d.
+ */
+export function nextAnniversary(lastPartyISO: string, todayIso: string): string {
+  const [y, m, d] = lastPartyISO.split("-").map(Number);
+  for (let n = 1; n <= 15; n++) {
+    const yy = y + n;
+    const dd = m === 2 && d === 29 && !isLeap(yy) ? 28 : d;
+    const iso = `${yy}-${pad2(m)}-${pad2(dd)}`;
+    if (iso >= todayIso) return iso;
+  }
+  return `${y + 15}-${pad2(m)}-${pad2(d)}`;
+}
+
+/** Laiškas išsiunčiamas, kai iki metinių lieka nuo ANNIV_MIN iki ANNIV_MAX dienų (2–5 savaitės). */
+export const ANNIV_MIN_DAYS = 14;
+export const ANNIV_MAX_DAYS = 35;
+
+
+export function anniversaryEmail(opts: {
+  name: string; code: string; validUntil: string; celebrant?: string; nextAge?: number;
+}): { subject: string; html: string } {
+  const hasChild = !!opts.celebrant && !!opts.nextAge;
+  const subject = hasChild
+    ? `${opts.celebrant} kitąmet sukaks ${opts.nextAge} m. — rezervuokite šventę BALA VR`
+    : "Artėja gimtadienis? −19 € jūsų šventei BALA VR";
+  const link = "https://bala.lt/gimtadieniai/rezervacija?utm_source=email&utm_medium=promo&utm_campaign=metines";
+  const html = shell(
+    `<h2 style="margin:0 0 12px;font-size:20px">${hasChild ? `${escapeHtml(opts.celebrant!)} kitąmet sukaks ${opts.nextAge} m.` : "Artėja dar vienas gimtadienis?"}</h2>` +
+    `<p>Sveiki, ${escapeHtml(opts.name)}!</p>` +
+    `<p>Ačiū, kad šventėte pas mus BALA VR. ${hasChild ? "Jei ir šiais metais planuojate šventę," : "Jei planuojate gimtadienio šventę,"} <b>savaitgaliai užsipildo 2–3 savaitės iš anksto</b> — geriausia datą rezervuoti jau dabar.</p>` +
+    `<p>Kaip padėka grįžtantiems — <b>19 € nuolaida</b> gimtadienio šventei (galioja ir savaitgaliais):</p>` +
+    codeBadge(opts.code) +
+    `<p style="text-align:center;margin:0 0 18px;color:#111827"><b>Kodas galioja iki ${fmtDateLT(opts.validUntil)}</b></p>` +
+    `<p>Pirmadienį–ketvirtadienį dar papildomai taikoma <b>−20 € nuolaida</b> (pritaikoma automatiškai).</p>` +
+    `<p style="text-align:center;margin:20px 0"><a href="${link}" style="display:inline-block;background:#f0a500;color:#0d2b35;font-weight:700;text-decoration:none;padding:12px 26px;border-radius:10px">REZERVUOTI ŠVENTĘ</a></p>` +
+    `<p style="color:#6b7280;font-size:12.5px">Kodas išduotas asmeniškai — rezervuokite tuo pačiu el. paštu, kuriuo gavote laišką. Nesikaupia su dovanų kuponais. Įveskite jį apmokėjimo žingsnyje.</p>` +
+    `<p>Iki susitikimo!<br/><b>BALA VR komanda</b></p>`,
+  );
+  return { subject, html };
+}
+
+export function secondVisitEmail(name: string, code: string, validUntil: string): { subject: string; html: string } {
+  const subject = "Dar vienas nuotykis BALA VR? −15% jūsų kitam vizitui 🎮";
+  const link = "https://bala.lt/rezervacija?utm_source=email&utm_medium=promo&utm_campaign=antras-vizitas";
+  const html = shell(
+    `<h2 style="margin:0 0 12px;font-size:20px">Ačiū, kad aplankėte BALA VR!</h2>` +
+    `<p>Sveiki, ${escapeHtml(name)}!</p>` +
+    `<p>Prieš porą savaičių išbandėte BALA VR. Dovanojame <b>15% nuolaidą</b> kitam vizitui — VR pabėgimo kambariui ar veiksmo žaidimams:</p>` +
+    codeBadge(code) +
+    `<p style="text-align:center;margin:0 0 18px;color:#111827"><b>Kodas galioja iki ${fmtDateLT(validUntil)}</b></p>` +
+    `<p style="text-align:center;margin:20px 0"><a href="${link}" style="display:inline-block;background:#f0a500;color:#0d2b35;font-weight:700;text-decoration:none;padding:12px 26px;border-radius:10px">REZERVUOTI</a></p>` +
+    `<p style="color:#6b7280;font-size:12.5px">Kodas išduotas asmeniškai — rezervuokite tuo pačiu el. paštu, kuriuo gavote laišką. Nesikaupia su dovanų kuponais. Įveskite jį apmokėjimo žingsnyje.</p>` +
+    `<p>Iki susitikimo!<br/><b>BALA VR komanda</b></p>`,
+  );
+  return { subject, html };
+}
+
 /* --------------- Trigger'iai (cron) --------------- */
 
 export type PromoRunResult = {
@@ -137,27 +230,42 @@ export type PromoRunResult = {
   loyalty_sent: number;
   party_thanks_sent: number;
   reminders_sent: number;
+  anniversary_sent: number;
+  second_visit_sent: number;
   errors: number;
   skipped_reason?: string;
+  /** Tik dry-run: kam ir ką būtų išsiųsta (el. paštai užmaskuoti). */
+  preview?: { kind: string; to: string; detail: string }[];
 };
 
+function maskEmail(e: string): string {
+  const [u, d] = e.split("@");
+  return `${u.slice(0, 2)}***@${d ?? ""}`;
+}
+
 export async function runPromoCron(opts: { dryRun?: boolean } = {}): Promise<PromoRunResult> {
-  const r: PromoRunResult = { visit_one_thanks_sent: 0, loyalty_sent: 0, party_thanks_sent: 0, reminders_sent: 0, errors: 0 };
+  const r: PromoRunResult = { visit_one_thanks_sent: 0, loyalty_sent: 0, party_thanks_sent: 0, reminders_sent: 0, anniversary_sent: 0, second_visit_sent: 0, errors: 0 };
+  if (opts.dryRun) r.preview = [];
   if (!dbConfigured()) { r.skipped_reason = "db_not_configured"; return r; }
   if (!emailConfigured()) { r.skipped_reason = "email_not_configured"; return r; }
 
+  const unsub = await listUnsubscribed();
+  const dry = opts.dryRun ?? false;
   await Promise.all([
-    generateVisitOneThanks(r, opts.dryRun ?? false),
-    generateLoyaltyCodes(r, opts.dryRun ?? false),
-    generatePartyThanksCodes(r, opts.dryRun ?? false),
-    sendExpiryReminders(r, opts.dryRun ?? false),
+    generateVisitOneThanks(r, dry, unsub),
+    generateLoyaltyCodes(r, dry, unsub),
+    generatePartyThanksCodes(r, dry, unsub),
+    sendExpiryReminders(r, dry, unsub),
   ]);
+  // Naujos kampanijos: eilės tvarka (ne lygiagrečiai), kad neapkrautume Gmail SMTP.
+  await generateAnniversaryCodes(r, dry, unsub);
+  await generateSecondVisitCodes(r, dry, unsub);
   return r;
 }
 
 /* --------------- 0. Padėka po 1-o vizito (be kodo, tik akcijos anonsas) --------------- */
 
-async function generateVisitOneThanks(r: PromoRunResult, dryRun: boolean): Promise<void> {
+async function generateVisitOneThanks(r: PromoRunResult, dryRun: boolean, unsub: Set<string>): Promise<void> {
   const supabase = getSupabaseAdmin();
   // Vakar apmokėti room/game vizitai — sistemos ką tik įvykę.
   const yesterday = addDaysISO(todayISO(), -1);
@@ -179,6 +287,7 @@ async function generateVisitOneThanks(r: PromoRunResult, dryRun: boolean): Promi
   }
 
   for (const g of byEmail.values()) {
+    if (unsub.has(g.email)) continue;
     if (await visitOneThanksSentTo(g.email)) continue; // jau kada nors siųsta
 
     // Tikrinam ar tai iš tiesų 1-as jo vizitas (visą laiką).
@@ -195,7 +304,7 @@ async function generateVisitOneThanks(r: PromoRunResult, dryRun: boolean): Promi
 
     try {
       const { subject, html } = visitOneThanksEmail(g.name);
-      await getTransporter().sendMail({ from: senderAddress(), to: g.email, subject, html });
+      await sendPromoMail(g.email, subject, html);
       await markVisitOneThanksSent(g.email);
       r.visit_one_thanks_sent++;
       console.log(`[promo] VISIT1_THANKS -> ${g.email}`);
@@ -208,7 +317,7 @@ async function generateVisitOneThanks(r: PromoRunResult, dryRun: boolean): Promi
 
 /* --------------- 1. Lojalumas --------------- */
 
-async function generateLoyaltyCodes(r: PromoRunResult, dryRun: boolean): Promise<void> {
+async function generateLoyaltyCodes(r: PromoRunResult, dryRun: boolean, unsub: Set<string>): Promise<void> {
   const supabase = getSupabaseAdmin();
   // Paimam VISUS paid room/game per pastarąsias 90d, grupuojam pagal email.
   const cutoff = addDaysISO(todayISO(), -90);
@@ -233,6 +342,7 @@ async function generateLoyaltyCodes(r: PromoRunResult, dryRun: boolean): Promise
 
   for (const g of groups.values()) {
     if (g.count !== 2) continue; // reikia lygiai 2 apmokėtų vizitų per 90d
+    if (unsub.has(g.email)) continue;
     if (await loyaltyCodeSentTo(g.email)) continue; // jau siųsta
     if (dryRun) { r.loyalty_sent++; continue; }
 
@@ -258,7 +368,7 @@ async function generateLoyaltyCodes(r: PromoRunResult, dryRun: boolean): Promise
       await insertPromoCode(promo);
       await markLoyaltySent(g.email, code);
       const { subject, html } = loyaltyEmail(g.name, code, validUntil);
-      await getTransporter().sendMail({ from: senderAddress(), to: g.email, subject, html });
+      await sendPromoMail(g.email, subject, html);
       r.loyalty_sent++;
       console.log(`[promo] LOYALTY -> ${g.email} (${code})`);
     } catch (e) {
@@ -270,7 +380,7 @@ async function generateLoyaltyCodes(r: PromoRunResult, dryRun: boolean): Promise
 
 /* --------------- 2. Padėka gimtadienio užsakovui --------------- */
 
-async function generatePartyThanksCodes(r: PromoRunResult, dryRun: boolean): Promise<void> {
+async function generatePartyThanksCodes(r: PromoRunResult, dryRun: boolean, unsub: Set<string>): Promise<void> {
   const supabase = getSupabaseAdmin();
   // Party rezervacijos, kurių data buvo prieš 3 dienas, apmokėtos.
   const targetDate = addDaysISO(todayISO(), -3);
@@ -284,13 +394,14 @@ async function generatePartyThanksCodes(r: PromoRunResult, dryRun: boolean): Pro
   if (!data) return;
 
   for (const b of data as BookingRow[]) {
+    if (unsub.has(normalizeEmail(b.customer_email))) continue;
     if (await partyThanksSentFor(b.id)) continue; // jau siųsta
     if (dryRun) { r.party_thanks_sent++; continue; }
 
     const code = generateCodeString("ACIU");
     const email = normalizeEmail(b.customer_email);
     const validFrom = todayISO();
-    const validUntil = addDaysISO(validFrom, 45);
+    const validUntil = addDaysISO(validFrom, 60);
     const promo: PromoCode = {
       code, kind: "party_thanks",
       discount_type: "percent", discount_value: 20,
@@ -310,7 +421,7 @@ async function generatePartyThanksCodes(r: PromoRunResult, dryRun: boolean): Pro
       await insertPromoCode(promo);
       await markPartyThanksSent(b.id, code);
       const { subject, html } = partyThanksEmail(b.customer_name, code, validUntil);
-      await getTransporter().sendMail({ from: senderAddress(), to: email, subject, html });
+      await sendPromoMail(email, subject, html);
       r.party_thanks_sent++;
       console.log(`[promo] PARTY_THANKS -> ${email} (${code})`);
     } catch (e) {
@@ -322,13 +433,14 @@ async function generatePartyThanksCodes(r: PromoRunResult, dryRun: boolean): Pro
 
 /* --------------- 3. Priminimai 15d iki pabaigos (tik loyalty) --------------- */
 
-async function sendExpiryReminders(r: PromoRunResult, dryRun: boolean): Promise<void> {
+async function sendExpiryReminders(r: PromoRunResult, dryRun: boolean, unsub: Set<string>): Promise<void> {
   const codes = await listPromoCodes();
   const target = addDaysISO(todayISO(), 15);
   for (const promo of codes) {
     if (promo.kind !== "loyalty") continue;
     if (promo.used_at || promo.cancelled) continue;
     if (promo.valid_until !== target) continue;
+    if (unsub.has(promo.assigned_email)) continue;
     if (await reminderSentFor(promo.code)) continue;
     if (dryRun) { r.reminders_sent++; continue; }
 
@@ -341,7 +453,7 @@ async function sendExpiryReminders(r: PromoRunResult, dryRun: boolean): Promise<
         .maybeSingle();
       const name = (srcBooking?.customer_name as string) || "svetys";
       const { subject, html } = loyaltyReminderEmail(name, promo.code, promo.valid_until);
-      await getTransporter().sendMail({ from: senderAddress(), to: promo.assigned_email, subject, html });
+      await sendPromoMail(promo.assigned_email, subject, html);
       await markReminderSent(promo.code);
       r.reminders_sent++;
       console.log(`[promo] REMINDER -> ${promo.assigned_email} (${promo.code})`);
@@ -350,4 +462,276 @@ async function sendExpiryReminders(r: PromoRunResult, dryRun: boolean): Promise<
       console.error(`[promo] REMINDER klaida (${promo.code}):`, e);
     }
   }
+}
+
+
+/* --------------- 4. Metinių priminimas (2–5 sav. prieš gimtadienio metines) --------------- */
+
+type AnnivClient = {
+  email: string; name: string; lastParty: string;
+  celebrant?: string; celebrantAge?: number; lastPartyYear?: number;
+};
+
+async function generateAnniversaryCodes(r: PromoRunResult, dryRun: boolean, unsub: Set<string>): Promise<void> {
+  // Dry-run visada leidžiamas (nieko nesiunčia); realus siuntimas — tik įjungus PROMO_ANNIVERSARY_ENABLED=1.
+  if (!dryRun && !flagOn("PROMO_ANNIVERSARY_ENABLED")) return;
+  const supabase = getSupabaseAdmin();
+  const today = todayISO();
+
+  // 1) Apmokėtos gimtadienių rezervacijos (visos datos, įskaitant būsimas).
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("customer_email, customer_name, date, celebrant_name, celebrant_age")
+    .eq("status", "paid")
+    .eq("type", "party");
+  if (error) { r.errors++; return; }
+
+  const clients = new Map<string, AnnivClient>();
+  for (const b of data ?? []) {
+    const email = normalizeEmail(String(b.customer_email));
+    const cur = clients.get(email);
+    if (!cur || String(b.date) > cur.lastParty) {
+      clients.set(email, {
+        email, name: String(b.customer_name), lastParty: String(b.date),
+        celebrant: b.celebrant_name ? String(b.celebrant_name) : undefined,
+        celebrantAge: typeof b.celebrant_age === "number" ? b.celebrant_age : undefined,
+        lastPartyYear: Number(String(b.date).slice(0, 4)),
+      });
+    }
+  }
+  // 2) Importuoti seni klientai (Moizmo) — jei jų paskutinė šventė vėlesnė, imame ją.
+  for (const [email, h] of await listHistClients()) {
+    const cur = clients.get(email);
+    if (!cur) clients.set(email, { email, name: h.name, lastParty: h.last_party_date });
+    else if (h.last_party_date > cur.lastParty) { cur.lastParty = h.last_party_date; cur.celebrant = undefined; cur.celebrantAge = undefined; }
+  }
+
+  for (const c of clients.values()) {
+    if (unsub.has(c.email)) continue;
+    const anniv = nextAnniversary(c.lastParty, today);
+    const days = daysBetweenISO(today, anniv);
+    if (days < ANNIV_MIN_DAYS || days > ANNIV_MAX_DAYS) continue;
+    if (await anniversarySentFor(c.email, anniv)) continue;
+
+    const nextAge = c.celebrant && c.celebrantAge && c.lastPartyYear
+      ? c.celebrantAge + (Number(anniv.slice(0, 4)) - c.lastPartyYear)
+      : undefined;
+    if (dryRun) {
+      r.anniversary_sent++;
+      r.preview?.push({ kind: "anniversary", to: maskEmail(c.email), detail: `metinės ${anniv} (po ${days} d.), paskutinė šventė ${c.lastParty}${c.celebrant ? `, ${c.celebrant} → ${nextAge} m.` : ""}` });
+      continue;
+    }
+
+    const code = generateCodeString("SVENTE");
+    const validUntil = addDaysISO(anniv, 30); // iki 30 d. po metinių datos
+    const promo: PromoCode = {
+      code, kind: "anniversary",
+      discount_type: "fixed", discount_value: 19,
+      assigned_email: c.email,
+      applies_to: ["party"],
+      valid_from: today, valid_until: validUntil,
+      issued_at: new Date().toISOString(),
+      used_at: null, used_booking_id: null, used_booking_ref: null,
+      source_booking_id: null,
+      cancelled: false,
+      min_visits_required: 0,
+      allow_voucher_stack: false,
+      max_uses: 1,
+      used_count: 0,
+    };
+    try {
+      await insertPromoCode(promo);
+      await markAnniversarySent(c.email, anniv, code);
+      const { subject, html } = anniversaryEmail({ name: c.name, code, validUntil, celebrant: c.celebrant, nextAge });
+      await sendPromoMail(c.email, subject, html);
+      r.anniversary_sent++;
+      console.log(`[promo] ANNIVERSARY -> ${c.email} (${code}, metinės ${anniv})`);
+    } catch (e) {
+      r.errors++;
+      console.error(`[promo] ANNIVERSARY klaida (${c.email}):`, e);
+    }
+  }
+}
+
+/* --------------- 5. Antro vizito kodas (~2 sav. po pirmo pabėgimo kambario vizito) --------------- */
+
+async function generateSecondVisitCodes(r: PromoRunResult, dryRun: boolean, unsub: Set<string>): Promise<void> {
+  if (!dryRun && !flagOn("PROMO_SECOND_VISIT_ENABLED")) return;
+  const supabase = getSupabaseAdmin();
+  const today = todayISO();
+  // Langas 14–21 d. po vizito: jei cron vieną dieną nesuveikė, klientas vis tiek gaus kodą.
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("customer_email, customer_name, id")
+    .eq("status", "paid")
+    .in("type", ["room", "game"])
+    .gte("date", addDaysISO(today, -21))
+    .lte("date", addDaysISO(today, -14));
+  if (error) { r.errors++; return; }
+
+  const byEmail = new Map<string, { email: string; name: string; id: string }>();
+  for (const b of data ?? []) {
+    const email = normalizeEmail(String(b.customer_email));
+    if (!byEmail.has(email)) byEmail.set(email, { email, name: String(b.customer_name), id: String(b.id) });
+  }
+
+  for (const g of byEmail.values()) {
+    if (unsub.has(g.email)) continue;
+    if (await secondVisitSentTo(g.email)) continue;
+    // Tik pirmam apsilankymui: iš viso lygiai 1 apmokėtas room/game vizitas.
+    if ((await countPaidRoomGameVisits(g.email)) !== 1) continue;
+    if (dryRun) {
+      r.second_visit_sent++;
+      r.preview?.push({ kind: "second_visit", to: maskEmail(g.email), detail: "−15%, galioja 90 d." });
+      continue;
+    }
+
+    const code = generateCodeString("KITAS");
+    const validUntil = addDaysISO(today, 90);
+    const promo: PromoCode = {
+      code, kind: "second_visit",
+      discount_type: "percent", discount_value: 15,
+      assigned_email: g.email,
+      applies_to: ["room", "game"],
+      valid_from: today, valid_until: validUntil,
+      issued_at: new Date().toISOString(),
+      used_at: null, used_booking_id: null, used_booking_ref: null,
+      source_booking_id: g.id,
+      cancelled: false,
+      min_visits_required: 0,
+      allow_voucher_stack: false,
+      max_uses: 1,
+      used_count: 0,
+    };
+    try {
+      await insertPromoCode(promo);
+      await markSecondVisitSent(g.email, code);
+      const { subject, html } = secondVisitEmail(g.name, code, validUntil);
+      await sendPromoMail(g.email, subject, html);
+      r.second_visit_sent++;
+      console.log(`[promo] SECOND_VISIT -> ${g.email} (${code})`);
+    } catch (e) {
+      r.errors++;
+      console.error(`[promo] SECOND_VISIT klaida (${g.email}):`, e);
+    }
+  }
+}
+
+
+/* --------------- Vienkartinis „Ačiū už šventę" siuntimas (rankinis, ne cron) --------------- */
+
+export type PartyThanksBatchResult = {
+  candidates: number;
+  sent: number;
+  skipped_unsubscribed: number;
+  skipped_already_thanked: number;
+  errors: number;
+  preview: { to: string; name: string; party_date: string; source: string }[];
+  test_sent_to?: string;
+  skipped_reason?: string;
+};
+
+/**
+ * Išsiunčia „Ačiū už šventę" (ACIU −20%) visiems, kurių šventė buvo nuo `since` iki vakar,
+ * ir kurie dar negavo. Šaltiniai: apmokėtos svetainės rezervacijos + importuoti seni klientai.
+ *  - dryRun: nieko nesiunčia ir nerašo, tik grąžina sąrašą (el. paštai užmaskuoti).
+ *  - testTo: išsiunčia VIENĄ bandomąjį laišką į nurodytą adresą su netikru kodu; DB nerašo.
+ * Vykdoma TIK per /api/cron/promo-batch, kuris gyvoje svetainėje išjungtas (PROMO_BATCH_ENABLED).
+ */
+export async function runPartyThanksBatch(opts: {
+  since: string; dryRun: boolean; testTo?: string;
+}): Promise<PartyThanksBatchResult> {
+  const out: PartyThanksBatchResult = {
+    candidates: 0, sent: 0, skipped_unsubscribed: 0, skipped_already_thanked: 0, errors: 0, preview: [],
+  };
+  if (!dbConfigured()) { out.skipped_reason = "db_not_configured"; return out; }
+  if (!emailConfigured()) { out.skipped_reason = "email_not_configured"; return out; }
+
+  const supabase = getSupabaseAdmin();
+  const today = todayISO();
+  const unsub = await listUnsubscribed();
+
+  type Rec = { email: string; name: string; date: string; key: string; sourceBookingId: string | null; source: string };
+  const recs = new Map<string, Rec>();
+
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("id, customer_email, customer_name, date")
+    .eq("status", "paid")
+    .eq("type", "party")
+    .gte("date", opts.since)
+    .lt("date", today);
+  if (error) { out.errors++; return out; }
+  for (const b of data ?? []) {
+    const email = normalizeEmail(String(b.customer_email));
+    const cur = recs.get(email);
+    if (!cur || String(b.date) > cur.date) {
+      recs.set(email, { email, name: String(b.customer_name), date: String(b.date), key: String(b.id), sourceBookingId: String(b.id), source: "svetainė" });
+    }
+  }
+  for (const [email, h] of await listHistClients()) {
+    if (h.last_party_date < opts.since || h.last_party_date >= today) continue;
+    if (recs.has(email)) continue;
+    recs.set(email, { email, name: h.name, date: h.last_party_date, key: `hist:${email}|${h.last_party_date}`, sourceBookingId: null, source: h.source });
+  }
+
+  // Kas jau gavo ACIU per pastarąsias 60 d. (pagal išduotus kodus) — nesiunčiam antrą kartą.
+  const cutoff = addDaysISO(today, -60);
+  const alreadyByCode = new Set(
+    (await listPromoCodes())
+      .filter((c) => c.kind === "party_thanks" && c.issued_at.slice(0, 10) >= cutoff)
+      .map((c) => c.assigned_email),
+  );
+
+  const list: Rec[] = [];
+  for (const rec of [...recs.values()].sort((a, b) => a.date.localeCompare(b.date))) {
+    if (unsub.has(rec.email)) { out.skipped_unsubscribed++; continue; }
+    if (alreadyByCode.has(rec.email) || (await partyThanksSentFor(rec.key))) { out.skipped_already_thanked++; continue; }
+    list.push(rec);
+  }
+  out.candidates = list.length;
+  for (const rec of list) out.preview.push({ to: maskEmail(rec.email), name: rec.name.split(" ")[0], party_date: rec.date, source: rec.source });
+
+  if (opts.testTo) {
+    const sample = list[0];
+    const { subject, html } = partyThanksEmail(sample ? sample.name : "Ieva", "ACIU-BANDYMAS", addDaysISO(today, 60));
+    await sendPromoMail(opts.testTo, `[BANDYMAS] ${subject}`, html);
+    out.test_sent_to = maskEmail(opts.testTo);
+    return out;
+  }
+  if (opts.dryRun) return out;
+
+  for (const rec of list) {
+    const code = generateCodeString("ACIU");
+    const validFrom = today;
+    const validUntil = addDaysISO(validFrom, 60);
+    const promo: PromoCode = {
+      code, kind: "party_thanks",
+      discount_type: "percent", discount_value: 20,
+      assigned_email: rec.email,
+      applies_to: ["room", "game"],
+      valid_from: validFrom, valid_until: validUntil,
+      issued_at: new Date().toISOString(),
+      used_at: null, used_booking_id: null, used_booking_ref: null,
+      source_booking_id: rec.sourceBookingId,
+      cancelled: false,
+      min_visits_required: 0,
+      allow_voucher_stack: false,
+      max_uses: 1,
+      used_count: 0,
+    };
+    try {
+      await insertPromoCode(promo);
+      await markPartyThanksSent(rec.key, code);
+      const { subject, html } = partyThanksEmail(rec.name, code, validUntil);
+      await sendPromoMail(rec.email, subject, html);
+      out.sent++;
+      console.log(`[promo] PARTY_THANKS_BATCH -> ${rec.email} (${code})`);
+    } catch (e) {
+      out.errors++;
+      console.error(`[promo] PARTY_THANKS_BATCH klaida (${rec.email}):`, e);
+    }
+    await new Promise((r) => setTimeout(r, 2000)); // neapkrauname Gmail SMTP
+  }
+  return out;
 }
