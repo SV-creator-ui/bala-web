@@ -276,9 +276,9 @@ export default function Packages() {
         <div className="vr-flow-note">
           <h3 className="vr-flow-title">Kaip vyksta VR žaidimai?</h3>
           <p className="vr-flow-text">
-            VR žaidžiama komandomis ir rotuojantis. Kol viena komanda žaidžia
-            VR, kiti dalyviai turi kitas veiklas — interaktyvią sieną,
-            arkadinius ir stalo žaidimus.
+            VR žaidžiama dviem komandomis pakaitomis. Kol viena komanda žaidžia
+            VR, kita pramogauja: dviese vairuoja lenktynių simuliatorių,
+            žaidžia stalo futbolą, oro ritulį ar kitus stalo žaidimus.
           </p>
         </div>
 
