@@ -1,13 +1,14 @@
 /**
  * Atsisakymas nuo rinkodaros laiškų: pasirašytas (HMAC) tokenas, kad niekas
  * negalėtų atsisakyti svetimo el. pašto. Tokenas nesikeičia — vienas email = vienas token.
- * Slaptas raktas: CRON_SECRET (arba ADMIN_PASSWORD, jei CRON_SECRET nenustatytas).
+ * Slaptas raktas: UNSUBSCRIBE_SECRET (tas pats vietoje ir gyvoje svetainėje, kad laiškai,
+ * išsiųsti iš bet kur, turėtų galiojančias nuorodas); atsarginiai: CRON_SECRET, ADMIN_PASSWORD.
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { normalizeEmail } from "./storage";
 
 function secret(): string {
-  return process.env.CRON_SECRET || process.env.ADMIN_PASSWORD || "dev-only-unsubscribe-secret";
+  return process.env.UNSUBSCRIBE_SECRET || process.env.CRON_SECRET || process.env.ADMIN_PASSWORD || "dev-only-unsubscribe-secret";
 }
 
 function siteUrl(): string {
