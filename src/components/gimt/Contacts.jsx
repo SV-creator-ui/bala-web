@@ -37,20 +37,6 @@ export default function Contacts() {
           <div className="contacts-info">
             <div className="contact-item">
               <div className="contact-item-icon">
-                <PinIcon />
-              </div>
-              <div>
-                <div className="contact-item-title">Adresas</div>
-                <div className="contact-item-value">
-                  <a href={MAPS_LINK} target="_blank" rel="noreferrer">
-                    Pajūrio g. 5B, Klaipėda
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div className="contact-item">
-              <div className="contact-item-icon">
                 <PhoneIcon />
               </div>
               <div>
@@ -70,6 +56,20 @@ export default function Contacts() {
                 <div className="contact-item-value">
                   <a href="mailto:bala.pramogos@gmail.com">
                     bala.pramogos@gmail.com
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="contact-item">
+              <div className="contact-item-icon">
+                <PinIcon />
+              </div>
+              <div>
+                <div className="contact-item-title">Adresas</div>
+                <div className="contact-item-value">
+                  <a href={MAPS_LINK} target="_blank" rel="noreferrer">
+                    Pajūrio g. 5B, Klaipėda
                   </a>
                 </div>
               </div>

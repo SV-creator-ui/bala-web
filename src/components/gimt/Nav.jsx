@@ -49,11 +49,11 @@ export default function Nav() {
       </a>
       <ul className="nav-links">
         <li><a href="#pradzia">Pradžia</a></li>
-        <li><a href="#kaip-vyksta">Kaip vyksta</a></li>
         <li><a href="#paketai">Kainos</a></li>
+        <li><a href="#atsiliepimai">Atsiliepimai</a></li>
+        <li><a href="#kaip-vyksta">Kaip vyksta</a></li>
         <li><a href="#zaidimai">Populiariausi žaidimai</a></li>
         <li><a href="#akimirkos">Galerija</a></li>
-        <li><a href="#atsiliepimai">Atsiliepimai</a></li>
         <li><a href="#duk">DUK</a></li>
         <li><a href="#kontaktai">Kontaktai</a></li>
       </ul>
@@ -94,11 +94,11 @@ export default function Nav() {
           </button>
           <ul className="nav-mobile-links">
             <li><a href="#pradzia" onClick={close}>Pradžia</a></li>
-            <li><a href="#kaip-vyksta" onClick={close}>Kaip vyksta</a></li>
             <li><a href="#paketai" onClick={close}>Kainos</a></li>
+            <li><a href="#atsiliepimai" onClick={close}>Atsiliepimai</a></li>
+            <li><a href="#kaip-vyksta" onClick={close}>Kaip vyksta</a></li>
             <li><a href="#zaidimai" onClick={close}>Populiariausi žaidimai</a></li>
             <li><a href="#akimirkos" onClick={close}>Galerija</a></li>
-            <li><a href="#atsiliepimai" onClick={close}>Atsiliepimai</a></li>
             <li><a href="#duk" onClick={close}>DUK</a></li>
             <li><a href="#kontaktai" onClick={close}>Kontaktai</a></li>
           </ul>

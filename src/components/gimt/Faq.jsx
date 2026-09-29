@@ -4,24 +4,24 @@ import { useState } from "react";
 
 const faqs = [
   {
+    q: "Kas prižiūri vaikus šventės metu?",
+    a: "Kiekvienos šventės metu dirba mūsų instruktorius — jis padeda užsidėti VR akinius, paaiškina žaidimo taisykles ir seka laiką. Už vaikų taisyklių laikymąsi atsako tėvai.",
+  },
+  {
     q: "Nuo kokio amžiaus galima žaisti VR?",
     a: "VR žaidimai – nuo 7 metų. Arkadiniai žaidimai – nuo mažesnio amžiaus. Instruktorius visada padeda ir prižiūri.",
-  },
-  {
-    q: "Ar tėvai taip pat gali žaisti VR?",
-    a: "Tėvai gali išbandyti VR veiksmo žaidimus, jei lieka laisva vieta. Jei norima intensyvesnio VR tempo – galima pasirinkti VR MAX (+25 €): trumpesnės pauzės tarp VR sesijų ir daugiau šventės laiko žaidimams.",
-  },
-  {
-    q: "Ar galime atsivežti tortą ir dekoracijas?",
-    a: "Žinoma! Galite atsivežti arba užsisakyti maistą, tortą, gėrimų, pasipuošti dekoracijas.",
   },
   {
     q: "Ar visi žaidėjai turės veiklos?",
     a: "Taip. Kol viena komanda žaidžia VR, kita renkasi interaktyvią sieną, arkadinius (stalo) žaidimus, vairavimo simuliatorių arba vaišinasi. Komandos reguliariai keičiasi.",
   },
   {
-    q: "Kas prižiūri vaikus šventės metu?",
-    a: "Kiekvienos šventės metu dirba mūsų instruktorius — jis padeda užsidėti VR akinius, paaiškina žaidimo taisykles ir seka laiką. Už vaikų taisyklių laikymąsi atsako tėvai.",
+    q: "Ar galime atsivežti tortą ir dekoracijas?",
+    a: "Žinoma! Galite atsivežti arba užsisakyti maistą, tortą, gėrimų, pasipuošti dekoracijas.",
+  },
+  {
+    q: "Ar tėvai taip pat gali žaisti VR?",
+    a: "Tėvai gali išbandyti VR veiksmo žaidimus, jei lieka laisva vieta. Jei norima intensyvesnio VR tempo – galima pasirinkti VR MAX (+25 €): trumpesnės pauzės tarp VR sesijų ir daugiau šventės laiko žaidimams.",
   },
   {
     q: "Ką daryti, jei norisi intensyvesnio VR tempo?",

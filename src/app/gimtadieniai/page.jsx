@@ -26,16 +26,16 @@ export default function Home() {
       <Nav />
       <main>
         <Hero />
-        <HowItWorks />
         <WhatYouGet />
+        <Packages />
+        <Testimonials />
+        <HowItWorks />
         <Games />
         <MidCta />
         <Moments />
-        <Testimonials />
-        <Packages />
         <Faq />
-        <Contacts />
         <ScarcityCta />
+        <Contacts />
       </main>
       <Footer />
       <ScrollReveal />

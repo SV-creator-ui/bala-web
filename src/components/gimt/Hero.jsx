@@ -4,8 +4,8 @@ import { WEEKDAY_OFFER } from "@/lib/offers";
 const BOOKING_URL = "/gimtadieniai/rezervacija";
 
 const stats = [
-  { num: "650+", label: "Gimtadienių" },
   { num: "4.9★", label: "Google" },
+  { num: "650+", label: "Gimtadienių" },
   { num: "220 m²", label: "Erdvė" },
   { num: "Nuo 2022", label: "Patirtis" },
 ];
