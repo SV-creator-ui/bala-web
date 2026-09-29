@@ -6,10 +6,6 @@
       "schedule": "0 8 * * *"
     },
     {
-      "path": "/api/cron/promo",
-      "schedule": "5 8 * * *"
-    },
-    {
       "path": "/api/cron/settle-pending",
       "schedule": "15 8 * * *"
     }
