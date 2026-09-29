@@ -12,6 +12,7 @@
  *  - UNSUBSCRIBED_DATE ('1900-01-12'): time=<normalized_email>, reason=<iso timestamp>
  *  - HIST_CLIENT_DATE ('1900-01-13'): time=<normalized_email>, reason=<HistClient JSON> (importuoti seni klientai)
  *  - SECOND_VISIT_SENT_DATE ('1900-01-14'): time=<normalized_email>, reason=<code>
+ *  - ROOM_CLIENT_DATE ('1900-01-15'): time=<normalized_email>, reason=<RoomClient JSON> (importuoti seni kambarių/žaidimų klientai)
  */
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import { dbConfigured } from "@/lib/admin/auth";
@@ -26,6 +27,7 @@ export const ANNIVERSARY_SENT_DATE = "1900-01-11";
 export const UNSUBSCRIBED_DATE = "1900-01-12";
 export const HIST_CLIENT_DATE = "1900-01-13";
 export const SECOND_VISIT_SENT_DATE = "1900-01-14";
+export const ROOM_CLIENT_DATE = "1900-01-15";
 
 export type PromoKind = "loyalty" | "party_thanks" | "anniversary" | "second_visit" | "manual";
 export type PromoDiscountType = "percent" | "fixed";
@@ -336,4 +338,26 @@ export async function markSecondVisitSent(email: string, code: string): Promise<
     .from("blackouts")
     .insert({ date: SECOND_VISIT_SENT_DATE, time: normalizeEmail(email), reason: code });
   if (error) throw error;
+}
+
+
+/* -------------------- Importuoti seni pabėgimo kambarių / VR žaidimų klientai -------------------- */
+
+export type RoomClient = {
+  name: string;
+  /** Paskutinio apsilankymo (ar būsimos rezervacijos) data YYYY-MM-DD. */
+  last_visit_date: string;
+  visits: number;
+  source: string; // pvz. "moizmo"
+};
+
+export async function listRoomClients(): Promise<Map<string, RoomClient>> {
+  const out = new Map<string, RoomClient>();
+  if (!dbConfigured()) return out;
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase.from("blackouts").select("time, reason").eq("date", ROOM_CLIENT_DATE);
+  for (const r of data ?? []) {
+    try { out.set(String(r.time), JSON.parse(String(r.reason)) as RoomClient); } catch { /* praleidžiam sugadintą */ }
+  }
+  return out;
 }

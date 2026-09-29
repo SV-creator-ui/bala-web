@@ -7,9 +7,10 @@
  *   since=YYYY-MM-DD    šventės nuo šios datos (numatyta 2026-08-01)
  *   test=<email>        išsiunčia vieną bandomąjį laišką į šį adresą (DB nerašo)
  *   send=1              REALIAI siunčia visiems; be jo — tik peržiūra (dry-run)
+ *   campaign=return     vietoj „Ačiū už šventę" siunčia „Dar vienas nuotykis" (−15%) kambarių/žaidimų klientams
  */
 import { NextResponse } from "next/server";
-import { runPartyThanksBatch } from "@/lib/promo/generator";
+import { runPartyThanksBatch, runReturnOfferBatch } from "@/lib/promo/generator";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -27,8 +28,11 @@ export async function GET(req: Request) {
   const testTo = url.searchParams.get("test") || undefined;
   const send = url.searchParams.get("send") === "1";
   try {
-    const result = await runPartyThanksBatch({ since, dryRun: !send, testTo });
-    return NextResponse.json({ ok: true, mode: testTo ? "test" : send ? "SEND" : "dry-run", ...result });
+    const campaign = url.searchParams.get("campaign") === "return" ? "return" : "thanks";
+    const result = campaign === "return"
+      ? await runReturnOfferBatch({ dryRun: !send, testTo })
+      : await runPartyThanksBatch({ since, dryRun: !send, testTo });
+    return NextResponse.json({ ok: true, campaign, mode: testTo ? "test" : send ? "SEND" : "dry-run", ...result });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[promo-batch] klaida:", msg);

@@ -23,7 +23,7 @@ import {
   partyThanksSentFor, markPartyThanksSent, listPromoCodes,
   reminderSentFor, markReminderSent, normalizeEmail,
   visitOneThanksSentTo, markVisitOneThanksSent,
-  listUnsubscribed, listHistClients, anniversarySentFor, markAnniversarySent,
+  listUnsubscribed, listHistClients, listRoomClients, anniversarySentFor, markAnniversarySent,
   secondVisitSentTo, markSecondVisitSent, countPaidRoomGameVisits,
   type PromoCode,
 } from "./storage";
@@ -732,6 +732,151 @@ export async function runPartyThanksBatch(opts: {
     } catch (e) {
       out.errors++;
       console.error(`[promo] PARTY_THANKS_BATCH klaida (${rec.email}):`, e);
+    }
+    await new Promise((r) => setTimeout(r, 2000)); // neapkrauname Gmail SMTP
+  }
+  return out;
+}
+
+
+/* --------------- Vienkartinis „Dar vienas nuotykis" (−15%) visiems kambarių / VR žaidimų klientams --------------- */
+
+/** Vardas laiško pradžiai: pirmas žodis, tvarkinga didžioji raidė („MARINA" → „Marina"). */
+function firstNameOf(full: string): string {
+  const w = (full || "").trim().split(/\s+/)[0] || "";
+  if (!w) return "svety";
+  return w.charAt(0).toLocaleUpperCase("lt") + w.slice(1).toLocaleLowerCase("lt");
+}
+
+export function returnOfferEmail(name: string, code: string, validUntil: string): { subject: string; html: string } {
+  const subject = "Dar vienas nuotykis BALA virtualios realybės erdvėje? −15% nuolaida 🥽";
+  const link = "https://bala.lt/rezervacija?utm_source=email&utm_medium=promo&utm_campaign=grizk-15";
+  const html = shell(
+    `<img src="https://bala.lt/assets/email-kosmosas-3.jpg" alt="VR pabėgimo kambarys „Kosminė stotis Tiberija“" width="476" style="display:block;width:100%;max-width:476px;height:auto;border-radius:10px;margin:0 0 16px" />` +
+    `<h2 style="margin:0 0 12px;font-size:20px">Dar vienas nuotykis BALA virtualios realybės erdvėje?</h2>` +
+    `<p>Sveiki, ${escapeHtml(name)}!</p>` +
+    `<p style="margin-bottom:4px">Dovanojame</p>` +
+    `<p style="text-align:center;margin:6px 0 14px;font-size:26px;line-height:1.25;font-weight:800;color:#0d2b35">−15% NUOLAIDĄ VR pabėgimo kambariui</p>` +
+    `<p>Pasikvieskite draugus ar šeimą ir išbandykite naują scenarijų — pas mus jų net 9, o adrenalino ir gerų emocijų užtenka kiekvienam! 🥽</p>` +
+    `<p style="text-align:center;margin:18px 0 0;color:#374151;font-size:13px;text-transform:uppercase;letter-spacing:.08em">Nuolaidos kodas</p>` +
+    codeBadge(code) +
+    `<p style="text-align:center;margin:0 0 4px;color:#111827"><b>Nuolaida galioja iki ${fmtDateLT(validUntil)}</b></p>` +
+    `<p style="text-align:center;margin:0 0 18px;color:#6b7280;font-size:12.5px">(60 dienų nuo šio laiško)</p>` +
+    `<p>Rezervuokite <a href="${link}" style="color:#0d9488">www.bala.lt</a> ir įveskite nuolaidos kodą apmokėjimo lange.</p>` +
+    `<p style="text-align:center;margin:20px 0"><a href="${link}" style="display:inline-block;background:#f0a500;color:#0d2b35;font-weight:700;text-decoration:none;padding:12px 26px;border-radius:10px">REZERVUOTI</a></p>` +
+    `<p style="color:#6b7280;font-size:12.5px">Kodas išduotas asmeniškai — rezervuokite tuo pačiu el. paštu, kuriuo gavote laišką. Nuolaida nesisumuoja su dovanų kuponais.</p>` +
+    `<p>Iki susitikimo!<br/><b>BALA VR komanda</b></p>`,
+  );
+  return { subject, html };
+}
+
+export type ReturnOfferBatchResult = {
+  candidates: number;
+  sent: number;
+  skipped_unsubscribed: number;
+  skipped_already: number;
+  skipped_upcoming: number;
+  errors: number;
+  preview: { to: string; name: string; last_visit: string; source: string }[];
+  test_sent_to?: string;
+  skipped_reason?: string;
+};
+
+/**
+ * Išsiunčia „Dar vienas nuotykis" (−15%, 60 d.) VISIEMS pabėgimo kambarių / VR žaidimų klientams:
+ * apmokėtos svetainės rezervacijos (room/game) + importuoti seni klientai.
+ * Praleidžiami: atsisakę, jau gavę KITAS kodą, gavę ACIU per 60 d. ir turintys būsimą rezervaciją.
+ *  - dryRun: nieko nesiunčia ir nerašo; testTo: vienas bandomasis laiškas su netikru kodu, DB nerašo.
+ * Vykdoma TIK per /api/cron/promo-batch?campaign=return (gyvoje svetainėje išjungta).
+ */
+export async function runReturnOfferBatch(opts: { dryRun: boolean; testTo?: string }): Promise<ReturnOfferBatchResult> {
+  const out: ReturnOfferBatchResult = {
+    candidates: 0, sent: 0, skipped_unsubscribed: 0, skipped_already: 0, skipped_upcoming: 0, errors: 0, preview: [],
+  };
+  if (!dbConfigured()) { out.skipped_reason = "db_not_configured"; return out; }
+  if (!emailConfigured()) { out.skipped_reason = "email_not_configured"; return out; }
+
+  const supabase = getSupabaseAdmin();
+  const today = todayISO();
+  const unsub = await listUnsubscribed();
+
+  type Rec = { email: string; name: string; last: string; sourceBookingId: string | null; source: string };
+  const recs = new Map<string, Rec>();
+
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("id, customer_email, customer_name, date")
+    .eq("status", "paid")
+    .in("type", ["room", "game"]);
+  if (error) { out.errors++; return out; }
+  for (const b of data ?? []) {
+    const email = normalizeEmail(String(b.customer_email));
+    const cur = recs.get(email);
+    if (!cur || String(b.date) > cur.last) {
+      recs.set(email, { email, name: String(b.customer_name), last: String(b.date), sourceBookingId: String(b.id), source: "svetainė" });
+    }
+  }
+  for (const [email, c] of await listRoomClients()) {
+    const cur = recs.get(email);
+    if (!cur) recs.set(email, { email, name: c.name, last: c.last_visit_date, sourceBookingId: null, source: c.source });
+    else if (c.last_visit_date > cur.last) cur.last = c.last_visit_date;
+  }
+
+  // Nesiunčiam antrą kartą tiems, kas ACIU gavo per pastarąsias 60 d.
+  const cutoff = addDaysISO(today, -60);
+  const gotAciu = new Set(
+    (await listPromoCodes())
+      .filter((c) => c.kind === "party_thanks" && c.issued_at.slice(0, 10) >= cutoff)
+      .map((c) => c.assigned_email),
+  );
+
+  const list: Rec[] = [];
+  for (const rec of [...recs.values()].sort((a, b) => a.last.localeCompare(b.last))) {
+    if (unsub.has(rec.email)) { out.skipped_unsubscribed++; continue; }
+    if (rec.last >= today) { out.skipped_upcoming++; continue; } // turi būsimą rezervaciją — ji ir taip ateis
+    if (gotAciu.has(rec.email) || (await secondVisitSentTo(rec.email))) { out.skipped_already++; continue; }
+    list.push(rec);
+  }
+  out.candidates = list.length;
+  for (const rec of list) out.preview.push({ to: maskEmail(rec.email), name: firstNameOf(rec.name), last_visit: rec.last, source: rec.source });
+
+  if (opts.testTo) {
+    const sample = list[0];
+    const { subject, html } = returnOfferEmail(sample ? firstNameOf(sample.name) : "Ieva", "KITAS-BANDYMAS", addDaysISO(today, 60));
+    await sendPromoMail(opts.testTo, `[BANDYMAS] ${subject}`, html);
+    out.test_sent_to = maskEmail(opts.testTo);
+    return out;
+  }
+  if (opts.dryRun) return out;
+
+  for (const rec of list) {
+    const code = generateCodeString("KITAS");
+    const validUntil = addDaysISO(today, 60);
+    const promo: PromoCode = {
+      code, kind: "second_visit",
+      discount_type: "percent", discount_value: 15,
+      assigned_email: rec.email,
+      applies_to: ["room", "game"],
+      valid_from: today, valid_until: validUntil,
+      issued_at: new Date().toISOString(),
+      used_at: null, used_booking_id: null, used_booking_ref: null,
+      source_booking_id: rec.sourceBookingId,
+      cancelled: false,
+      min_visits_required: 0,
+      allow_voucher_stack: false,
+      max_uses: 1,
+      used_count: 0,
+    };
+    try {
+      await insertPromoCode(promo);
+      await markSecondVisitSent(rec.email, code);
+      const { subject, html } = returnOfferEmail(firstNameOf(rec.name), code, validUntil);
+      await sendPromoMail(rec.email, subject, html);
+      out.sent++;
+      console.log(`[promo] RETURN_OFFER -> ${rec.email} (${code})`);
+    } catch (e) {
+      out.errors++;
+      console.error(`[promo] RETURN_OFFER klaida (${rec.email}):`, e);
     }
     await new Promise((r) => setTimeout(r, 2000)); // neapkrauname Gmail SMTP
   }
