@@ -105,11 +105,13 @@ export function partyThanksEmail(name: string, code: string, validUntil: string)
     `<h2 style="margin:0 0 12px;font-size:20px">Ačiū už šventę!</h2>` +
     `<p>Sveiki, ${escapeHtml(name)}!</p>` +
     `<p>Ačiū, kad šventėte pas mus BALA VR! ❤️ Mums buvo labai malonu būti Jūsų šventės dalimi.</p>` +
-    `<p>Kaip padėką norime padovanoti Jums <b>20% nuolaidą VR pabėgimo kambariui arba veiksmo žaidimams</b>. Pasikvieskite draugus ar šeimą ir grįžkite dar vienam nuotykiui! 🥽</p>` +
+    `<p style="margin-bottom:4px">Kaip padėką norime padovanoti Jums</p>` +
+    `<p style="text-align:center;margin:6px 0 14px;font-size:26px;line-height:1.25;font-weight:800;color:#0d2b35">20% nuolaidą VR pabėgimo kambariui</p>` +
+    `<p>Pasikvieskite draugus ar šeimą ir grįžkite dar vienam nuotykiui! 🥽</p>` +
     codeBadge(code) +
     `<p style="text-align:center;margin:0 0 4px;color:#111827"><b>Nuolaida galioja iki ${fmtDateLT(validUntil)}</b></p>` +
     `<p style="text-align:center;margin:0 0 18px;color:#6b7280;font-size:12.5px">(60 dienų nuo šio laiško)</p>` +
-    `<p>Rezervuokite <a href="https://www.bala.lt" style="color:#0d9488">www.bala.lt</a> ir įveskite nuolaidos kodą apmokėjimo lange.</p>` +
+    `<p>Rezervuokite <a href="https://bala.lt/rezervacija?utm_source=email&utm_medium=promo&utm_campaign=aciu" style="color:#0d9488">www.bala.lt</a> ir įveskite nuolaidos kodą apmokėjimo lange.</p>` +
     `<p style="text-align:center;margin:20px 0"><a href="https://bala.lt/rezervacija?utm_source=email&utm_medium=promo&utm_campaign=aciu" style="display:inline-block;background:#f0a500;color:#0d2b35;font-weight:700;text-decoration:none;padding:12px 26px;border-radius:10px">REZERVUOTI</a></p>` +
     `<p style="color:#6b7280;font-size:12.5px">Kodas išduotas asmeniškai — rezervuokite tuo pačiu el. paštu, kuriuo gavote laišką. Nuolaida nesisumuoja su dovanų kuponais.</p>` +
     `<p>Iki susitikimo!<br/><b>BALA VR komanda</b></p>`,
