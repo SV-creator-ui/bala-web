@@ -758,7 +758,7 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-volt/60 bg-volt/10 px-4 py-3">
             <span className="font-display text-base uppercase tracking-wide text-volt sm:text-lg">
-              {WEEKDAY_OFFER.label}
+              {WEEKDAY_OFFER.cardLabel}
             </span>
             <span className="text-[13px] text-smoke">
               (pirmadienį–ketvirtadienį) — pritaikoma pasirinkus datą.
