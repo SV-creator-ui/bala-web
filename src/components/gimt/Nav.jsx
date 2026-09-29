@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import OfferStrip from "@/components/shared/OfferStrip";
 
 const BOOKING_URL = "/gimtadieniai/rezervacija";
 
@@ -31,6 +32,8 @@ export default function Nav() {
   const close = () => setOpen(false);
 
   return (
+    <>
+    <OfferStrip />
     <nav className={`nav${scrolled ? " scrolled" : ""}`}>
       <div className="nav-inner">
       <a href="/" className="nav-back" aria-label="Grįžti į pramogų pasirinkimą" title="Kitos pramogos">
@@ -108,5 +111,6 @@ export default function Nav() {
         </div>
       </div>
     </nav>
+    </>
   );
 }

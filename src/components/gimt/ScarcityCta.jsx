@@ -1,3 +1,5 @@
+import { WEEKDAY_OFFER } from "@/lib/offers";
+
 const BOOKING_URL = "/gimtadieniai/rezervacija";
 
 export default function ScarcityCta() {
@@ -12,9 +14,11 @@ export default function ScarcityCta() {
           <h2 className="scarcity-h2">Rezervuokite savo datą dabar</h2>
           <p className="scarcity-sub">
             Savaitgalių laikas užpildomas 2–3 savaitės iš anksto.
-            <br />
-            Darbo dienomis — papildoma nuolaida ir daugiau laisvų laikų.
           </p>
+          <a href={BOOKING_URL} className="scarcity-offer">
+            <span className="scarcity-offer-label">{WEEKDAY_OFFER.label}</span>
+            <span className="scarcity-offer-note">ir daugiau laisvų laikų</span>
+          </a>
           <div className="scarcity-ctas">
             <a href={BOOKING_URL} className="btn btn-primary">
               PATIKRINTI LAISVUS LAIKUS

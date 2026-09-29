@@ -1,8 +1,14 @@
 import { Tick } from "./Icons";
+import { PARTY_PACKAGES } from "@/lib/booking/packages";
+import { WEEKDAY_OFFER, weekdayPackagePrice } from "@/lib/offers";
 
 // Rezervacija tvarkoma gimtadienių dizaino puslapyje; paketas parenkamas per
 // URL parametrą (grafikas bendras su pabėgimo kambariais).
 const bookingHref = (pkgId) => `/gimtadieniai/rezervacija?pkg=${pkgId}`;
+
+// Kainos imamos iš packages.ts (tas pats šaltinis, kuris skaičiuoja realią sumą).
+const eur = (n) => `€${n}`;
+const basePrice = (pkgId) => PARTY_PACKAGES.find((p) => p.id === pkgId)?.price;
 
 const packages = [
   {
@@ -11,8 +17,8 @@ const packages = [
     deco: "balloon",
     sub: "2 val. šventė · iki 14 žaidėjų",
     tagline: "Dinamiška šventė su VR ir veiklomis visai kompanijai.",
-    price: "€239",
-    weekdayPrice: "€219",
+    price: eur(basePrice("maksi")),
+    weekdayPrice: eur(weekdayPackagePrice("maksi")),
     features: [
       "2 val. privati šventė",
       "Iki 14 žaidėjų",
@@ -32,8 +38,8 @@ const packages = [
     deco: "heart",
     sub: "2,5 val. šventė · iki 15 žaidėjų",
     tagline: "Daugiau laiko VR, vaišėms ir ramesnei šventės eigai.",
-    price: "€289",
-    weekdayPrice: "€269",
+    price: eur(basePrice("vip")),
+    weekdayPrice: eur(weekdayPackagePrice("vip")),
     features: [
       "2,5 val. privati šventė",
       "Iki 15 žaidėjų",
@@ -55,8 +61,8 @@ const packages = [
     deco: "cake",
     sub: "3 val. šventė · iki 16 žaidėjų",
     tagline: "Daugiausia laiko VR ir visai šventės patirčiai.",
-    price: "€359",
-    weekdayPrice: "€339",
+    price: eur(basePrice("gold")),
+    weekdayPrice: eur(weekdayPackagePrice("gold")),
     features: [
       "3 val. privati šventė",
       "Iki 16 žaidėjų",
@@ -238,10 +244,11 @@ export default function Packages() {
                     <span className="price-num">{pkg.price}</span>
                     <span className="price-period">visa šventė</span>
                   </div>
-                  {pkg.weekdayPrice && (
+                  {pkg.weekdayPrice && WEEKDAY_OFFER.active && (
                     <div className="price-weekday">
-                      I–IV:{" "}
+                      I–IV dieniais:{" "}
                       <span className="price-weekday-num">{pkg.weekdayPrice}</span>
+                      <span className="price-weekday-badge">{WEEKDAY_OFFER.cardLabel}</span>
                     </div>
                   )}
                 </div>

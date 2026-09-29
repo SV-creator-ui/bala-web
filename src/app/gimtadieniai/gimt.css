@@ -182,13 +182,13 @@
 
 /* ── NAV ── */
 .nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  position: fixed; top: var(--offer-h, 0px); left: 0; right: 0; z-index: 100;
   padding: 20px 0;
   background: rgba(13,43,53,0.72);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--white-12);
-  transition: padding var(--dur-base) var(--ease-out),
+  transition: padding var(--dur-base) var(--ease-out), top 0.3s ease,
     background var(--dur-base) ease, box-shadow var(--dur-base) ease;
 }
 /* Vidinis turinys sulygiuotas su puslapio konteineriu (kaip hero) —
@@ -1340,16 +1340,63 @@
   min-height: 66px; /* suvienodina aukštį, kad kainos būtų vienoje linijoje */
 }
 .price-weekday {
+  margin-top: 6px;
   font-family: var(--font-body);
-  font-size: 13.5px;
-  color: var(--white-45);
+  font-size: 15px;
+  color: var(--white-85, rgba(255,255,255,0.85));
   line-height: 1.2;
   letter-spacing: 0.01em;
 }
 .price-weekday-num {
   color: var(--amber);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 18px;
 }
+.price-weekday-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--amber);
+  color: var(--teal-deep);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  vertical-align: 2px;
+}
+/* Nuolaidos ženkliukas hero srityje, šalia pagrindinio CTA */
+.offer-chip {
+  display: inline-flex; align-items: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--amber);
+  background: var(--amber-soft);
+  color: var(--amber);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background var(--dur-fast) ease, transform var(--dur-fast) ease;
+}
+.offer-chip:hover { background: rgba(240, 165, 0, 0.26); transform: translateY(-1px); }
+.offer-chip-amount { color: inherit; }
+/* Apatinis skatinimo blokas — gintarinė „nuolaidos" juosta */
+.scarcity-offer {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  margin: 0 auto 22px;
+  padding: 12px 26px;
+  border-radius: 16px;
+  background: var(--amber);
+  color: var(--teal-deep);
+  text-decoration: none;
+  box-shadow: 0 8px 28px rgba(240, 165, 0, 0.28);
+  transition: transform var(--dur-fast) ease, background var(--dur-fast) ease;
+}
+.scarcity-offer:hover { background: var(--amber-hover); transform: translateY(-2px); }
+.scarcity-offer-label { font-family: var(--font-display); font-weight: 700; font-size: clamp(18px, 3.4vw, 24px); letter-spacing: 0.01em; }
+.scarcity-offer-note { font-family: var(--font-body); font-weight: 600; font-size: 13px; opacity: 0.85; }
 .vr-flow-note {
   max-width: 720px;
   margin: var(--space-10) auto var(--space-4);

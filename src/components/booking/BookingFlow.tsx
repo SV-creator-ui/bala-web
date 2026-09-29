@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BOOKING, ADDONS, depositFor, toHHMM, type BookingType } from "@/lib/booking/config";
 import { activityEndMin } from "@/lib/booking/window";
 import { roomsPrice, gamesPrice, grandTotal, formatEur } from "@/lib/booking/pricing";
+import { WEEKDAY_OFFER } from "@/lib/offers";
 import {
   PARTY_PACKAGES, PARTY_EXTRAS, getPartyPackage,
   partyTotal, partyDiscount, isDiscountDay, extraPrice, VR_MAX_PRICE_BY_PACKAGE,
@@ -756,7 +757,7 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
             })}
           </div>
           <p className="mt-3 text-[12.5px] text-smoke-2">
-            −{formatEur(20)} € nuolaida I–IV dienomis (pirmadienį–ketvirtadienį) — pritaikoma pasirinkus datą.
+            {WEEKDAY_OFFER.label} (pirmadienį–ketvirtadienį) — pritaikoma pasirinkus datą.
           </p>
 
           <h3 className="font-display uppercase text-lg mt-8 mb-3">Papildymai <span className="text-smoke-2 text-sm normal-case">(nebūtina)</span></h3>
@@ -877,7 +878,7 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
                       ? `text-smoke-2 opacity-35 cursor-not-allowed ${closed ? "line-through" : ""}`
                       : "hover:bg-white/5"
                   }`}
-                  title={closed ? "Kalėdos — uždaryta" : discount ? "I–IV: −20 € nuolaida" : undefined}
+                  title={closed ? "Kalėdos — uždaryta" : discount ? WEEKDAY_OFFER.label : undefined}
                 >
                   {d}
                   {isToday && <span className={`absolute bottom-1 h-1 w-1 rounded-full ${selected ? "bg-volt-ink" : "bg-volt"}`} />}
@@ -888,7 +889,7 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
           </div>
           {type === "party" && (
             <p className="mt-2 flex items-center gap-1.5 font-mono text-[10.5px] text-smoke-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-genre-green" /> I–IV: −20 € nuolaida
+              <span className="h-1.5 w-1.5 rounded-full bg-genre-green" /> {WEEKDAY_OFFER.label}
             </p>
           )}
         </div>

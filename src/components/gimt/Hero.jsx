@@ -1,4 +1,5 @@
 import HeroVideo from "./HeroVideo";
+import { WEEKDAY_OFFER } from "@/lib/offers";
 
 const BOOKING_URL = "/gimtadieniai/rezervacija";
 
@@ -40,6 +41,11 @@ export default function Hero() {
               <a href={BOOKING_URL} className="btn btn-primary">
                 TIKRINTI LAISVUS LAIKUS
               </a>
+              {WEEKDAY_OFFER.active && (
+                <a href="#paketai" className="offer-chip">
+                  <span className="offer-chip-amount">{WEEKDAY_OFFER.label}</span>
+                </a>
+              )}
             </div>
             <div className="hero-stats-row in-hero-text">
               {stats.map((s, i) => (
