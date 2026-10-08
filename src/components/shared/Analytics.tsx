@@ -86,11 +86,11 @@ function CookieBanner({ onChoose }: { onChoose: (granted: boolean) => void }) {
         </div>
         <div className="flex-1">
           <div className="font-display text-base uppercase tracking-wide">
-            Vertiname tavo privatumą
+            Ar galime naudoti slapukus?
           </div>
           <p className="mt-1 text-sm text-smoke">
-            Naudojame slapukus statistikai ir aktualesnei reklamai. Tai padeda
-            mums tobulinti svetainę. Daugiau —{" "}
+            Jie padeda mums matyti, kurios reklamos veikia, ir rodyti tau mažiau
+            nereikalingų reklamų. Svetainė veiks bet kuriuo atveju. Daugiau —{" "}
             <Link
               href="/privatumo-politika"
               className="underline hover:text-volt"
@@ -101,18 +101,18 @@ function CookieBanner({ onChoose }: { onChoose: (granted: boolean) => void }) {
           </p>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap justify-end gap-2">
+      <div className="mt-4 flex gap-2 sm:justify-end">
         <button
           type="button"
           onClick={() => onChoose(false)}
-          className="rounded-full border border-line-strong px-4 py-2 text-sm font-semibold hover:border-volt hover:text-volt"
+          className="flex-1 rounded-full border border-line-strong px-4 py-2.5 text-sm font-semibold hover:border-volt hover:text-volt sm:flex-none sm:py-2"
         >
           Tik būtinieji
         </button>
         <button
           type="button"
           onClick={() => onChoose(true)}
-          className="rounded-full bg-volt px-5 py-2 text-sm font-bold text-volt-ink hover:opacity-90"
+          className="flex-1 rounded-full bg-volt px-5 py-2.5 text-sm font-bold text-volt-ink hover:opacity-90 sm:flex-none sm:py-2"
         >
           Sutinku
         </button>

@@ -74,6 +74,22 @@ function readCookie(name: string): string | undefined {
   return m ? decodeURIComponent(m[1]) : undefined;
 }
 
+const FBC_MAX_AGE = 90 * 24 * 60 * 60; // kaip Meta Pixel'io `_fbc`
+
+/**
+ * Įrašo `_fbc` slapuką (TIK su sutikimu). Pixel'is jį sukuria pats tik tada,
+ * kai užsikrauna puslapyje su `fbclid` URL'e — jei „Sutinku" paspaudžiama
+ * vėliau kitame puslapyje, paspaudimo ID be šito dingtų su sesija.
+ */
+function persistFbc(fbclid: string, ts: number): void {
+  if (readCookie("_fbc")?.endsWith("." + fbclid)) return;
+  const host = window.location.hostname;
+  // Tas pats domenas kaip Pixel'io (.bala.lt), kad nesusidarytų du `_fbc`.
+  const domain = host === "bala.lt" || host.endsWith(".bala.lt") ? "; Domain=.bala.lt" : "";
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `_fbc=fb.1.${ts}.${fbclid}; Max-Age=${FBC_MAX_AGE}; Path=/; SameSite=Lax${domain}${secure}`;
+}
+
 /**
  * Kviečiama vieną kartą užsikrovus puslapiui. Naujas reklaminis / išorinis
  * apsilankymas perrašo ankstesnį (paskutinis ne tiesioginis šaltinis sesijoje).
@@ -102,7 +118,10 @@ export function captureAttribution(): void {
 
   if (fbclid) {
     pendingFbclid = { value: fbclid.slice(0, 500), ts: now };
-    if (consentGranted()) touch.fbclid = pendingFbclid.value;
+    if (consentGranted()) {
+      touch.fbclid = pendingFbclid.value;
+      persistFbc(pendingFbclid.value, now);
+    }
   }
 
   const isNewTouch = UTM_KEYS.some((k) => touch[k]) || touch.click || touch.referrer;
@@ -114,6 +133,7 @@ export function onAdConsentGranted(): void {
   if (typeof window === "undefined" || !pendingFbclid) return;
   const t = readTouch();
   if (t && t.click === "meta" && !t.fbclid) writeTouch({ ...t, fbclid: pendingFbclid.value });
+  persistFbc(pendingFbclid.value, pendingFbclid.ts);
 }
 
 /** Atribucija, siunčiama kartu su rezervacijos / kupono užsakymu. */
