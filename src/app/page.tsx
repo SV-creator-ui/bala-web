@@ -43,7 +43,7 @@ export default function ChooserPage() {
   return (
     <main className="min-h-[100svh] flex flex-col bg-ink text-white pb-[calc(72px+env(safe-area-inset-bottom))] min-[900px]:pb-0">
       {/* Header */}
-      <header className="flex flex-col items-center text-center px-6 pt-10 pb-8 md:pt-16 md:pb-12">
+      <header className="flex flex-col items-center text-center px-6 pt-7 pb-6 md:pt-16 md:pb-12">
         <Image
           src="/assets/logo-bala-vr-wordmark.png"
           alt="BALA VR"
@@ -52,21 +52,21 @@ export default function ChooserPage() {
           className="h-[30px] md:h-[38px] w-auto"
           priority
         />
-        <span className="mt-4 md:mt-5 whitespace-nowrap text-[11px] md:text-[12px] font-bold uppercase tracking-[0.28em] leading-none text-white/80 animate-hero-in">
+        <span className="mt-2 md:mt-5 whitespace-nowrap text-[11px] md:text-[12px] font-bold uppercase tracking-[0.28em] leading-none text-white/80 animate-hero-in">
           Virtualios realybės erdvė
         </span>
-        <h1 className="mt-6 md:mt-8 font-display uppercase leading-[1.02] tracking-[-.01em] text-[clamp(30px,5.2vw,54px)] animate-hero-in [animation-delay:80ms]">
+        <h1 className="mt-4 md:mt-8 font-display uppercase leading-[1.02] tracking-[-.01em] text-[clamp(30px,5.2vw,54px)] animate-hero-in [animation-delay:80ms]">
           Rinkitės savo <span className="text-volt">nuotykį</span>
         </h1>
-        <p className="mt-4 md:mt-5 max-w-[640px] text-[15px] md:text-[17px] leading-[1.55] text-white/85 animate-hero-in [animation-delay:160ms]">
-          Privati virtualios realybės erdvė — gimtadieniams, draugams ir komandoms.
+        <p className="mt-2.5 md:mt-5 max-w-[640px] whitespace-nowrap text-[clamp(12px,3.7vw,14.5px)] md:text-[17px] leading-[1.55] text-white/85 animate-hero-in [animation-delay:160ms]">
+          Gimtadieniams, šeimoms, draugams, kolektyvams
         </p>
         <a
           href="https://share.google/tPHRV6QUCNXzb2KPV"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="147 Google atsiliepimai — 5 iš 5 žvaigždučių"
-          className="mt-6 md:mt-7 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 px-3.5 py-1.5 animate-hero-in [animation-delay:240ms] transition-colors"
+          className="mt-4 md:mt-7 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] hover:bg-white/[0.09] hover:border-white/20 px-3.5 py-1.5 animate-hero-in [animation-delay:240ms] transition-colors"
         >
           <svg width="14" height="14" viewBox="0 0 48 48" aria-hidden className="flex-none">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
@@ -84,7 +84,7 @@ export default function ChooserPage() {
             Google atsiliepimų
           </span>
         </a>
-        <p className="mt-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-[12.5px] md:text-[13.5px] text-white/70 animate-hero-in [animation-delay:300ms]">
+        <p className="mt-3 md:mt-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-[12.5px] md:text-[13.5px] text-white/70 animate-hero-in [animation-delay:300ms]">
           <span className="inline-flex items-center gap-1">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="text-volt">
               <path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" />
