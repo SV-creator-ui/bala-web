@@ -88,6 +88,30 @@ export function trackOpenAiPurchase(
   return true;
 }
 
+export type StickyBarButton = "call" | "party" | "room";
+
+/**
+ * Titulinio mobilios lipnios juostos paspaudimas.
+ * - gtag: `sticky_bar_click` įvykis (matysis GA4, kai bus įjungtas; Google Ads
+ *   jį gali naudoti tik sukūrus atskirą konversijos veiksmą).
+ * - Meta: skambutis → standartinis `Contact`, rezervacijos mygtukai →
+ *   custom `StickyBarClick` (Events Manager'yje galima kurti custom conversion).
+ * Be sutikimo fbq neegzistuoja, o gtag veikia per Consent Mode (denied) — saugu.
+ */
+export function trackStickyBarClick(button: StickyBarButton): void {
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "sticky_bar_click", {
+    button,
+    page_path: window.location.pathname,
+  });
+  if (!window.fbq) return;
+  if (button === "call") {
+    window.fbq("track", "Contact", { content_name: "sticky_bar_call" });
+  } else {
+    window.fbq("trackCustom", "StickyBarClick", { button });
+  }
+}
+
 /**
  * Siunčia Meta Pixel Purchase konversiją.
  * `eventID` (transactionId) leidžia dedupe'ui su Conversions API (server-side).

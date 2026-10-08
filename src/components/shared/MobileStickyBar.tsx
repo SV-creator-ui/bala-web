@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { trackStickyBarClick } from "@/lib/analytics";
 
 /**
  * Lipni apatinė juosta mobiliam (<900px): skambutis + du tiesioginiai rezervacijos keliai.
@@ -28,6 +29,7 @@ export default function MobileStickyBar() {
         <a
           href="tel:+37068426686"
           aria-label="Skambinti +370 684 26686"
+          onClick={() => trackStickyBarClick("call")}
           tabIndex={visible ? 0 : -1}
           className="grid h-12 w-12 flex-none place-items-center rounded-full border border-white/20 bg-white/[0.06] text-white active:scale-95 transition-transform"
         >
@@ -37,6 +39,7 @@ export default function MobileStickyBar() {
         </a>
         <Link
           href="/gimtadieniai/rezervacija"
+          onClick={() => trackStickyBarClick("party")}
           tabIndex={visible ? 0 : -1}
           className="flex h-12 flex-1 items-center justify-center rounded-full whitespace-nowrap px-3 text-[14px] font-bold text-[#0d2b35] active:scale-[0.97] transition-transform"
           style={{ background: "linear-gradient(180deg, #ffbf33 0%, #f0a500 100%)" }}
@@ -45,6 +48,7 @@ export default function MobileStickyBar() {
         </Link>
         <Link
           href="/rezervacija"
+          onClick={() => trackStickyBarClick("room")}
           tabIndex={visible ? 0 : -1}
           className="flex h-12 flex-[1.3] items-center justify-center rounded-full whitespace-nowrap bg-volt px-3 text-[14px] font-bold text-volt-ink active:scale-[0.97] transition-transform"
         >
