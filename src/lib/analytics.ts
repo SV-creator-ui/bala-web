@@ -25,6 +25,8 @@ export const OPENAI_PIXEL_ID = "EJBqoM6MUdCK8ANcGqGafL";
  */
 export const ADS_CONVERSION_BOOKING = "AW-17951168306/t75tCOqtlvQcELKu5O9C";
 export const ADS_CONVERSION_GIFT_CARD = "AW-17951168306/nQTqCLrtmvQcELKu5O9C";
+/** „Skambutis iš svetainės (tel. paspaudimas)" — kategorija Contact, Count: One. */
+export const ADS_CONVERSION_PHONE = "AW-17951168306/EMTOCL25uZUdELKu5O9C";
 
 /** localStorage raktas su sutikimo būsena („granted"/„denied"). */
 export const CONSENT_KEY = "bala-cookie-consent";
@@ -88,6 +90,16 @@ export function trackOpenAiPurchase(
   return true;
 }
 
+/**
+ * Bet kurios `tel:` nuorodos paspaudimas svetainėje → Google Ads konversija
+ * „Skambutis iš svetainės". Kviečiamas iš bendro klausytojo (Analytics.tsx).
+ */
+export function trackPhoneClick(): void {
+  if (!ADS_CONVERSION_PHONE) return;
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  window.gtag("event", "conversion", { send_to: ADS_CONVERSION_PHONE });
+}
+
 export type StickyBarButton = "call" | "party" | "room";
 
 /**
@@ -96,7 +108,7 @@ export type StickyBarButton = "call" | "party" | "room";
  *   jį gali naudoti tik sukūrus atskirą konversijos veiksmą).
  * - Meta: skambutis → standartinis `Contact`, rezervacijos mygtukai →
  *   custom `StickyBarClick` (Events Manager'yje galima kurti custom conversion).
- * Be sutikimo fbq neegzistuoja, o gtag veikia per Consent Mode (denied) — saugu.
+ * Be sutikimo nei gtag, nei fbq neužkraunami — tada nieko nesiunčiama.
  */
 export function trackStickyBarClick(button: StickyBarButton): void {
   if (typeof window === "undefined") return;

@@ -11,6 +11,7 @@ import {
   GTAG_LOADER_ID,
   META_PIXEL_ID,
   OPENAI_PIXEL_ID,
+  trackPhoneClick,
 } from "@/lib/analytics";
 import { captureAttribution, onAdConsentGranted } from "@/lib/attribution";
 
@@ -139,6 +140,16 @@ export default function Analytics() {
       }
     }, 0);
     return () => window.clearTimeout(timer);
+  }, []);
+
+  // Visi `tel:` paspaudimai (lipni juosta, poraštė, meniu…) → Ads konversija.
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.('a[href^="tel:"]');
+      if (a) trackPhoneClick();
+    };
+    document.addEventListener("click", onClick, { capture: true });
+    return () => document.removeEventListener("click", onClick, { capture: true });
   }, []);
 
   const choose = (granted: boolean) => {
