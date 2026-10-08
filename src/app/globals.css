@@ -127,11 +127,13 @@
 @media (max-width: 899px) {
   @supports (animation-timeline: view()) {
     .card-mobile-reveal {
-      opacity: 0;
-      translate: 0 44px;
+      /* Pradeda nuo 0.65, ne 0 — kortelė prie ekrano apačios turi būti skaitoma
+         ir paspaudžiama, ne „blanki" (konversijos audito pastaba 2026-10-08). */
+      opacity: 0.65;
+      translate: 0 20px;
       animation: cardMobileReveal linear both;
       animation-timeline: view();
-      animation-range: entry 0% cover 32%;
+      animation-range: entry 0% cover 18%;
     }
   }
 }

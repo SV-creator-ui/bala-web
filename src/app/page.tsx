@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import ChooserReviewsSlider from "@/components/shared/ChooserReviewsSlider";
+import MobileStickyBar from "@/components/shared/MobileStickyBar";
 
 export const metadata: Metadata = {
   title: "BALA VR Klaipėda — pasirinkite savo pramogą",
@@ -40,7 +41,7 @@ function Features({ items, color }: { items: string[]; color: string }) {
 
 export default function ChooserPage() {
   return (
-    <main className="min-h-[100svh] flex flex-col bg-ink text-white">
+    <main className="min-h-[100svh] flex flex-col bg-ink text-white pb-[calc(72px+env(safe-area-inset-bottom))] min-[900px]:pb-0">
       {/* Header */}
       <header className="flex flex-col items-center text-center px-6 pt-10 pb-8 md:pt-16 md:pb-12">
         <Image
@@ -83,6 +84,19 @@ export default function ChooserPage() {
             Google atsiliepimų
           </span>
         </a>
+        <p className="mt-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-[12.5px] md:text-[13.5px] text-white/70 animate-hero-in [animation-delay:300ms]">
+          <span className="inline-flex items-center gap-1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden className="text-volt">
+              <path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" />
+              <circle cx="12" cy="10" r="2.5" />
+            </svg>
+            Pajūrio g. 5B
+          </span>
+          <span aria-hidden className="text-white/30">·</span>
+          <span>Rezervuok internetu</span>
+          <span aria-hidden className="hidden sm:inline text-white/30">·</span>
+          <span className="hidden sm:inline">Avansas nuo 30 €</span>
+        </p>
       </header>
 
       {/* Three choices */}
@@ -122,12 +136,12 @@ export default function ChooserPage() {
                   "2–6 žaidėjai",
                 ]}
               />
-              <div className="mt-6 md:mt-auto flex items-center gap-3 [text-shadow:none]">
-                <span className="inline-flex items-center gap-2 rounded-full bg-volt text-volt-ink font-bold text-[15px] px-6 py-3.5 transition-transform group-hover:-translate-y-0.5">
-                  Rinktis
-                  <Arrow />
+              <div className="mt-6 md:mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 [text-shadow:none]">
+                <span className="inline-flex items-center gap-2 rounded-full bg-volt text-volt-ink whitespace-nowrap font-bold text-[14.5px] md:text-[15px] px-5 md:px-6 py-3.5 transition-transform group-hover:-translate-y-0.5">
+                  Žiūrėti kambarius
+                  <span className="hidden min-[400px]:inline-flex"><Arrow /></span>
                 </span>
-                <span className="text-[14px] md:text-[13px] font-semibold text-white/95 md:text-white/80">
+                <span className="whitespace-nowrap text-[14px] md:text-[13px] font-semibold text-white/95 md:text-white/80">
                   nuo €20/asm.
                 </span>
               </div>
@@ -167,15 +181,15 @@ export default function ChooserPage() {
                   "Vieta vaišėms",
                 ]}
               />
-              <div className="mt-6 flex items-center gap-3 [text-shadow:none]">
+              <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 [text-shadow:none]">
                 <span
-                  className="inline-flex items-center gap-2 rounded-full text-[#0d2b35] font-bold text-[15px] px-6 py-3.5 transition-transform group-hover:-translate-y-0.5 animate-cta-glow motion-reduce:animate-none"
+                  className="inline-flex items-center gap-2 rounded-full text-[#0d2b35] whitespace-nowrap font-bold text-[14.5px] md:text-[15px] px-5 md:px-6 py-3.5 transition-transform group-hover:-translate-y-0.5 animate-cta-glow motion-reduce:animate-none"
                   style={{ background: "linear-gradient(180deg, #ffbf33 0%, #f0a500 100%)" }}
                 >
-                  Rinktis
-                  <Arrow />
+                  Planuoti šventę
+                  <span className="hidden min-[400px]:inline-flex"><Arrow /></span>
                 </span>
-                <span className="text-[14px] md:text-[13px] font-semibold text-white/95 md:text-white/85">
+                <span className="whitespace-nowrap text-[14px] md:text-[13px] font-semibold text-white/95 md:text-white/85">
                   nuo €219
                 </span>
               </div>
@@ -215,15 +229,15 @@ export default function ChooserPage() {
                   "Komandinis režimas",
                 ]}
               />
-              <div className="mt-6 flex items-center gap-3 [text-shadow:none]">
+              <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 [text-shadow:none]">
                 <span
-                  className="inline-flex items-center gap-2 rounded-full text-[#04252b] font-bold text-[15px] px-6 py-3.5 transition-transform group-hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-full text-[#04252b] whitespace-nowrap font-bold text-[14.5px] md:text-[15px] px-5 md:px-6 py-3.5 transition-transform group-hover:-translate-y-0.5"
                   style={{ background: "linear-gradient(180deg, #5be6dc 0%, #34d1e0 100%)" }}
                 >
-                  Rinktis
-                  <Arrow />
+                  Žiūrėti žaidimus
+                  <span className="hidden min-[400px]:inline-flex"><Arrow /></span>
                 </span>
-                <span className="text-[14px] md:text-[13px] font-semibold text-white/95 md:text-white/80">
+                <span className="whitespace-nowrap text-[14px] md:text-[13px] font-semibold text-white/95 md:text-white/80">
                   nuo €20/asm.
                 </span>
               </div>
@@ -232,14 +246,29 @@ export default function ChooserPage() {
         </div>
 
         {/* Dovanų kuponas — secondary CTA */}
-        <div className="mt-6 md:mt-8 flex justify-center">
-          <Link
-            href="/pabegimo-kambariai/dovanu-kuponas"
-            className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-white/[0.03] px-5 py-3 text-[14px] md:text-[14.5px] font-semibold text-smoke transition-colors hover:border-volt/50 hover:bg-white/[0.06] hover:text-white"
-          >
-            Ieškai dovanos? Padovanok VR nuotykį <span aria-hidden>→</span>
-          </Link>
-        </div>
+        <Link
+          href="/pabegimo-kambariai/dovanu-kuponas"
+          className="group mt-6 md:mt-8 mx-auto flex w-full max-w-[640px] items-center gap-4 rounded-3xl border border-volt/35 bg-gradient-to-r from-volt/[0.10] to-white/[0.03] p-4 md:p-5 transition-colors hover:border-volt/70 hover:from-volt/[0.16] active:scale-[0.99]"
+        >
+          <span aria-hidden className="grid h-12 w-12 flex-none place-items-center rounded-2xl bg-volt/15 text-volt">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="8" width="18" height="4" rx="1" />
+              <path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+              <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
+            </svg>
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block font-display uppercase text-[19px] md:text-[21px] leading-[1.1] text-white">
+              Dovanų kuponas
+            </span>
+            <span className="mt-1 block text-[13.5px] md:text-[14px] leading-[1.4] text-white/75">
+              Nuo 20 € · PDF el. paštu iš karto
+            </span>
+          </span>
+          <span className="flex-none text-volt transition-transform group-hover:translate-x-0.5">
+            <Arrow />
+          </span>
+        </Link>
 
         <ChooserReviewsSlider />
       </div>
@@ -265,6 +294,8 @@ export default function ChooserPage() {
           </a>
         </div>
       </footer>
+
+      <MobileStickyBar />
     </main>
   );
 }
