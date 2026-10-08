@@ -4,6 +4,8 @@
  * Rezervacijos srautas — bendras VR pabėgimo kambariui IR gimtadienio/šventės
  * paketams (vienas grafikas). 5 žingsniai:
  *   Tipas → Laikas → Dalyviai → Kontaktai → Apmokėjimas.
+ * Šventei (party) „Dalyvių" žingsnio nėra: Tipas → Laikas → Papildymai →
+ * Kontaktai → Apmokėjimas (svečių skaičius nurodomas kontaktų žingsnyje).
  * Kaina ir avansas rodomi iš @/lib/booking (tas pats šaltinis kaip serveryje).
  */
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -13,7 +15,8 @@ import { roomsPrice, gamesPrice, grandTotal, formatEur } from "@/lib/booking/pri
 import { WEEKDAY_OFFER } from "@/lib/offers";
 import {
   PARTY_PACKAGES, PARTY_EXTRAS, getPartyPackage,
-  partyTotal, partyDiscount, isDiscountDay, extraPrice, VR_MAX_PRICE_BY_PACKAGE, PARTY_WEEKDAY_DISCOUNT_EUR,
+  partyTotal, partyDiscount, isDiscountDay, extraPrice, PARTY_WEEKDAY_DISCOUNT_EUR,
+  PARTY_GUESTS_UNSPECIFIED, PARTY_BUNDLE, MOST_CHOSEN_EXTRA_ID, hasPartyBundle, partyBundleRegularPrice, partyBundleSavings,
   type PartyPackageId,
 } from "@/lib/booking/packages";
 import { isClosedHoliday } from "@/lib/booking/holidays";
@@ -27,11 +30,12 @@ type SlotStatus = { time: string; available: boolean };
 // Rezervacijos fazės. Įprastam VR pabėgimo kambariui (room) "type" fazės nėra —
 // pirmas žingsnis iškart yra laikas. Šventės paketams (party) pirmas žingsnis
 // išlieka paketo pasirinkimas.
-type Phase = "type" | "date" | "players" | "contact" | "payment";
+type Phase = "type" | "date" | "players" | "extras" | "contact" | "payment";
 const PHASE_LABEL: Record<Phase, string> = {
   type: "Tipas",
   date: "Laikas",
   players: "Žaidėjai",
+  extras: "Papildymai",
   contact: "Kontaktai",
   payment: "Apmokėjimas",
 };
@@ -63,11 +67,6 @@ export default function BookingFlow({ initialType, initialPkgId }: {
 
   // Kambariui ir komandiniams žaidimams tipo/paketo fazės nėra — pirmas žingsnis laikas.
   const roomOnly = initialType === "room" || initialType === "game";
-  const phases: Phase[] = roomOnly
-    ? ["date", "players", "contact", "payment"]
-    : ["type", "date", "players", "contact", "payment"];
-  const lastStep = phases.length;
-
   // Pradinis žingsnis: room — iškart laikas (1). Party su jau žinomu paketu —
   // peršokam paketo pasirinkimą (laikas = 2). Kitaip pradedam nuo pradžios.
   const [step, setStep] = useState(() => {
@@ -75,9 +74,16 @@ export default function BookingFlow({ initialType, initialPkgId }: {
     if (initialType === "party" && initialPkg) return 2;
     return 1;
   });
-  const phase: Phase = phases[step - 1];
-
   const [type, setType] = useState<BookingType | null>(initialType ?? null);
+
+  // Šventei vietoj „Žaidėjų" — „Papildymai" (po datos/laiko, kai kaina jau aiški).
+  const phases: Phase[] = roomOnly
+    ? ["date", "players", "contact", "payment"]
+    : type === "party"
+    ? ["type", "date", "extras", "contact", "payment"]
+    : ["type", "date", "players", "contact", "payment"];
+  const lastStep = phases.length;
+  const phase: Phase = phases[step - 1];
   const [typeLocked] = useState(!!initialType); // tipas parinktas iš URL (nerodom tipo kortelių)
   const [pkgId, setPkgId] = useState<PartyPackageId | null>(initialPkg);
   const [partyExtras, setPartyExtras] = useState<string[]>([]);
@@ -123,6 +129,8 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   }
 
   const [players, setPlayers] = useState<number>(BOOKING.minPlayers);
+  // Šventės svečių skaičius neprivalomas: null = klientas nenurodė (nerodomas laiškuose).
+  const [partyGuests, setPartyGuests] = useState<number | null>(null);
   const [addons, setAddons] = useState<string[]>([]);
 
   const [name, setName] = useState("");
@@ -371,6 +379,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
       // (slotsError !== null → user matys retry mygtuką, o ne Toliau).
       case "date": return !!(date && time) && !slotsError && slots !== null;
       case "players": return players >= 1;
+      case "extras": return true; // priedai nebūtini
       case "contact": return validName(name) && validPhone(phone) && validEmail(email) && inviteReady();
       case "payment": return agreed;
       default: return false;
@@ -385,7 +394,8 @@ export default function BookingFlow({ initialType, initialPkgId }: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type, packageId: pkgId, date, time, players,
+          type, packageId: pkgId, date, time,
+          players: type === "party" ? (partyGuests ?? PARTY_GUESTS_UNSPECIFIED) : players,
           addons: activeAddons, name, phone, email, note,
           voucherCode: voucherCode || undefined,
           promoCode: promoCode || undefined,
@@ -427,9 +437,9 @@ export default function BookingFlow({ initialType, initialPkgId }: {
   const partyOnly = typeLocked && type === "party";
   const headByPhase: Record<Phase, { title: string; intro: string }> = {
     type: {
-      title: partyOnly ? "Pasirinkite kainą" : "Ką rezervuojate?",
+      title: partyOnly ? "Pasirinkite paketą" : "Ką rezervuojate?",
       intro: partyOnly
-        ? "Pasirinkite gimtadienio šventę. Papildymus galite pridėti žemiau."
+        ? "Visi paketai — su VR instruktoriumi ir privačia 220 m² erdve."
         : "Pasirinkite įprastą VR pabėgimo kambario apsilankymą arba gimtadienio šventę.",
     },
     date: {
@@ -450,6 +460,10 @@ export default function BookingFlow({ initialType, initialPkgId }: {
           ? `2–${BOOKING.maxPlayers} žaidėjų.`
           : `2–${BOOKING.maxOnlinePlayers} žaidėjų. Didesnei grupei (${BOOKING.maxOnlinePlayers + 1}–${BOOKING.maxPlayers}) susisiekite telefonu.`,
     },
+    extras: {
+      title: "Papildymai",
+      intro: "Nebūtina — bet šie priedai šventę padaro įsimintinesnę.",
+    },
     contact: {
       title: "Tavo kontaktai",
       intro: "Į šiuos duomenis atsiųsime patvirtinimą ir priminimą prieš vizitą.",
@@ -459,7 +473,7 @@ export default function BookingFlow({ initialType, initialPkgId }: {
       intro: `Vietai rezervuoti sumokamas ${formatEur(deposit)} € avansas. Likutį sumokėsi vietoje.`,
     },
   };
-  const head = { n: step, ...headByPhase[phase] };
+  const head = headByPhase[phase];
   const nextLabel = submitting
     ? "Palaukite…"
     : step === lastStep
@@ -468,13 +482,19 @@ export default function BookingFlow({ initialType, initialPkgId }: {
       : "Patvirtinti rezervaciją ›"
     : "Toliau ›";
   const nextDisabled = !canProceed() || submitting;
+  // Kodėl „Toliau" neaktyvus — rodoma šalia mygtuko.
+  const disabledHint = !nextDisabled || submitting ? "" :
+    phase === "type" ? "Pasirinkite paketą" :
+    phase === "date" ? (!date ? "Pasirinkite datą" : !time ? "Pasirinkite laiką" : "") :
+    phase === "contact" ? "Užpildykite vardą, telefoną ir el. paštą" :
+    phase === "payment" ? "Pažymėkite sutikimą su taisyklėmis" : "";
 
   return (
     <div>
       <Steps phases={phases} step={step} />
 
-      <div className="mt-8">
-        <StepHead n={head.n} last={lastStep} title={head.title} />
+      <div className="mt-5">
+        <StepHead title={head.title} />
         {head.intro && <p className="mt-2 max-w-[64ch] text-sm text-smoke">{head.intro}</p>}
       </div>
 
@@ -487,8 +507,6 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               setType={(t) => { setType(t); setTime(null); if (t === "room") setPkgId(null); }}
               pkgId={pkgId}
               setPkgId={(id) => { setPkgId(id); setTime(null); }}
-              partyExtras={partyExtras}
-              setPartyExtras={(a) => { setPartyExtras(a); setTime(null); }}
             />
           )}
           {phase === "date" && (
@@ -506,6 +524,8 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               onRetrySlots={() => setSlotsRetryToken((n) => n + 1)}
               type={type!}
               pkg={pkg}
+              partyExtras={partyExtras}
+              setPartyExtras={setPartyExtras}
               onHoverDay={(iso) => {
                 if (!type || (type === "party" && !pkgId)) return;
                 prefetchSlots(iso, type, pkgId, addonsKey);
@@ -532,8 +552,12 @@ export default function BookingFlow({ initialType, initialPkgId }: {
               voucherDiscount={voucherDiscount}
             />
           )}
+          {phase === "extras" && pkg && (
+            <StepExtras pkgId={pkg.id} partyExtras={partyExtras} setPartyExtras={setPartyExtras} />
+          )}
           {phase === "contact" && (
             <StepContact
+              guests={type === "party" && pkg ? { players: partyGuests, setPlayers: setPartyGuests, max: pkg.maxPlayers } : null}
               name={name} setName={setName}
               phone={phone} setPhone={setPhone}
               email={email} setEmail={setEmail}
@@ -606,10 +630,12 @@ export default function BookingFlow({ initialType, initialPkgId }: {
             <button
               onClick={next}
               disabled={nextDisabled}
-              className="w-full rounded-2xl bg-volt text-volt-ink font-extrabold text-[18px] px-6 py-4 shadow-[0_8px_24px_var(--btn-glow,rgba(255,228,0,.5))] transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
+              style={{ padding: "16px 24px" }}
+              className="w-full rounded-2xl bg-volt text-volt-ink font-extrabold text-[18px] shadow-[0_8px_24px_var(--btn-glow,rgba(255,228,0,.5))] transition hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
             >
               {nextLabel}
             </button>
+            {disabledHint && <p className="text-center text-[13px] text-smoke">{disabledHint}</p>}
             <button
               onClick={back}
               className={`text-smoke hover:text-white font-bold text-[15px] py-1 ${step === 1 ? "hidden" : ""}`}
@@ -621,20 +647,25 @@ export default function BookingFlow({ initialType, initialPkgId }: {
       </div>
 
       {/* Mobili navigacija — prilipdyta apačioje */}
-      <div className="lg:hidden sticky bottom-0 z-20 -mx-5 mt-6 flex items-center justify-between gap-3 border-t border-line bg-ink/95 backdrop-blur px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <button
-          onClick={back}
-          className={`text-smoke hover:text-white font-bold text-[16px] ${step === 1 ? "invisible" : ""}`}
-        >
-          ‹ Atgal
-        </button>
-        <button
-          onClick={next}
-          disabled={nextDisabled}
-          className="rounded-2xl bg-volt text-volt-ink font-extrabold text-[17px] px-9 py-4 shadow-[0_8px_24px_var(--btn-glow,rgba(255,228,0,.5))] transition hover:-translate-y-0.5 disabled:opacity-40 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
-        >
-          {nextLabel}
-        </button>
+      <div className="lg:hidden sticky bottom-0 z-20 -mx-5 mt-6 border-t border-line bg-ink/95 backdrop-blur px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {disabledHint && <p className="mb-2 text-center text-[13px] text-smoke">{disabledHint}</p>}
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={back}
+            style={{ padding: "12px 4px" }}
+            className={`text-smoke hover:text-white font-bold text-[16px] ${step === 1 ? "invisible" : ""}`}
+          >
+            ‹ Atgal
+          </button>
+          <button
+            onClick={next}
+            disabled={nextDisabled}
+            style={{ padding: "14px 36px" }}
+            className="flex-1 max-w-[240px] rounded-2xl bg-volt text-volt-ink font-extrabold text-[17px] shadow-[0_8px_24px_var(--btn-glow,rgba(255,228,0,.5))] transition hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0 disabled:shadow-none disabled:cursor-not-allowed"
+          >
+            {nextLabel}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -693,10 +724,9 @@ function Steps({ phases, step }: { phases: Phase[]; step: number }) {
 }
 
 /* ---------------- Step 1: Type + package ---------------- */
-function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPartyExtras }: {
+function StepType({ locked, type, setType, pkgId, setPkgId }: {
   locked: boolean; type: BookingType | null; setType: (t: BookingType) => void;
   pkgId: PartyPackageId | null; setPkgId: (id: PartyPackageId) => void;
-  partyExtras: string[]; setPartyExtras: (a: string[]) => void;
 }) {
   // Kai tipas parinktas iš URL (pvz. iš gimtadienių puslapio) — nerodom tipo
   // kortelių, iškart tik paketo pasirinkimą.
@@ -725,7 +755,7 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
 
       {type === "party" && (
         <>
-          {!partyOnly && <h3 className="font-display uppercase text-lg mt-8 mb-3">Pasirinkite kainą</h3>}
+          {!partyOnly && <h3 className="font-display uppercase text-lg mt-8 mb-3">Pasirinkite paketą</h3>}
           <div className="grid gap-3 sm:grid-cols-3">
             {PARTY_PACKAGES.map((p) => {
               const on = pkgId === p.id;
@@ -733,15 +763,21 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
                 <button
                   key={p.id}
                   onClick={() => setPkgId(p.id)}
-                  className={`flex h-full flex-col rounded-2xl border px-5 py-5 text-left transition ${
+                  style={{ padding: "20px 22px" }}
+                  className={`flex h-full flex-col rounded-2xl border text-left transition ${
                     on ? "border-volt bg-volt/10" : "border-line bg-ink-card hover:border-line-strong"
                   }`}
                 >
                   {/* Fiksuoto aukščio ženkliuko eilutė — kad pavadinimai visose kortelėse sutaptų */}
-                  <div className="mb-2 h-[18px]">
-                    {p.featured && (
+                  <div className="mb-2 flex h-[20px] items-center justify-between gap-2">
+                    {p.featured ? (
                       <span className="inline-block rounded-full bg-volt/20 px-2 py-0.5 text-[10px] font-bold uppercase text-volt">
                         Populiariausias
+                      </span>
+                    ) : <span />}
+                    {on && (
+                      <span aria-label="Pasirinkta" className="grid h-6 w-6 flex-none place-items-center rounded-full bg-volt text-[13px] font-extrabold text-volt-ink">
+                        ✓
                       </span>
                     )}
                   </div>
@@ -754,44 +790,20 @@ function StepType({ locked, type, setType, pkgId, setPkgId, partyExtras, setPart
                     <span className="font-display text-2xl">€{p.price}</span>
                     <span className="text-xs text-smoke-2">iki {p.maxPlayers} žaid.</span>
                   </div>
+                  {WEEKDAY_OFFER.active && (
+                    <span className="mt-2 inline-block self-start rounded bg-volt/15 px-2 py-0.5 text-[12px] font-bold text-volt">
+                      €{p.price - PARTY_WEEKDAY_DISCOUNT_EUR} pirm.–ketv.
+                    </span>
+                  )}
                 </button>
               );
             })}
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-volt/60 bg-volt/10 px-4 py-3">
-            <span className="font-display text-base uppercase tracking-wide text-volt sm:text-lg">
-              {WEEKDAY_OFFER.cardLabel}
-            </span>
-            <span className="text-[13px] text-smoke">
-              (pirmadienį–ketvirtadienį) — pritaikoma pasirinkus datą.
-            </span>
-          </div>
-
-          <h3 className="font-display uppercase text-lg mt-8 mb-3">Papildymai <span className="text-smoke-2 text-sm normal-case">(nebūtina)</span></h3>
-          <div className="flex flex-col gap-2.5 max-w-[560px]">
-            {PARTY_EXTRAS.map((e) => {
-              const on = partyExtras.includes(e.id);
-              // VR MAX kaina priklauso nuo paketo; kol paketas nepasirinktas — „nuo N €".
-              const vrMin = Math.min(...Object.values(VR_MAX_PRICE_BY_PACKAGE));
-              const priceText = e.id === "vrmax" && !pkgId
-                ? `nuo ${vrMin} €`
-                : `+${extraPrice(e, pkgId)} €`;
-              return (
-                <button
-                  key={e.id}
-                  onClick={() => setPartyExtras(on ? partyExtras.filter((x) => x !== e.id) : [...partyExtras, e.id])}
-                  className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left ${on ? "border-volt bg-volt/10" : "border-line bg-ink-card hover:border-line-strong"}`}
-                >
-                  <span className={`grid h-5 w-5 place-items-center rounded-md border-2 text-volt-ink text-xs font-extrabold ${on ? "bg-volt border-volt" : "border-line-strong"}`}>{on ? "✓" : ""}</span>
-                  <span className="flex-1">
-                    <b className="text-[15px]">{e.name}</b>
-                    <span className="block text-xs text-smoke-2">{e.desc}</span>
-                  </span>
-                  <span className="font-mono font-semibold whitespace-nowrap">{priceText}</span>
-                </button>
-              );
-            })}
-          </div>
+          {WEEKDAY_OFFER.active && (
+            <p className="mt-3 text-[12.5px] leading-snug text-smoke">
+              <b className="text-volt">{WEEKDAY_OFFER.amountLabel} pirm.–ketv.</b> pritaikoma pasirinkus datą. {WEEKDAY_OFFER.finePrint}
+            </p>
+          )}
         </>
       )}
     </div>
@@ -816,13 +828,14 @@ function TypeCard({ active, onClick, emoji, title, desc }: {
 }
 
 /* ---------------- Step 2: Date + Time ---------------- */
-function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime, slots, slotsLoading, slotsError, onRetrySlots, type, pkg, block, onHoverDay }: {
+function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime, slots, slotsLoading, slotsError, onRetrySlots, type, pkg, partyExtras, setPartyExtras, block, onHoverDay }: {
   today: Date; viewMonth: Date; setViewMonth: (d: Date) => void;
   date: string | null; setDate: (d: string) => void;
   time: string | null; setTime: (t: string) => void;
   slots: SlotStatus[] | null; slotsLoading: boolean;
   slotsError: string | null; onRetrySlots: () => void;
   type: BookingType; pkg: ReturnType<typeof getPartyPackage>;
+  partyExtras: string[]; setPartyExtras: (a: string[]) => void;
   block: { start: string; end: string } | null;
   onHoverDay?: (iso: string) => void;
 }) {
@@ -860,7 +873,7 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
               <span key={d} className="text-center text-[10px] font-mono text-smoke-2">{d}</span>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="@container grid grid-cols-7 gap-1">
             {cells.map((d, i) => {
               if (d === null) return <span key={`e${i}`} />;
               const cellDate = new Date(y, m, d);
@@ -878,7 +891,7 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
                   onMouseEnter={disabled ? undefined : () => onHoverDay?.(iso)}
                   onFocus={disabled ? undefined : () => onHoverDay?.(iso)}
                   disabled={disabled}
-                  className={`relative grid aspect-square place-items-center rounded-lg text-sm font-semibold transition ${
+                  className={`relative flex aspect-square flex-col items-center justify-center gap-[3px] rounded-lg text-sm font-semibold transition ${
                     selected
                       ? "bg-volt text-volt-ink"
                       : disabled
@@ -889,10 +902,11 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
                   }`}
                   title={closed ? "Kalėdos — uždaryta" : discount ? WEEKDAY_OFFER.label : undefined}
                 >
-                  {d}
+                  <span className="leading-none">{d}</span>
                   {isToday && <span className={`absolute ${discount ? "top-1" : "bottom-1"} h-1 w-1 rounded-full ${selected ? "bg-volt-ink" : "bg-volt"}`} />}
+                  {/* Etiketė po skaičiumi (ne ant jo); siaurame kalendoriuje — mažesnė (container query). */}
                   {discount && (
-                    <span className={`absolute bottom-[3px] text-[8px] font-bold leading-none tracking-tight ${selected ? "text-volt-ink" : "text-volt"}`}>
+                    <span className={`whitespace-nowrap rounded px-[3px] py-[1px] text-[8px] font-extrabold leading-none tracking-tight @[260px]:px-1 @[260px]:py-[2px] @[260px]:text-[10px] ${selected ? "bg-volt-ink/15 text-volt-ink" : "bg-volt text-volt-ink"}`}>
                       −{PARTY_WEEKDAY_DISCOUNT_EUR} €
                     </span>
                   )}
@@ -900,11 +914,6 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
               );
             })}
           </div>
-          {type === "party" && (
-            <p className="mt-3 text-center text-[12px] font-semibold text-volt">
-              NUOLAIDA I–IV dieniais
-            </p>
-          )}
         </div>
 
         <div>
@@ -963,6 +972,27 @@ function StepDate({ today, viewMonth, setViewMonth, date, setDate, time, setTime
               Šią dieną laisvų laikų nėra. Pasirink kitą dieną.
             </p>
           )}
+          {/* „Papildomas laikas" keičia šventės trukmę, todėl renkamas čia (prieš laiką), o ne papildymų žingsnyje. */}
+          {type === "party" && pkg && date && (() => {
+            const e = PARTY_EXTRAS.find((x) => x.id === "extratime");
+            if (!e) return null;
+            const on = partyExtras.includes(e.id);
+            return (
+              <button
+                type="button"
+                onClick={() => setPartyExtras(on ? partyExtras.filter((x) => x !== e.id) : [...partyExtras, e.id])}
+                style={{ padding: "12px 20px" }}
+                className={`mt-4 flex w-full items-center gap-3 rounded-xl border text-left ${on ? "border-volt bg-volt/10" : "border-line bg-ink-card hover:border-line-strong"}`}
+              >
+                <span className={`grid h-5 w-5 flex-none place-items-center rounded-md border-2 text-volt-ink text-xs font-extrabold ${on ? "bg-volt border-volt" : "border-line-strong"}`}>{on ? "✓" : ""}</span>
+                <span className="flex-1">
+                  <b className="text-[15px]">{e.name}</b>
+                  <span className="block text-xs text-smoke-2">{e.desc}</span>
+                </span>
+                <span className="font-mono font-semibold whitespace-nowrap">+{extraPrice(e, pkg.id)} €</span>
+              </button>
+            );
+          })()}
           {type === "party" && pkg && time && block && (
             <p className="mt-4 rounded-lg border border-volt/25 bg-volt/[.05] px-3 py-2.5 text-[12.5px] leading-[1.5] text-smoke">
               Šventė {time}. Ateiti galima 15 min. anksčiau. Salė rezervuojama nuo <b className="text-white">{block.start}</b> iki <b className="text-white">{block.end}</b>.{" "}
@@ -1120,6 +1150,89 @@ function StepPlayers({ type, pkg, players, setPlayers, addons, setAddons, rooms,
   );
 }
 
+/* ---------------- Step 3 (party): Extras ---------------- */
+function Check({ on }: { on: boolean }) {
+  return (
+    <span className={`grid h-5 w-5 flex-none place-items-center rounded-md border-2 text-volt-ink text-xs font-extrabold ${on ? "bg-volt border-volt" : "border-line-strong"}`}>{on ? "✓" : ""}</span>
+  );
+}
+
+// „Papildomas laikas" čia nerodomas — jis keičia trukmę ir renkamas datos/laiko žingsnyje.
+function StepExtras({ pkgId, partyExtras, setPartyExtras }: {
+  pkgId: PartyPackageId; partyExtras: string[]; setPartyExtras: (a: string[]) => void;
+}) {
+  const bundleIds = PARTY_BUNDLE.extraIds as readonly string[];
+  const bundleOn = hasPartyBundle(partyExtras);
+  const regular = partyBundleRegularPrice(pkgId);
+  const saving = Math.max(0, regular - PARTY_BUNDLE.price);
+  const singles = PARTY_EXTRAS.filter((e) => bundleIds.includes(e.id));
+
+  const toggle = (id: string) =>
+    setPartyExtras(partyExtras.includes(id) ? partyExtras.filter((x) => x !== id) : [...partyExtras, id]);
+  const toggleBundle = () =>
+    setPartyExtras(
+      bundleOn
+        ? partyExtras.filter((x) => !bundleIds.includes(x))
+        : [...partyExtras.filter((x) => !bundleIds.includes(x)), ...bundleIds],
+    );
+
+  // Paaiškinimai žmonėms, kurie nežino, kas yra VR MAX (tekstas pagal DUK).
+  const explain: Record<string, string> = {
+    vrmax: "Trumpesnės pauzės tarp VR sesijų, todėl šventės metu lieka daugiau laiko patiems žaidimams. Rekomenduojama, jei VR nori pažaisti ir suaugę, ir vaikai.",
+    popcorn: "Šviežias popkornas — iškart sukuria kino vakaro nuotaiką.",
+  };
+
+  return (
+    <div className="flex max-w-[600px] flex-col gap-3">
+      {singles.map((e) => {
+        const on = partyExtras.includes(e.id);
+        return (
+          <button
+            key={e.id}
+            type="button"
+            onClick={() => toggle(e.id)}
+            aria-pressed={on}
+            style={{ padding: "16px 22px" }}
+            className={`flex items-start gap-3 rounded-xl border text-left transition ${on ? "border-volt bg-volt/10" : "border-line bg-ink-card hover:border-line-strong"}`}
+          >
+            <span className="mt-0.5"><Check on={on} /></span>
+            <span className="flex-1">
+              <b className="text-[16px]">{e.id === "vrmax" ? "VR MAX — daugiau VR žaidimo" : e.name}</b>
+              {MOST_CHOSEN_EXTRA_ID === e.id && (
+                <span className="ml-2 rounded bg-volt/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-volt">Dažniausiai renkasi</span>
+              )}
+              <span className="mt-1 block text-[13px] leading-snug text-smoke">{explain[e.id] ?? e.desc}</span>
+            </span>
+            <span className="ml-3 pr-1 font-mono font-semibold whitespace-nowrap">+{extraPrice(e, pkgId)} €</span>
+          </button>
+        );
+      })}
+
+      <button
+        type="button"
+        onClick={toggleBundle}
+        aria-pressed={bundleOn}
+        style={{ padding: "16px 24px" }}
+        className={`mt-1 flex items-center gap-3 rounded-2xl border-2 text-left transition ${bundleOn ? "border-volt bg-volt/10" : "border-volt/50 bg-ink-card hover:border-volt"}`}
+      >
+        <Check on={bundleOn} />
+        <span className="flex-1">
+          <b className="block text-[16px]">Imkite abu: VR MAX + popkornas</b>
+          {saving > 0 && (
+            <span className="mt-1 inline-block rounded bg-volt px-2 py-0.5 text-[11px] font-extrabold uppercase text-volt-ink">
+              Sutaupote {saving} €
+            </span>
+          )}
+        </span>
+        <span className="ml-3 pr-1 text-right font-mono">
+          <span className="block text-xs text-smoke-2 line-through">{regular} €</span>
+          <span className="block text-lg font-bold text-volt">+{PARTY_BUNDLE.price} €</span>
+        </span>
+      </button>
+    </div>
+  );
+}
+
 /* ---------------- Step 4: Contact ---------------- */
 type InviteUI = {
   want: boolean; setWant: (v: boolean) => void;
@@ -1129,7 +1242,8 @@ type InviteUI = {
   date: string | null; time: string | null; endTime: string | null; phone: string;
 };
 
-function StepContact({ name, setName, phone, setPhone, email, setEmail, note, setNote, touched, setTouched, isParty, invite }: {
+function StepContact({ name, setName, phone, setPhone, email, setEmail, note, setNote, touched, setTouched, isParty, invite, guests }: {
+  guests: { players: number | null; setPlayers: (n: number | null) => void; max: number } | null;
   name: string; setName: (v: string) => void;
   phone: string; setPhone: (v: string) => void;
   email: string; setEmail: (v: string) => void;
@@ -1170,6 +1284,25 @@ function StepContact({ name, setName, phone, setPhone, email, setEmail, note, se
                 className="w-full rounded-xl border border-line bg-ink-card px-3.5 py-3 text-white focus:outline-none focus:border-volt" />
             </div>
           </>
+        )}
+        {guests && (
+          <div className="sm:col-span-2 flex items-center justify-between rounded-xl border border-line bg-ink-card px-4 py-3">
+            <div>
+              <span className="block text-[14px] font-semibold text-white">Kiek svečių planuojate? <span className="font-normal text-smoke-2">(nebūtina)</span></span>
+              <span className="block text-xs text-smoke-2">Iki {guests.max}. Minimalus VR žaidėjų amžius – 7 metai.</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button type="button" aria-label="Mažiau svečių"
+                onClick={() => guests.setPlayers(guests.players === null || guests.players <= 1 ? null : guests.players - 1)}
+                disabled={guests.players === null}
+                className="grid h-9 w-9 place-items-center rounded-full border border-line-strong text-xl leading-none hover:border-volt disabled:opacity-30 disabled:cursor-not-allowed">−</button>
+              <span className="font-display text-2xl w-8 text-center">{guests.players ?? "—"}</span>
+              <button type="button" aria-label="Daugiau svečių"
+                onClick={() => guests.setPlayers(Math.min(guests.max, (guests.players ?? 0) + 1))}
+                disabled={guests.players !== null && guests.players >= guests.max}
+                className="grid h-9 w-9 place-items-center rounded-full border border-line-strong text-xl leading-none hover:border-volt disabled:opacity-30 disabled:cursor-not-allowed">+</button>
+            </div>
+          </div>
         )}
         <div className="sm:col-span-2">
           <label className="block font-mono text-[11px] uppercase tracking-wider text-smoke-2 mb-1.5">Pastabos (nebūtina)</label>
@@ -1416,7 +1549,7 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
             {type === "party" ? (pkg ? `${pkg.name} šventė` : "Gimtadienio šventė") : type === "game" ? "VR veiksmo žaidimai" : "VR pabėgimo kambarys"}
           </h4>
           <span className="mt-0.5 block font-mono text-[11.5px] uppercase tracking-wide text-smoke-2">
-            {type === "party" ? (pkg ? pkg.durationLabel : "Pasirink kainą") : type === "game" ? "3 žaidimai · ~45 min." : "Scenarijus — vietoje"}
+            {type === "party" ? (pkg ? pkg.durationLabel : "Pasirink paketą") : type === "game" ? "3 žaidimai · ~45 min." : "Scenarijus — vietoje"}
           </span>
         </div>
       </div>
@@ -1437,6 +1570,12 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
               {PARTY_EXTRAS.filter((e) => partyExtras.includes(e.id)).map((e) => (
                 <SumLine key={e.id} label={`+ ${e.name}`} value={`${extraPrice(e, pkg.id)} €`} muted />
               ))}
+              {partyBundleSavings(partyExtras, pkg.id) > 0 && (
+                <div className="mb-2 flex items-baseline justify-between gap-2.5 text-[13.5px] font-semibold text-volt">
+                  <span>Komplekto nuolaida</span>
+                  <span className="text-right font-mono tabular-nums">−{partyBundleSavings(partyExtras, pkg.id)} €</span>
+                </div>
+              )}
               <SumLine label="Įskaičiuota" value={`iki ${pkg.maxPlayers} žaidėjų`} muted />
             </>
           )}
@@ -1470,9 +1609,26 @@ function Summary({ phase, type, pkg, date, time, players, addons, partyExtras, r
             </div>
           </div>
         </>
+      ) : type === "party" && pkg ? (
+        // Paketas pasirinktas, data dar ne — rodom kainą iš karto (su I–IV nuolaida „nuo").
+        <div className="mt-3 border-t border-line pt-4">
+          <SumLine label="Įskaičiuota" value={`iki ${pkg.maxPlayers} žaidėjų`} muted />
+          <div className="mt-2 flex items-baseline justify-between">
+            <span className="font-display text-[13px] uppercase tracking-wide text-smoke-2">Kaina</span>
+            <span className="flex items-baseline gap-2">
+              {WEEKDAY_OFFER.active && (
+                <span className="font-mono text-[14px] text-smoke-2 line-through tabular-nums">{formatEur(pkg.price)} €</span>
+              )}
+              <span className="font-display text-[28px] leading-none text-white tabular-nums">
+                {WEEKDAY_OFFER.active ? "nuo " : ""}{formatEur(pkg.price - (WEEKDAY_OFFER.active ? PARTY_WEEKDAY_DISCOUNT_EUR : 0))} €
+              </span>
+            </span>
+          </div>
+          <p className="mt-2 text-[12px] text-smoke-2">Galutinė kaina — pasirinkus datą.</p>
+        </div>
       ) : (
         <p className="mt-3 rounded-lg border border-dashed border-line-strong bg-ink-card/40 px-3 py-2.5 text-[12.5px] text-smoke-2">
-          {!type ? "Pasirink, ką rezervuoji." : type === "party" ? "Kaina paaiškės pasirinkus šventę ir datą." : "Kaina paaiškės pasirinkus žaidėjų skaičių."}
+          {!type ? "Pasirink, ką rezervuoji." : type === "party" ? "Pasirinkite paketą — kainą matysite iš karto." : "Kaina paaiškės pasirinkus žaidėjų skaičių."}
         </p>
       )}
     </aside>
@@ -1489,13 +1645,10 @@ function SumLine({ label, value, muted = false }: { label: string; value: string
 }
 
 /* ---------------- Shared ---------------- */
-function StepHead({ n, last, title }: { n: number; last: number; title: string }) {
+// Žingsnio numeris rodomas žingsnių juostoje, todėl čia tik antraštė.
+function StepHead({ title }: { title: string }) {
   return (
     <div className="mb-1">
-      <div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-volt">
-        <span>Žingsnis {String(n).padStart(2, "0")} iš {String(last).padStart(2, "0")}</span>
-        <span aria-hidden className="h-px w-8 bg-volt/40" />
-      </div>
       <h2 className="font-display text-3xl md:text-[38px] leading-[1.05] tracking-[-.01em] uppercase text-white">
         {title}
       </h2>

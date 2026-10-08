@@ -6,7 +6,7 @@
  * Duomenys atitinka viešą kainoraštį (gimtadieniai / Packages.jsx).
  */
 import { BOOKING } from "./config";
-import { isPublicHoliday } from "./holidays";
+import { isPublicHoliday, isSchoolBreak } from "./holidays";
 
 export type PartyPackageId = "maksi" | "vip" | "gold";
 
@@ -129,6 +129,18 @@ export const PARTY_EXTRAS: readonly PartyExtra[] = [
   },
 ] as const;
 
+/**
+ * Šventės svečių skaičius neprivalomas. Kai klientas jo nenurodo, DB laukas
+ * `players` (not null, check 1..30) gauna šią reikšmę, o laiškuose, kalendoriuje
+ * ir patvirtinimo puslapyje svečių skaičius nerodomas (žr. guestsKnown).
+ */
+export const PARTY_GUESTS_UNSPECIFIED = 30;
+
+/** Ar rezervacijoje svečių skaičius nurodytas (rodyti jį)? */
+export function guestsKnown(type: string, players: number): boolean {
+  return !(type === "party" && players >= PARTY_GUESTS_UNSPECIFIED);
+}
+
 /** I–IV dienų (pirmadienis–ketvirtadienis) nuolaida eurais. */
 export const PARTY_WEEKDAY_DISCOUNT_EUR = 20;
 
@@ -145,10 +157,11 @@ export function isDiscountWeekday(dateStr: string): boolean {
 
 /**
  * Ar konkrečiai datai galioja I–IV nuolaida?
- * Taip, jei tai pirmadienis–ketvirtadienis IR ne valstybinė šventė.
+ * Taip, jei tai pirmadienis–ketvirtadienis IR ne valstybinė šventė
+ * IR ne mokinių atostogos.
  */
 export function isDiscountDay(dateStr: string): boolean {
-  return isDiscountWeekday(dateStr) && !isPublicHoliday(dateStr);
+  return isDiscountWeekday(dateStr) && !isPublicHoliday(dateStr) && !isSchoolBreak(dateStr);
 }
 
 /** I–IV nuolaida konkrečiai datai (0 arba PARTY_WEEKDAY_DISCOUNT_EUR). */
@@ -174,10 +187,45 @@ export function extraPrice(extra: PartyExtra, pkgId?: string | null): number {
   return extra.price;
 }
 
-/** Pasirinktų paketo papildymų suma (atsižvelgia į paketą — VR MAX kaina kinta). */
-export function partyExtrasPrice(extraIds: string[], pkgId?: string | null): number {
-  return PARTY_EXTRAS.filter((e) => extraIds.includes(e.id))
+/**
+ * Komplektas „VR MAX + popkornas" — abu kartu už fiksuotą kainą. Atskira
+ * nuolaidų logika nereikalinga: pasirinkus abu priedus, bendra suma sumažinama
+ * iki PARTY_BUNDLE.price (taikoma ir serveryje per partyExtrasPrice).
+ */
+export const PARTY_BUNDLE = {
+  extraIds: ["vrmax", "popcorn"] as const,
+  price: 30,
+} as const;
+
+/**
+ * Priedas su žyma „Dažniausiai renkasi". Nustatyti TIK kai tai patvirtina
+ * užsakymų duomenys (2026-10: iš 15 apmokėtų švenčių priedą turėjo viena,
+ * todėl kol kas null — žyma nerodoma).
+ */
+export const MOST_CHOSEN_EXTRA_ID: string | null = null;
+
+/** Ar pasirinktas visas komplektas (abu priedai)? */
+export function hasPartyBundle(extraIds: string[]): boolean {
+  return PARTY_BUNDLE.extraIds.every((id) => extraIds.includes(id));
+}
+
+/** Komplekto kaina be nuolaidos (VR MAX + popkornas atskirai) tam paketui. */
+export function partyBundleRegularPrice(pkgId?: string | null): number {
+  return PARTY_EXTRAS.filter((e) => (PARTY_BUNDLE.extraIds as readonly string[]).includes(e.id))
     .reduce((s, e) => s + extraPrice(e, pkgId), 0);
+}
+
+/** Kiek sutaupoma, kai pasirinktas komplektas (0 jei ne). */
+export function partyBundleSavings(extraIds: string[], pkgId?: string | null): number {
+  if (!hasPartyBundle(extraIds)) return 0;
+  return Math.max(0, partyBundleRegularPrice(pkgId) - PARTY_BUNDLE.price);
+}
+
+/** Pasirinktų paketo papildymų suma (atsižvelgia į paketą ir komplekto nuolaidą). */
+export function partyExtrasPrice(extraIds: string[], pkgId?: string | null): number {
+  const sum = PARTY_EXTRAS.filter((e) => extraIds.includes(e.id))
+    .reduce((s, e) => s + extraPrice(e, pkgId), 0);
+  return sum - partyBundleSavings(extraIds, pkgId);
 }
 
 /** Papildymų pridedama trukmė minutėmis (pvz. „Papildomas laikas"). */

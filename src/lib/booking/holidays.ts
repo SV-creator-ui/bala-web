@@ -45,6 +45,24 @@ const FIXED_HOLIDAYS = new Set<string>([
 /** Kalėdų dienos, kai patalpa uždaryta. */
 const CLOSED_HOLIDAYS = new Set<string>(["12-24", "12-25", "12-26"]);
 
+/**
+ * Mokinių atostogos (imtinai, "YYYY-MM-DD"): gimtadienių I–IV nuolaida
+ * NEtaikoma. Vasaros atostogos neįtrauktos (sprendimas: tik trumpos atostogos).
+ * Šaltinis: ŠMSM, 2026–2027 m. m. (1–10 kl. Velykų atostogos + gimnazistų savaitė).
+ * 2027–2028 m. m. atostogų ministerija dar nepaskelbė — pridėti paskelbus.
+ */
+const SCHOOL_BREAKS: ReadonlyArray<readonly [string, string]> = [
+  ["2026-11-02", "2026-11-08"], // rudens
+  ["2026-12-21", "2027-01-03"], // Kalėdų
+  ["2027-02-15", "2027-02-21"], // žiemos
+  ["2027-03-22", "2027-04-04"], // Velykų (1–10 kl. + gimnazistai)
+];
+
+/** Ar data (YYYY-MM-DD) patenka į mokinių atostogas? */
+export function isSchoolBreak(dateStr: string): boolean {
+  return SCHOOL_BREAKS.some(([from, to]) => dateStr >= from && dateStr <= to);
+}
+
 function mmdd(dateStr: string): string {
   const [, m, d] = dateStr.split("-");
   return `${m}-${d}`;

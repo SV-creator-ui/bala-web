@@ -10,7 +10,7 @@
  */
 import nodemailer from "nodemailer";
 import type { BookingRow } from "@/lib/supabase/server";
-import { getPartyPackage } from "@/lib/booking/packages";
+import { getPartyPackage, guestsKnown } from "@/lib/booking/packages";
 import { formatEur } from "@/lib/booking/pricing";
 import { generateInvitationPdfs } from "@/lib/booking/invitation-pdf";
 
@@ -107,7 +107,7 @@ function customerHtml(b: BookingRow): string {
       ${row("Paslauga", serviceName(b))}
       ${row("Data", fmtDate(b.date))}
       ${row(isParty ? "Pradžia" : "Laikas", b.time)}
-      ${row(isParty ? "Dalyviai" : "Žaidėjai", `${b.players} asm.`)}
+      ${guestsKnown(b.type, b.players) ? row(isParty ? "Dalyviai" : "Žaidėjai", `${b.players} asm.`) : ""}
       ${voucher > 0 ? row("Dovanų kuponas", `−${formatEur(voucher)} €`) : ""}
       ${row(dep > 0 ? "Sumokėtas avansas" : "Apmokėta", dep > 0 ? `${formatEur(dep)} €` : "dovanų kuponu")}
       ${row("Likutis vietoje", `${formatEur(onSite)} €`)}
@@ -129,7 +129,7 @@ function adminHtml(b: BookingRow): string {
       ${row("Data", fmtDate(b.date))}
       ${row(isParty ? "Pradžia" : "Laikas", b.time)}
       ${b.block_start && b.block_end ? row("Salė užimta", `${b.block_start}–${b.block_end}`) : ""}
-      ${row(isParty ? "Dalyviai" : "Žaidėjai", `${b.players} asm.`)}
+      ${guestsKnown(b.type, b.players) ? row(isParty ? "Dalyviai" : "Žaidėjai", `${b.players} asm.`) : ""}
       ${row("Klientas", b.customer_name)}
       ${row("Telefonas", b.customer_phone)}
       ${row("El. paštas", b.customer_email)}

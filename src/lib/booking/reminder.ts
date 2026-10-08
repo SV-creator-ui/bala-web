@@ -9,7 +9,7 @@
  */
 import { getSupabaseAdmin, type BookingRow } from "@/lib/supabase/server";
 import { dbConfigured } from "@/lib/admin/auth";
-import { getPartyPackage } from "@/lib/booking/packages";
+import { getPartyPackage, guestsKnown } from "@/lib/booking/packages";
 import { formatEur } from "@/lib/booking/pricing";
 import { emailConfigured, getTransporter, senderAddress } from "@/lib/email";
 
@@ -184,7 +184,8 @@ function bookingVars(b: BookingRow): Vars {
     name: b.customer_name,
     date: fmtDate(b.date),
     time: b.time,
-    players: String(b.players),
+    // Tuščia = svečių skaičius nenurodytas (renderTemplate pašalina „· … žm.").
+    players: guestsKnown(b.type, b.players) ? String(b.players) : "",
     service: serviceName(b),
     reference: b.merchant_reference,
     total: formatEur(total),
@@ -212,6 +213,10 @@ function sampleVars(type: BookingType): Vars {
 
 /** Pakeičia {{key}} pagal duotus kintamuosius (nežinomi palieka {{name}} kaip yra). */
 export function renderTemplate(tmpl: string, vars: Partial<Vars>): string {
+  // Svečių skaičius nenurodytas — išmetam visą „ · {{players}} žm." dalį.
+  if (vars.players === "") {
+    tmpl = tmpl.replace(/\s*·\s*\{\{\s*players\s*\}\}\s*žm\./g, "");
+  }
   return tmpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k) => {
     const v = (vars as Record<string, string>)[k];
     return typeof v === "string" ? v : m;

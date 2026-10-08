@@ -63,8 +63,13 @@
   --grad-amber:  linear-gradient(180deg, #ffbf33 0%, #f0a500 100%);
 }
 
-/* ── Reset ── */
-.gimt, .gimt *, .gimt *::before, .gimt *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Reset ──
+   @layer base: be sluoksnio šis reset'as nugalėdavo VISAS Tailwind klases
+   (p-*, m-*, mt-* …) gimtadienių puslapyje, pvz. rezervacijos formoje. Sluoksnyje
+   jis lieka silpnesnis už .gimt dizaino klases (jos be sluoksnio) ir už utilities. */
+@layer base {
+  .gimt, .gimt *, .gimt *::before, .gimt *::after { box-sizing: border-box; margin: 0; padding: 0; }
+}
 /* NB: html { scroll-behavior: smooth } dublikatą pašalinom — jį apibrėžia
    globals.css @layer base, kuris turi mobile override (auto <769px, kad
    iOS Safari smooth scroll'as nesusivaidytų su native momentum scroll'u).

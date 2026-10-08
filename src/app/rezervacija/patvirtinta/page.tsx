@@ -8,7 +8,7 @@ import Nav from "@/components/bala/Nav";
 import Footer from "@/components/bala/Footer";
 import BookingConversionTracker from "@/components/booking/BookingConversionTracker";
 import { formatEur } from "@/lib/booking/pricing";
-import { getPartyPackage } from "@/lib/booking/packages";
+import { getPartyPackage, guestsKnown } from "@/lib/booking/packages";
 import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/confirm";
 import { googleCalendarRenderUrl } from "@/lib/booking/calendar-link";
 
@@ -62,7 +62,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
                   />
                   <Item k="Data" v={fmtDate(booking.date)} />
                   <Item k={booking.type === "party" ? "Pradžia" : "Laikas"} v={booking.time} />
-                  <Item k={booking.type === "party" ? "Dalyviai" : "Žaidėjai"} v={`${booking.players} asm.`} />
+                  {guestsKnown(booking.type, booking.players) && (
+                    <Item k={booking.type === "party" ? "Dalyviai" : "Žaidėjai"} v={`${booking.players} asm.`} />
+                  )}
                   <Item k="Sumokėtas avansas" v={`${formatEur(Number(booking.deposit_eur))} € (iš ${formatEur(Number(booking.total_eur))} €)`} full />
                 </div>
                 <div className="border-t border-dashed border-line px-6 py-4 text-sm text-smoke">

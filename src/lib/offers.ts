@@ -22,6 +22,8 @@ export const WEEKDAY_OFFER = {
   /** Trumpas užrašas kainų kortelėje */
   cardLabel: `−${amount} € NUOLAIDA`,
   daysLabel: "I–IV dieniais",
+  /** Smulkus šriftas: kada nuolaida netaikoma */
+  finePrint: "Netaikoma šventinėmis dienomis ir mokinių atostogų metu.",
   barText: `−${amount} € NUOLAIDA I–IV dieniais`,
   barCta: "Rezervuoti",
   href: "/gimtadieniai/rezervacija",

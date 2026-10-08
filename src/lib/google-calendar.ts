@@ -13,7 +13,7 @@
  */
 import { SignJWT, importPKCS8 } from "jose";
 import type { BookingRow } from "@/lib/supabase/server";
-import { getPartyPackage, PARTY_EXTRAS } from "@/lib/booking/packages";
+import { getPartyPackage, PARTY_EXTRAS, guestsKnown } from "@/lib/booking/packages";
 import { ADDONS } from "@/lib/booking/config";
 import { formatEur } from "@/lib/booking/pricing";
 
@@ -91,8 +91,9 @@ function eventBody(b: BookingRow) {
     isParty && b.celebrant_name
       ? ` ${b.celebrant_name}${b.celebrant_age ? ` (${b.celebrant_age} m.)` : ""}`
       : "";
+  const guestsSuffix = guestsKnown(b.type, b.players) ? ` (${b.players} asm.)` : "";
   const summary = isParty
-    ? `🎂 Gimtadienis${celebrantLabel} — ${b.customer_name}${pkg ? ` · ${pkg.name}` : ""} (${b.players} asm.)`
+    ? `🎂 Gimtadienis${celebrantLabel} — ${b.customer_name}${pkg ? ` · ${pkg.name}` : ""}${guestsSuffix}`
     : isGame
     ? `🎮 VR veiksmo žaidimai — ${b.customer_name} (${b.players} asm.)`
     : `🥽 VR kambarys — ${b.customer_name} (${b.players} asm.)`;
@@ -124,7 +125,7 @@ function eventBody(b: BookingRow) {
     `Klientas: ${b.customer_name}`,
     `Tel.: ${b.customer_phone}`,
     `El. paštas: ${b.customer_email}`,
-    `Dalyviai: ${b.players}`,
+    guestsKnown(b.type, b.players) ? `Dalyviai: ${b.players}` : null,
     addonsLine,
     `Suma: ${formatEur(Number(b.total_eur))} € (avansas ${formatEur(Number(b.deposit_eur))} €)`,
     setupNote,

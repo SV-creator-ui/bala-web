@@ -17,6 +17,7 @@ import {
   getPartyPackage,
   partyTotal,
   PARTY_EXTRAS,
+  PARTY_GUESTS_UNSPECIFIED,
 } from "@/lib/booking/packages";
 import {
   validName,
@@ -107,7 +108,8 @@ export async function POST(req: Request) {
     if (!pkg) errors.push("kaina");
     const validExtraIds = PARTY_EXTRAS.map((e) => e.id);
     addons = rawAddons.filter((id) => validExtraIds.includes(id));
-    if (pkg && (!Number.isInteger(players) || players < 1 || players > pkg.maxPlayers)) {
+    // Svečių skaičius neprivalomas: nenurodytas = PARTY_GUESTS_UNSPECIFIED.
+    if (pkg && players !== PARTY_GUESTS_UNSPECIFIED && (!Number.isInteger(players) || players < 1 || players > pkg.maxPlayers)) {
       errors.push("žaidėjai");
     }
 

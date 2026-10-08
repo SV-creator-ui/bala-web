@@ -3,7 +3,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { generateSlots } from "@/lib/booking/config";
 import { formatEur } from "@/lib/booking/pricing";
-import { getPartyPackage } from "@/lib/booking/packages";
+import { getPartyPackage, guestsKnown } from "@/lib/booking/packages";
 
 type Booking = {
   id: string;
@@ -310,7 +310,7 @@ export default function AdminDashboard({ demo }: { demo: boolean }) {
                       <div className="mt-1 text-[11.5px] text-smoke-2">Šaltinis: {sourceLabel(b)}</div>
                     )}
                   </td>
-                  <td className="px-4 py-3 font-mono">{b.players}</td>
+                  <td className="px-4 py-3 font-mono">{guestsKnown(b.type, b.players) ? b.players : "—"}</td>
                   <td className="px-4 py-3 whitespace-nowrap font-mono">
                     <div>{formatEur(Number(b.total_eur))} €</div>
                     <div className="text-smoke-2 text-[13px]">av. {formatEur(Number(b.deposit_eur))} €</div>

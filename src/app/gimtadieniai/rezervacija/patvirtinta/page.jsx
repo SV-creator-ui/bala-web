@@ -1,7 +1,7 @@
 import Footer from "@/components/gimt/Footer";
 import BookingConversionTracker from "@/components/booking/BookingConversionTracker";
 import { formatEur } from "@/lib/booking/pricing";
-import { getPartyPackage } from "@/lib/booking/packages";
+import { getPartyPackage, guestsKnown } from "@/lib/booking/packages";
 import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/confirm";
 import { googleCalendarRenderUrl } from "@/lib/booking/calendar-link";
 
@@ -73,7 +73,9 @@ export default async function Page({ searchParams }) {
                   <Item k="Paslauga" v={serviceLabel(booking)} full />
                   <Item k="Data" v={fmtDate(booking.date)} />
                   <Item k="Pradžia" v={booking.time} />
-                  <Item k="Dalyviai" v={`${booking.players} asm.`} />
+                  {guestsKnown(booking.type, booking.players) && (
+                    <Item k="Dalyviai" v={`${booking.players} asm.`} />
+                  )}
                   <Item
                     k="Sumokėtas avansas"
                     v={`${formatEur(Number(booking.deposit_eur))} € (iš ${formatEur(Number(booking.total_eur))} €)`}
