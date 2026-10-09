@@ -41,21 +41,21 @@ function Features({ items, color }: { items: string[]; color: string }) {
 }
 
 function GroupCard({
-  href, image, imageAlt, eyebrow, eyebrowClass, title, text, cta,
+  href, image, imageAlt, imagePosition = "object-center", eyebrow, eyebrowClass, title, text, cta,
 }: {
-  href: string; image: string; imageAlt: string; eyebrow: string; eyebrowClass: string; title: string; text: string; cta: string;
+  href: string; image: string; imageAlt: string; imagePosition?: string; eyebrow: string; eyebrowClass: string; title: string; text: string; cta: string;
 }) {
   return (
     <Link
       href={href}
-      className="group relative flex min-h-[250px] flex-col justify-end overflow-hidden rounded-3xl border border-white/15 hover:border-white/40 transition-[transform,border-color] duration-[var(--duration-base)] ease-[var(--ease-out-premium)] active:scale-[0.98] hover:-translate-y-1"
+      className="group relative flex min-h-[340px] min-[900px]:min-h-[250px] flex-col justify-end overflow-hidden rounded-3xl border border-white/15 hover:border-white/40 transition-[transform,border-color] duration-[var(--duration-base)] ease-[var(--ease-out-premium)] active:scale-[0.98] hover:-translate-y-1"
     >
       <Image
         src={image}
         alt={imageAlt}
         fill
         sizes="(min-width:900px) 560px, 100vw"
-        className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
+        className={`object-cover ${imagePosition} transition-transform duration-500 group-hover:scale-105`}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-ink from-[30%] via-ink/80 via-[60%] to-ink/30 min-[900px]:bg-gradient-to-r min-[900px]:from-ink min-[900px]:from-[25%] min-[900px]:via-ink/80 min-[900px]:via-[55%] min-[900px]:to-ink/20" />
       <div className="relative p-5 md:p-7 min-[900px]:max-w-[68%] [text-shadow:0_2px_10px_rgba(0,0,0,0.92)]">
@@ -261,12 +261,13 @@ export default function ChooserPage() {
           <div className="mt-4 md:mt-5 grid gap-4 min-[900px]:gap-6 grid-cols-1 min-[900px]:grid-cols-2">
             <GroupCard
               href="/imonems"
-              image="/moments/m-1.webp"
-              imageAlt="Kolektyvas žaidžia VR BALA VR erdvėje"
+              image="/kolektyvai/komandos-formavimas-vr-klaipeda.webp"
+              imageAlt="Kolektyvas žaidžia VR žaidimą BALA VR erdvėje Klaipėdoje"
+              imagePosition="object-[50%_42%]"
               eyebrow="Kolektyvams · teambuildingas"
               eyebrowClass="text-volt"
               title="Įmonėms"
-              text="Kalėdinis vakarėlis, teambuildingas ar kolektyvo šventė privačioje VR erdvėje."
+              text="Kalėdinis vakarėlis, teambuildingas ar kolektyvo šventė — pas mus arba jūsų įmonėje."
               cta="Gauti pasiūlymą"
             />
             <GroupCard

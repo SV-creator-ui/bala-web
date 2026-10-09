@@ -12,9 +12,9 @@ export const runtime = "nodejs";
 type Kind = "imone" | "mokykla";
 
 const KIND_LABEL: Record<Kind, string> = { imone: "Įmonė / kolektyvas", mokykla: "Mokykla / klasė" };
-const FORMAT_LABEL: Record<string, string> = {
-  pas_mus: "Klasė atvyksta į BALA VR",
-  i_mokykla: "BALA VR atvyksta į mokyklą",
+const FORMAT_LABEL: Record<Kind, Record<string, string>> = {
+  imone: { pas_mus: "Kolektyvas atvyksta į BALA VR", pas_jus: "BALA VR atvažiuoja į įmonę" },
+  mokykla: { pas_mus: "Klasė atvyksta į BALA VR", pas_jus: "BALA VR atvyksta į mokyklą" },
 };
 
 function str(v: unknown, max: number): string {
@@ -69,8 +69,8 @@ export async function POST(req: Request) {
 
   const rows: [string, string][] = [
     ["Tipas", KIND_LABEL[kind]],
-    ...(kind === "mokykla" && FORMAT_LABEL[format] ? [["Formatas", FORMAT_LABEL[format]] as [string, string]] : []),
-    [kind === "mokykla" ? "Mokykla, miestas" : "Įmonė", organization],
+    ...(FORMAT_LABEL[kind][format] ? [["Formatas", FORMAT_LABEL[kind][format]] as [string, string]] : []),
+    [kind === "mokykla" ? "Mokykla, miestas" : "Įmonė / vieta", organization],
     ["Dalyvių skaičius", participants],
     ...(kind === "mokykla" ? [["Mokinių amžius / klasė", age] as [string, string]] : []),
     ["Pageidaujama data", date],

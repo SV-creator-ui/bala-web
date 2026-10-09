@@ -5,6 +5,19 @@ import { trackInquiryLead } from "@/lib/analytics";
 
 type Kind = "imone" | "mokykla";
 type Status = "idle" | "sending" | "sent" | "error";
+type Format = "pas_mus" | "pas_jus";
+
+// Kur vyks renginys — pas mus Klaipėdoje ar BALA VR atvažiuoja pas klientą.
+const FORMATS: Record<Kind, [Format, string][]> = {
+  imone: [
+    ["pas_mus", "Atvykstame į BALA VR"],
+    ["pas_jus", "BALA VR atvažiuoja į įmonę"],
+  ],
+  mokykla: [
+    ["pas_mus", "Klasė atvyksta į BALA VR"],
+    ["pas_jus", "BALA VR atvyksta į mokyklą"],
+  ],
+};
 
 const INPUT =
   "w-full rounded-xl border border-line-strong bg-white/[0.04] px-4 py-3 text-[16px] text-white placeholder:text-white/40 outline-none transition-colors focus:border-volt";
@@ -24,7 +37,7 @@ function Field({ label, optional, children }: { label: string; optional?: boolea
 export default function GroupInquiryForm({ kind }: { kind: Kind }) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
-  const [format, setFormat] = useState<"pas_mus" | "i_mokykla">("pas_mus");
+  const [format, setFormat] = useState<Format>("pas_mus");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -37,7 +50,7 @@ export default function GroupInquiryForm({ kind }: { kind: Kind }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           kind,
-          format: kind === "mokykla" ? format : undefined,
+          format,
           name: fd.get("name"),
           phone: fd.get("phone"),
           email: fd.get("email"),
@@ -77,16 +90,10 @@ export default function GroupInquiryForm({ kind }: { kind: Kind }) {
 
   return (
     <form onSubmit={onSubmit} className="rounded-3xl border border-line-strong bg-ink-card p-5 md:p-8 flex flex-col gap-4">
-      {kind === "mokykla" && (
-        <fieldset className="flex flex-col gap-2">
+      <fieldset className="flex flex-col gap-2">
           <legend className="mb-1.5 text-[14px] font-semibold text-white">Kur vyks renginys?</legend>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {(
-              [
-                ["pas_mus", "Klasė atvyksta į BALA VR"],
-                ["i_mokykla", "BALA VR atvyksta į mokyklą"],
-              ] as const
-            ).map(([value, label]) => (
+            {FORMATS[kind].map(([value, label]) => (
               <label
                 key={value}
                 className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-[15px] font-semibold transition-colors ${
@@ -106,7 +113,6 @@ export default function GroupInquiryForm({ kind }: { kind: Kind }) {
             ))}
           </div>
         </fieldset>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Dalyvių skaičius">
@@ -123,12 +129,18 @@ export default function GroupInquiryForm({ kind }: { kind: Kind }) {
             <input name="age" placeholder="pvz. 6 klasė" className={INPUT} />
           </Field>
           <Field label="Mokykla ir miestas" optional={format === "pas_mus"}>
-            <input name="organization" required={format === "i_mokykla"} placeholder="pvz. Klaipėdos ... progimnazija" className={INPUT} />
+            <input name="organization" required={format === "pas_jus"} placeholder="pvz. Klaipėdos ... progimnazija" className={INPUT} />
           </Field>
         </div>
       ) : (
-        <Field label="Įmonė" optional>
-          <input name="organization" autoComplete="organization" className={INPUT} />
+        <Field label={format === "pas_jus" ? "Įmonė ir renginio vieta (miestas)" : "Įmonė"} optional={format === "pas_mus"}>
+          <input
+            name="organization"
+            required={format === "pas_jus"}
+            autoComplete="organization"
+            placeholder={format === "pas_jus" ? "pvz. UAB …, Klaipėda" : undefined}
+            className={INPUT}
+          />
         </Field>
       )}
 

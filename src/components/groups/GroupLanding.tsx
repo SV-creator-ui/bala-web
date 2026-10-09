@@ -5,6 +5,7 @@ import BreadcrumbJsonLd from "@/components/bala/BreadcrumbJsonLd";
 import GroupInquiryForm from "./GroupInquiryForm";
 
 type Offer = { title: string; text: string };
+type Photo = { src: string; alt: string };
 
 function Check() {
   return (
@@ -33,6 +34,8 @@ export default function GroupLanding({
   offers,
   points,
   formTitle,
+  gallery,
+  galleryTitle,
 }: {
   kind: "imone" | "mokykla";
   path: string;
@@ -45,6 +48,8 @@ export default function GroupLanding({
   offers: Offer[];
   points: string[];
   formTitle: string;
+  gallery?: Photo[];
+  galleryTitle?: string;
 }) {
   return (
     <main className="min-h-[100svh] flex flex-col bg-ink text-white">
@@ -101,7 +106,7 @@ export default function GroupLanding({
       {/* Pasiūlymai */}
       <section className="mx-auto w-full max-w-[1080px] px-6 md:px-10 pt-14 md:pt-20">
         <h2 className="font-display uppercase text-[clamp(24px,3.6vw,36px)] leading-[1.08]">{offersTitle}</h2>
-        <div className={`mt-6 grid gap-4 grid-cols-1 ${offers.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
+        <div className={`mt-6 grid gap-4 grid-cols-1 ${offers.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
           {offers.map((o) => (
             <div key={o.title} className="rounded-2xl border border-line-strong bg-ink-card p-5 md:p-6">
               <h3 className="font-display uppercase text-[20px] leading-[1.15] text-white">{o.title}</h3>
@@ -118,6 +123,33 @@ export default function GroupLanding({
           ))}
         </ul>
       </section>
+
+      {gallery && gallery.length > 0 && (
+        <section className="mx-auto w-full max-w-[1080px] px-6 md:px-10 pt-14 md:pt-20">
+          {galleryTitle && (
+            <h2 className="font-display uppercase text-[clamp(24px,3.6vw,36px)] leading-[1.08]">{galleryTitle}</h2>
+          )}
+          {/* Pirma nuotrauka horizontali — platesnė; kitos stačios */}
+          <div className="mt-6 grid gap-3 md:gap-4 grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr]">
+            {gallery.map((p, i) => (
+              <div
+                key={p.src}
+                className={`relative overflow-hidden rounded-2xl border border-white/10 md:aspect-auto md:h-[380px] ${
+                  i === 0 ? "col-span-2 md:col-span-1 aspect-[4/3]" : "aspect-[3/4]"
+                }`}
+              >
+                <Image
+                  src={p.src}
+                  alt={p.alt}
+                  fill
+                  sizes={i === 0 ? "(min-width:768px) 460px, 100vw" : "(min-width:768px) 290px, 50vw"}
+                  className="object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Žingsniai + forma */}
       <section id="uzklausa" className="mx-auto w-full max-w-[1080px] px-6 md:px-10 py-14 md:py-20 scroll-mt-6 grid gap-8 min-[900px]:grid-cols-[1fr_1.35fr]">
