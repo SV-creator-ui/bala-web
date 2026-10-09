@@ -27,6 +27,8 @@ export const ADS_CONVERSION_BOOKING = "AW-17951168306/t75tCOqtlvQcELKu5O9C";
 export const ADS_CONVERSION_GIFT_CARD = "AW-17951168306/nQTqCLrtmvQcELKu5O9C";
 /** „Skambutis iš svetainės (tel. paspaudimas)" — kategorija Contact, Count: One. */
 export const ADS_CONVERSION_PHONE = "AW-17951168306/EMTOCL25uZUdELKu5O9C";
+/** Google Ads konversija „Užklausa (įmonės / mokyklos)" — /imonems, /mokykloms formos (Submit lead form, Count: One). */
+export const ADS_CONVERSION_LEAD = "AW-17951168306/WVZbCJSy15YdELKu5O9C";
 
 /** localStorage raktas su sutikimo būsena („granted"/„denied"). */
 export const CONSENT_KEY = "bala-cookie-consent";
@@ -102,12 +104,13 @@ export function trackPhoneClick(): void {
 
 /**
  * Išsiųsta grupės užklausa (/imonems, /mokykloms).
- * - gtag: `generate_lead` (Google Ads gali jį importuoti kaip konversiją).
+ * - gtag: `generate_lead` + Google Ads konversija „Užklausa" (ADS_CONVERSION_LEAD).
  * - Meta: standartinis `Lead`.
  */
 export function trackInquiryLead(kind: "imone" | "mokykla"): void {
   if (typeof window === "undefined") return;
   window.gtag?.("event", "generate_lead", { inquiry_type: kind });
+  window.gtag?.("event", "conversion", { send_to: ADS_CONVERSION_LEAD, value: 1, currency: "EUR" });
   window.fbq?.("track", "Lead", { content_name: kind === "imone" ? "inquiry_company" : "inquiry_school" });
 }
 
