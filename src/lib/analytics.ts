@@ -100,6 +100,17 @@ export function trackPhoneClick(): void {
   window.gtag("event", "conversion", { send_to: ADS_CONVERSION_PHONE });
 }
 
+/**
+ * Išsiųsta grupės užklausa (/imonems, /mokykloms).
+ * - gtag: `generate_lead` (Google Ads gali jį importuoti kaip konversiją).
+ * - Meta: standartinis `Lead`.
+ */
+export function trackInquiryLead(kind: "imone" | "mokykla"): void {
+  if (typeof window === "undefined") return;
+  window.gtag?.("event", "generate_lead", { inquiry_type: kind });
+  window.fbq?.("track", "Lead", { content_name: kind === "imone" ? "inquiry_company" : "inquiry_school" });
+}
+
 export type StickyBarButton = "call" | "party" | "room";
 
 /**

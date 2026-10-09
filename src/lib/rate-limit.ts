@@ -194,6 +194,10 @@ export const voucherValidateRateLimit = (req: Request) =>
 export const promoValidateRateLimit = (req: Request) =>
   checkLimit(req, { name: "promo-validate", limit: 20, windowSec: 5 * 60, failClosed: false });
 
+/** Grupių užklausos (įmonės, mokyklos) POST — spam apsauga; FAIL-OPEN. */
+export const inquiryCreateRateLimit = (req: Request) =>
+  checkLimit(req, { name: "inquiry-create", limit: 5, windowSec: 15 * 60, failClosed: false });
+
 /** Availability GET — enumeracija/spam apsauga; FAIL-OPEN. */
 export const availabilityRateLimit = (req: Request) =>
   checkLimit(req, { name: "availability", limit: 60, windowSec: 60, failClosed: false });

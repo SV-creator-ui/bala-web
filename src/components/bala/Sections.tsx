@@ -206,6 +206,30 @@ export function KainosSection() {
             Rezervuojant sumokamas {BOOKING.depositEur} € avansas, likutis — vietoje. Internetu rezervuojama iki {BOOKING.maxOnlinePlayers} žaidėjų.
           </p>
         </RevealOnScroll>
+        <RevealOnScroll className="mt-10 md:mt-12">
+          <Link
+            href="/gimtadieniai"
+            className="group mx-auto flex max-w-[860px] flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 rounded-2xl border border-[rgba(240,165,0,0.45)] bg-gradient-to-r from-[rgba(240,165,0,0.12)] to-white/[0.03] p-5 md:p-6 transition-colors hover:border-[#f0a500]"
+          >
+            <span className="flex-1 min-w-0">
+              <span className="block text-[12px] font-bold uppercase tracking-[0.16em] text-[#f0a500]">
+                Planuojate gimtadienį?
+              </span>
+              <span className="mt-1.5 block font-display uppercase text-[22px] md:text-[24px] leading-[1.1] text-white">
+                Visa erdvė tik jūsų kompanijai
+              </span>
+              <span className="mt-1.5 block text-[15px] leading-[1.5] text-smoke">
+                Privati šventė su VR žaidimais, arkadomis ir vieta vaišėms — iki 16 žaidėjų, nuo 219 €.
+              </span>
+            </span>
+            <span
+              className="inline-flex flex-none items-center justify-center gap-2 self-start sm:self-center rounded-full px-6 py-3.5 text-[15px] font-bold text-[#0d2b35] transition-transform group-hover:-translate-y-0.5"
+              style={{ background: "linear-gradient(180deg, #ffbf33 0%, #f0a500 100%)" }}
+            >
+              Gimtadienio paketai
+            </span>
+          </Link>
+        </RevealOnScroll>
       </div>
     </section>
   );

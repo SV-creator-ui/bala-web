@@ -17,6 +17,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/gimtadieniai", priority: 0.9, changeFrequency: "weekly" },
     { path: "/gimtadieniai/rezervacija", priority: 0.7, changeFrequency: "monthly" },
     { path: "/komandiniai-vr-zaidimai", priority: 0.85, changeFrequency: "monthly" },
+    { path: "/imonems", priority: 0.85, changeFrequency: "monthly" },
+    { path: "/mokykloms", priority: 0.85, changeFrequency: "monthly" },
     { path: "/komandiniai-vr-zaidimai/rezervacija", priority: 0.6, changeFrequency: "monthly" },
     { path: "/rezervacija", priority: 0.55, changeFrequency: "monthly" },
     { path: "/privatumo-politika", priority: 0.3, changeFrequency: "yearly" },

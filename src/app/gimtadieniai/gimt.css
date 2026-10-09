@@ -245,7 +245,7 @@
 @media (prefers-reduced-motion: reduce) {
   .brand-bala, .brand-vr { animation: none; }
 }
-.nav-links { display: flex; gap: 18px; margin-left: auto; flex-wrap: nowrap; align-items: center; }
+.nav-links { display: flex; gap: 14px; margin-left: auto; flex-wrap: nowrap; align-items: center; }
 .nav-links a {
   position: relative;
   padding: 4px 0;
@@ -256,8 +256,8 @@
   transition: color var(--dur-fast) ease;
   white-space: nowrap;
 }
-/* Vidutinio pločio ekranuose (~900–1200px) slepiam telefoną — CTA ir meniu svarbiau */
-@media (max-width: 1180px) {
+/* Vidutinio pločio ekranuose slepiam telefoną — CTA ir meniu svarbiau */
+@media (max-width: 1320px) {
   .nav-phone { display: none; }
   .nav-links { gap: 14px; }
   .nav-links a { font-size: 14px; }
@@ -298,6 +298,8 @@
   transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
 }
 .nav-back:hover { color: var(--amber); border-color: var(--amber); }
+/* Desktop: vietoj rodyklės atgal — „Kitos pramogos" meniu šalia logotipo */
+@media (min-width: 1101px) { .nav-back { display: none; } }
 .nav-back svg { width: 18px; height: 18px; flex: none; }
 
 /* ── Hamburger mygtukas (tik mobile) ── */
@@ -328,6 +330,12 @@
 .nav-burger.is-open span:nth-child(2) { opacity: 0; }
 .nav-burger.is-open span:nth-child(3) { top: 20px; transform: rotate(-45deg); }
 
+/* Iki 1100px juostoje netelpa nuorodos į kitas paslaugas — rodom hamburger meniu */
+@media (max-width: 1100px) {
+  .nav-cta, .nav-links, .nav-phone, .nav-other { display: none; }
+  .nav-burger { display: inline-flex; }
+}
+
 /* ── Mobile meniu (overlay + panel) ── */
 .nav-mobile {
   position: fixed; inset: 0;
@@ -353,6 +361,7 @@
   border-left: 1px solid var(--white-12);
   padding: 80px 22px 28px;
   display: flex; flex-direction: column; gap: 6px;
+  overflow-y: auto;
   transform: translateX(100%);
   transition: transform var(--dur-med, 240ms) cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: -12px 0 40px rgba(0, 0, 0, 0.45);
@@ -372,6 +381,28 @@
 .nav-mobile-close:hover { color: var(--amber); border-color: var(--amber); }
 .nav-mobile-close svg { width: 20px; height: 20px; }
 .nav-mobile.is-open .nav-mobile-panel { transform: translateX(0); }
+/* Kitos paslaugos — kompaktiški „chip'ai" mobile meniu viršuje */
+.nav-mobile-site-label {
+  margin: 26px 0 8px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.nav-mobile-site {
+  list-style: none; margin: 0 0 14px; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.nav-mobile-site a {
+  display: inline-flex; align-items: center;
+  padding: 9px 14px;
+  font-size: 14px; font-weight: 600;
+  color: var(--white-88); text-decoration: none;
+  border: 1px solid var(--white-12); border-radius: 999px;
+  background: var(--white-06);
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease;
+}
+.nav-mobile-site a:hover,
+.nav-mobile-site a:focus-visible { color: var(--amber); border-color: var(--amber); }
 .nav-mobile-links {
   list-style: none; margin: 0; padding: 0;
   display: flex; flex-direction: column;

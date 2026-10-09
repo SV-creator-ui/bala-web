@@ -3,21 +3,43 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import OtherServicesMenu from "@/components/shared/OtherServicesMenu";
 
-type NavLink = { href: string; label: string };
+type NavLink = { href: string; label: string; wide?: boolean };
 
 // Anchor'ai nurodyti su pilnu keliu, kad veiktų ir iš subpuslapių
 // (kambariai, blogas, kuponas), ne tik iš pagrindinio puslapio.
-const LINKS: NavLink[] = [
+const PAGE_LINKS: NavLink[] = [
   { href: "/pabegimo-kambariai/kambariai", label: "Pabėgimo kambariai" },
   { href: "/pabegimo-kambariai#kaip-vyksta", label: "Kaip vyksta" },
   { href: "/pabegimo-kambariai#kainos", label: "Kainos" },
   { href: "/pabegimo-kambariai#atsiliepimai", label: "Atsiliepimai" },
   { href: "/pabegimo-kambariai#duk", label: "D.U.K." },
   { href: "/pabegimo-kambariai/blog", label: "Blogas" },
-  { href: "/pabegimo-kambariai/dovanu-kuponas", label: "Dovanų kuponas" },
   { href: "/pabegimo-kambariai#kontaktai", label: "Kontaktai" },
 ];
+
+// Kitos BALA VR paslaugos (mobile meniu apačioje; desktop — „Kitos pramogos" meniu).
+const SITE_LINKS: NavLink[] = [
+  { href: "/gimtadieniai", label: "Gimtadieniai" },
+  { href: "/imonems", label: "Įmonėms" },
+  { href: "/mokykloms", label: "Mokykloms" },
+  { href: "/komandiniai-vr-zaidimai", label: "VR veiksmo žaidimai" },
+  { href: "/pabegimo-kambariai/dovanu-kuponas", label: "Dovanų kuponas" },
+];
+
+// Desktop juostoje — tik šio puslapio skiltys; kitos paslaugos atskirame meniu prie logotipo.
+// `wide` — rodoma tik nuo 1280px, kad siauresniame desktop'e tilptų CTA mygtukas.
+const DESKTOP_PAGE_LINKS: NavLink[] = [
+  PAGE_LINKS[0],
+  PAGE_LINKS[1],
+  PAGE_LINKS[2],
+  { ...PAGE_LINKS[3], wide: true },
+  { ...PAGE_LINKS[4], wide: true },
+];
+
+const DESKTOP_LINK_CLASS =
+  "relative py-1.5 text-sm font-semibold text-white whitespace-nowrap hover:text-white transition-colors after:content-[''] after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-volt after:origin-left after:scale-x-0 after:transition-transform after:duration-200 after:ease-[var(--ease-out-premium)] hover:after:scale-x-100 focus-visible:after:scale-x-100";
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -64,7 +86,7 @@ export default function Nav() {
               href="/"
               aria-label="Grįžti į pramogų pasirinkimą"
               title="Kitos pramogos"
-              className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full border border-line-strong text-smoke transition-colors hover:border-volt hover:text-white"
+              className="inline-flex min-[1100px]:hidden h-9 w-9 flex-none items-center justify-center rounded-full border border-line-strong text-smoke transition-colors hover:border-volt hover:text-white"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <path d="M19 12H5M11 18l-6-6 6-6" />
@@ -89,21 +111,18 @@ export default function Nav() {
                 Virtualios realybės erdvė
               </span>
             </Link>
+            <OtherServicesMenu current="/pabegimo-kambariai" className="hidden min-[1100px]:block ml-3" />
           </div>
-          <nav aria-label="Pagrindinė navigacija" className="hidden min-[960px]:flex items-center gap-[30px]">
-            {LINKS.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="relative py-1.5 text-sm font-semibold text-white hover:text-white transition-colors after:content-[''] after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-volt after:origin-left after:scale-x-0 after:transition-transform after:duration-200 after:ease-[var(--ease-out-premium)] hover:after:scale-x-100 focus-visible:after:scale-x-100"
-              >
+          <nav aria-label="Pagrindinė navigacija" className="hidden min-[1100px]:flex items-center gap-[20px]">
+            {DESKTOP_PAGE_LINKS.map((l) => (
+              <a key={l.href} href={l.href} className={`${DESKTOP_LINK_CLASS} ${l.wide ? "hidden min-[1280px]:inline" : ""}`}>
                 {l.label}
               </a>
             ))}
           </nav>
           <a
             href="/rezervacija"
-            className="hidden min-[960px]:inline-flex items-center justify-center whitespace-nowrap rounded-full bg-volt px-[30px] py-4 text-[15px] font-bold text-volt-ink transition-transform hover:-translate-y-0.5 hover:bg-volt-deep"
+            className="hidden min-[1100px]:inline-flex items-center justify-center whitespace-nowrap rounded-full bg-volt px-[30px] py-4 text-[15px] font-bold text-volt-ink transition-transform hover:-translate-y-0.5 hover:bg-volt-deep"
           >
             Rezervuoti dabar
           </a>
@@ -112,7 +131,7 @@ export default function Nav() {
             aria-label="Atidaryti meniu"
             aria-expanded={open}
             onClick={() => setOpen((o) => !o)}
-            className="min-[960px]:hidden inline-flex flex-col justify-center items-center gap-[5px] w-11 h-11 rounded-[10px] border border-line-strong"
+            className="min-[1100px]:hidden inline-flex flex-col justify-center items-center gap-[5px] w-11 h-11 rounded-[10px] border border-line-strong"
           >
             <span className={`block w-5 h-0.5 bg-white transition-transform ${open ? "translate-y-[7px] rotate-45" : ""}`} />
             <span className={`block w-5 h-0.5 bg-white transition-opacity ${open ? "opacity-0" : ""}`} />
@@ -122,7 +141,7 @@ export default function Nav() {
       </header>
 
       <div
-        className={`min-[960px]:hidden fixed inset-0 z-99 bg-ink flex flex-col justify-start gap-1.5 px-6 pb-8 pt-[92px] overflow-y-auto transition-transform duration-300 ${
+        className={`min-[1100px]:hidden fixed inset-0 z-99 bg-ink flex flex-col justify-start gap-1.5 px-6 pb-8 pt-[92px] overflow-y-auto transition-transform duration-300 ${
           open ? "translate-y-0" : "-translate-y-full"
         }`}
       >
@@ -136,12 +155,12 @@ export default function Nav() {
           </svg>
           Kitos pramogos
         </Link>
-        {LINKS.map((l) => (
+        {PAGE_LINKS.map((l) => (
           <a
             key={l.href}
             href={l.href}
             onClick={(e) => onMobileLinkClick(e, l.href)}
-            className="border-b border-line py-3 px-1 font-display text-[clamp(28px,9vw,44px)] uppercase text-white"
+            className="border-b border-line py-2.5 px-1 font-display text-[clamp(24px,7.5vw,40px)] uppercase text-white"
           >
             {l.label}
           </a>
@@ -153,6 +172,25 @@ export default function Nav() {
         >
           Rezervuoti dabar
         </a>
+        <p className="mt-7 mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-smoke-2">
+          Kitos BALA VR pramogos
+        </p>
+        <div className="mb-3 flex flex-wrap gap-2">
+          {SITE_LINKS.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              onClick={() => setOpen(false)}
+              className={`inline-flex items-center rounded-full border px-4 py-2.5 text-[15px] font-semibold text-white transition-colors ${
+                l.href === "/gimtadieniai"
+                  ? "border-[#f0a500] bg-[rgba(240,165,0,0.14)]"
+                  : "border-line-strong bg-white/[0.04] hover:border-volt"
+              }`}
+            >
+              {l.label}
+            </a>
+          ))}
+        </div>
       </div>
     </>
   );

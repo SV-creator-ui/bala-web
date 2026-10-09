@@ -2,8 +2,18 @@
 
 import { useEffect, useState } from "react";
 import OfferStrip from "@/components/shared/OfferStrip";
+import OtherServicesMenu from "@/components/shared/OtherServicesMenu";
 
 const BOOKING_URL = "/gimtadieniai/rezervacija";
+
+// Kitos BALA VR paslaugos — mobile meniu apačioje (desktop: „Kitos pramogos" meniu prie logotipo).
+const SITE_LINKS = [
+  { href: "/pabegimo-kambariai", label: "Pabėgimo kambariai" },
+  { href: "/imonems", label: "Įmonėms" },
+  { href: "/mokykloms", label: "Mokykloms" },
+  { href: "/komandiniai-vr-zaidimai", label: "VR veiksmo žaidimai" },
+  { href: "/pabegimo-kambariai/dovanu-kuponas", label: "Dovanų kuponas" },
+];
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -47,13 +57,12 @@ export default function Nav() {
           <span className="brand-vr">VR</span>
         </span>
       </a>
+      <OtherServicesMenu current="/gimtadieniai" accent="amber" className="nav-other" />
       <ul className="nav-links">
-        <li><a href="#pradzia">Pradžia</a></li>
         <li><a href="#paketai">Kainos</a></li>
         <li><a href="#atsiliepimai">Atsiliepimai</a></li>
         <li><a href="#kaip-vyksta">Kaip vyksta</a></li>
-        <li><a href="#zaidimai">Populiariausi žaidimai</a></li>
-        <li><a href="#akimirkos">Galerija</a></li>
+        <li><a href="#zaidimai">Žaidimai</a></li>
         <li><a href="#duk">DUK</a></li>
         <li><a href="#kontaktai">Kontaktai</a></li>
       </ul>
@@ -108,6 +117,12 @@ export default function Nav() {
           <a href={BOOKING_URL} className="btn btn-primary nav-mobile-cta" onClick={close}>
             REZERVUOTI
           </a>
+          <p className="nav-mobile-site-label">Kitos BALA VR pramogos</p>
+          <ul className="nav-mobile-site">
+            {SITE_LINKS.map((l) => (
+              <li key={l.href}><a href={l.href} onClick={close}>{l.label}</a></li>
+            ))}
+          </ul>
         </div>
       </div>
     </nav>
