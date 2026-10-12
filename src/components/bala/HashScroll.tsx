@@ -9,9 +9,18 @@ import { useEffect } from "react";
  * nuotraukos, naršyklės pirminis šuolis gali būti netikslus — pakartojam po to,
  * kai išdėstymas nusistovi. Header aukštį atsižvelgia scroll-padding-top (globals).
  */
+// Senojo puslapio (/vr-pabegimo-kambariai/) žymės, į kurias vis dar veda
+// Google Ads papildomos nuorodos (sitelinks) -> dabartinės sekcijos.
+const LEGACY_HASHES: Record<string, string> = {
+  rezervacija: "kainos",
+  zaidimai: "scenarijai",
+  privalumai: "kam-tinka",
+};
+
 export default function HashScroll() {
   useEffect(() => {
-    const id = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    const raw = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    const id = LEGACY_HASHES[raw] ?? raw;
     if (!id) return;
     const go = () => {
       const el = document.getElementById(id);
