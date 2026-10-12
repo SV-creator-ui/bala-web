@@ -3,9 +3,11 @@
  * ─────────────────────────────────────────────────────────────────
  * Kliento pusė: nusileidimo metu nuskaitom UTM parametrus, išorinį referrer'į ir
  * paspaudimo ID (fbclid/gclid). UTM + referrer nėra asmens duomenys — saugom
- * sessionStorage (tik šios sesijos). `fbclid` reikšmė laikoma tik atmintyje ir
- * į sessionStorage rašoma TIK po slapukų sutikimo; `fbc`/`fbp` į serverį
- * siunčiami tik su sutikimu.
+ * sessionStorage (tik šios sesijos). `fbclid` ir `gclid` reikšmės laikomos tik
+ * atmintyje ir į sessionStorage rašomos TIK po slapukų sutikimo; `fbc`/`fbp`/
+ * `gclid` į serverį siunčiami tik su sutikimu. `gclid` reikalingas, kad
+ * naršyklėje nesuveikusias Google Ads konversijas būtų galima įkelti rankiniu
+ * būdu (Google Ads → Conversions → Uploads).
  *
  * Serverio pusė: `sanitizeAttribution` išvalo kliento duomenis ir (tik su
  * sutikimu) prideda IP + user agent — jie keliauja į Meta CAPI Purchase eventą.
@@ -23,6 +25,8 @@ export type Attribution = {
   consent?: boolean; // ar vartotojas sutiko su reklamos slapukais
   fbc?: string; // Meta paspaudimo ID (fb.1.<ms>.<fbclid>) — tik su sutikimu
   fbp?: string; // Meta naršyklės ID (_fbp slapukas) — tik su sutikimu
+  gclid?: string; // Google Ads paspaudimo ID (gclid/gbraid/wbraid) — tik su sutikimu
+  gclid_type?: "gclid" | "gbraid" | "wbraid";
   client_ip?: string; // prideda serveris, tik su sutikimu
   client_ua?: string; // prideda serveris, tik su sutikimu
 };
@@ -37,14 +41,26 @@ type Touch = {
   referrer?: string;
   landing?: string;
   fbclid?: string; // tik po sutikimo
+  gclid?: string; // tik po sutikimo
+  gclid_type?: "gclid" | "gbraid" | "wbraid";
   ts: number;
 };
 
 const STORAGE_KEY = "bala-attribution";
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
 
-/* fbclid be sutikimo laikomas tik atmintyje (išlieka per Next.js kliento navigaciją). */
+/* fbclid / gclid be sutikimo laikomi tik atmintyje (išlieka per Next.js kliento navigaciją). */
 let pendingFbclid: { value: string; ts: number } | null = null;
+let pendingGclid: { value: string; type: "gclid" | "gbraid" | "wbraid" } | null = null;
+
+/** Google paspaudimo ID iš URL: gclid (įprastas), gbraid/wbraid (iOS). */
+function readGoogleClick(params: URLSearchParams): typeof pendingGclid {
+  for (const type of ["gclid", "gbraid", "wbraid"] as const) {
+    const v = params.get(type);
+    if (v && /^[\w-]{10,500}$/.test(v)) return { value: v, type };
+  }
+  return null;
+}
 
 function consentGranted(): boolean {
   try {
@@ -105,9 +121,9 @@ export function captureAttribution(): void {
     if (v) touch[k] = v.slice(0, 200);
   }
   const fbclid = params.get("fbclid");
-  const gclid = params.get("gclid");
+  const gclick = readGoogleClick(params);
   if (fbclid) touch.click = "meta";
-  else if (gclid) touch.click = "google";
+  else if (gclick) touch.click = "google";
 
   try {
     if (document.referrer) {
@@ -123,16 +139,27 @@ export function captureAttribution(): void {
       persistFbc(pendingFbclid.value, now);
     }
   }
+  if (gclick) {
+    pendingGclid = gclick;
+    if (consentGranted()) {
+      touch.gclid = gclick.value;
+      touch.gclid_type = gclick.type;
+    }
+  }
 
   const isNewTouch = UTM_KEYS.some((k) => touch[k]) || touch.click || touch.referrer;
   if (isNewTouch || !readTouch()) writeTouch(touch);
 }
 
-/** Kviečiama paspaudus „Sutinku" — išsaugom atmintyje laikytą fbclid. */
+/** Kviečiama paspaudus „Sutinku" — išsaugom atmintyje laikytus fbclid / gclid. */
 export function onAdConsentGranted(): void {
-  if (typeof window === "undefined" || !pendingFbclid) return;
+  if (typeof window === "undefined") return;
   const t = readTouch();
-  if (t && t.click === "meta" && !t.fbclid) writeTouch({ ...t, fbclid: pendingFbclid.value });
+  if (pendingGclid && t && t.click === "google" && !t.gclid) {
+    writeTouch({ ...t, gclid: pendingGclid.value, gclid_type: pendingGclid.type });
+  }
+  if (!pendingFbclid) return;
+  if (t && t.click === "meta" && !t.fbclid) writeTouch({ ...readTouch()!, fbclid: pendingFbclid.value });
   persistFbc(pendingFbclid.value, pendingFbclid.ts);
 }
 
@@ -156,6 +183,11 @@ export function getAttributionForSubmit(): Attribution | undefined {
     const fbclid = t?.fbclid ?? pendingFbclid?.value;
     const ts = t?.fbclid ? t.ts : pendingFbclid?.ts;
     out.fbc = readCookie("_fbc") ?? (fbclid && ts ? `fb.1.${ts}.${fbclid}` : undefined);
+    const g = t?.gclid ? { value: t.gclid, type: t.gclid_type ?? "gclid" } : pendingGclid;
+    if (g) {
+      out.gclid = g.value;
+      out.gclid_type = g.type;
+    }
   }
   return out;
 }
@@ -177,6 +209,10 @@ export function sanitizeAttribution(raw: unknown, req: Request): Attribution | n
     out.consent = true;
     if (typeof r.fbc === "string" && /^fb\.\d\.\d+\.[\w-]{1,500}$/.test(r.fbc)) out.fbc = r.fbc;
     if (typeof r.fbp === "string" && /^fb\.\d\.\d+\.\d+$/.test(r.fbp)) out.fbp = r.fbp;
+    if (typeof r.gclid === "string" && /^[\w-]{10,500}$/.test(r.gclid)) {
+      out.gclid = r.gclid;
+      out.gclid_type = r.gclid_type === "gbraid" || r.gclid_type === "wbraid" ? r.gclid_type : "gclid";
+    }
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "";
     if (ip) out.client_ip = ip.slice(0, 64);
     const ua = req.headers.get("user-agent");

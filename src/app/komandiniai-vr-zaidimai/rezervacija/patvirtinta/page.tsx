@@ -11,6 +11,7 @@ import { formatEur } from "@/lib/booking/pricing";
 import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/confirm";
 import { googleCalendarRenderUrl } from "@/lib/booking/calendar-link";
 import BookingConversionTracker from "@/components/booking/BookingConversionTracker";
+import PendingAutoRefresh from "@/components/booking/PendingAutoRefresh";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +99,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
               <h1 className="font-display text-3xl uppercase mb-2">Laukiama apmokėjimo</h1>
               <p className="text-smoke mb-8">Jūsų mokėjimas dar apdorojamas. Kai tik jis patvirtinamas, gausite el. laišką. Jei apmokėjote — palaukite kelias minutes.</p>
               <Link href="/komandiniai-vr-zaidimai" className="inline-flex rounded-full bg-volt text-volt-ink font-bold px-6 py-3">Grįžti</Link>
+              <PendingAutoRefresh />
             </div>
           )}
 

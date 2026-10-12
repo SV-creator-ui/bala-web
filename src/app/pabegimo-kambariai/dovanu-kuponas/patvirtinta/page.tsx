@@ -7,6 +7,7 @@ import Link from "next/link";
 import Nav from "@/components/bala/Nav";
 import Footer from "@/components/bala/Footer";
 import BookingConversionTracker from "@/components/booking/BookingConversionTracker";
+import PendingAutoRefresh from "@/components/booking/PendingAutoRefresh";
 import { ADS_CONVERSION_GIFT_CARD } from "@/lib/analytics";
 import { formatEur } from "@/lib/booking/pricing";
 import { readConfirmParams } from "@/lib/booking/confirm";
@@ -78,6 +79,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
               <h1 className="font-display text-3xl uppercase mb-2">Laukiama apmokėjimo</h1>
               <p className="text-smoke mb-8">Jūsų mokėjimas dar apdorojamas. Kai tik jis patvirtinamas, kuponą gausite el. paštu. Jei apmokėjote — palaukite kelias minutes.</p>
               <Link href="/pabegimo-kambariai" className="inline-flex rounded-full bg-volt text-volt-ink font-bold px-6 py-3">Grįžti į pradžią</Link>
+              <PendingAutoRefresh />
             </div>
           )}
 

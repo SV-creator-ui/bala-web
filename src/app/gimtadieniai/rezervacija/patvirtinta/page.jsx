@@ -1,5 +1,6 @@
 import Footer from "@/components/gimt/Footer";
 import BookingConversionTracker from "@/components/booking/BookingConversionTracker";
+import PendingAutoRefresh from "@/components/booking/PendingAutoRefresh";
 import { formatEur } from "@/lib/booking/pricing";
 import { getPartyPackage, guestsKnown } from "@/lib/booking/packages";
 import { resolveBooking, resolveByRef, readConfirmParams } from "@/lib/booking/confirm";
@@ -107,6 +108,7 @@ export default async function Page({ searchParams }) {
                 Jei apmokėjote — palaukite kelias minutes.
               </p>
               <a href="/gimtadieniai" className="btn btn-primary">Grįžti į gimtadienius</a>
+              <PendingAutoRefresh />
             </>
           )}
 
